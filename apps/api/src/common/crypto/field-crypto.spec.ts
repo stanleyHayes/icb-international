@@ -32,21 +32,21 @@ describe('field-crypto', () => {
   it('rejects a tampered ciphertext', () => {
     const payload = encryptField('secret', KEY);
     const tampered = `${payload.slice(0, -2)}xx`;
-    expect(() => decryptField(tampered, KEY)).toThrowError(
+    expect(() => decryptField(tampered, KEY)).toThrow(
       expect.objectContaining({ code: 'INTERNAL_ERROR' }) as Error,
     );
   });
 
   it('rejects the wrong key', () => {
     const payload = encryptField('secret', KEY);
-    expect(() => decryptField(payload, OTHER_KEY)).toThrowError(
+    expect(() => decryptField(payload, OTHER_KEY)).toThrow(
       expect.objectContaining({ code: 'INTERNAL_ERROR' }) as Error,
     );
   });
 
   it('rejects malformed payloads', () => {
     for (const bad of ['', 'v1', 'v1.a.b', 'v2.a.b.c', 'v1..b.c']) {
-      expect(() => decryptField(bad, KEY)).toThrowError(
+      expect(() => decryptField(bad, KEY)).toThrow(
         expect.objectContaining({ code: 'INTERNAL_ERROR' }) as Error,
       );
     }

@@ -37,20 +37,24 @@ export interface MintJwtOptions {
   readonly clock?: TestClock;
 }
 
-/** Mint a signed access JWT the API's auth guard will accept. */
+/**
+ * Mint a signed access JWT the API's auth guard will accept.
+ *
+ * When `clock` is supplied, `iat` is written into the payload — jsonwebtoken anchors both `iat`
+ * and the derived `exp` to it, so the whole token is deterministic and time-travel-safe.
+ */
 export function mintTestAccessJwt(options: MintJwtOptions): string {
   const claims: TestAccessClaims = { ...defaultClaims(), ...options.claims };
   const payload: Record<string, unknown> = { ...claims, typ: JWT_ACCESS_TYPE };
+  if (options.clock) {
+    payload['iat'] = options.clock.epochSeconds();
+  }
   const signOptions: jwt.SignOptions = {
     algorithm: 'HS256',
     expiresIn: options.expiresInSeconds ?? JWT_ACCESS_TTL_SECONDS,
     issuer: JWT_ISSUER,
     audience: JWT_AUDIENCE,
   };
-  if (options.clock) {
-    signOptions.noTimestamp = true;
-    payload['iat'] = options.clock.epochSeconds();
-  }
   return jwt.sign(payload, options.secret, signOptions);
 }
 

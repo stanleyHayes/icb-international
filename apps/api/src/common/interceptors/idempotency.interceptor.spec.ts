@@ -14,7 +14,10 @@ interface FakeRequest {
 }
 
 interface Fixture {
-  store: IdempotencyStore & { saved: IdempotencyRecord[] };
+  store: IdempotencyStore;
+  saved: IdempotencyRecord[];
+  find: ReturnType<typeof vi.fn>;
+  handle: ReturnType<typeof vi.fn>;
   request: FakeRequest;
   reply: { statusCode: number; status: (code: number) => void };
   context: ExecutionContext;
@@ -27,14 +30,12 @@ function fixture(options: {
   existing?: IdempotencyRecord | null;
 }): Fixture {
   const saved: IdempotencyRecord[] = [];
-  const store = {
-    saved,
-    find: vi.fn().mockResolvedValue(options.existing ?? null),
-    save: vi.fn((record: IdempotencyRecord) => {
-      saved.push(record);
-      return Promise.resolve();
-    }),
-  };
+  const find = vi.fn().mockResolvedValue(options.existing ?? null);
+  const save = vi.fn((record: IdempotencyRecord) => {
+    saved.push(record);
+    return Promise.resolve();
+  });
+  const store: IdempotencyStore = { find, save };
   const request = {
     method: 'POST',
     url: '/v1/transfers?x=1',
@@ -48,8 +49,9 @@ function fixture(options: {
     getHandler: () => ({}),
     getClass: () => ({}),
   } as unknown as ExecutionContext;
-  const handler = { handle: vi.fn(() => of({ id: 'tr_1' })) };
-  return { store, request, reply, context, handler };
+  const handle = vi.fn(() => of({ id: 'tr_1' }));
+  const handler: CallHandler = { handle };
+  return { store, saved, find, handle, request, reply, context, handler };
 }
 
 function interceptorFor(f: Fixture, idempotent: boolean): IdempotencyInterceptor {
@@ -63,12 +65,12 @@ describe('IdempotencyInterceptor', () => {
     const result = await interceptorFor(f, false).intercept(f.context, f.handler);
 
     await expect(firstValueFrom(result)).resolves.toEqual({ id: 'tr_1' });
-    expect(f.store.find).not.toHaveBeenCalled();
+    expect(f.find).not.toHaveBeenCalled();
   });
 
   it('rejects a mutating call without an Idempotency-Key', async () => {
     const f = fixture({ idempotent: true });
-    await expect(interceptorFor(f, true).intercept(f.context, f.handler)).rejects.toThrowError(
+    await expect(interceptorFor(f, true).intercept(f.context, f.handler)).rejects.toThrow(
       expect.objectContaining({ code: 'VALIDATION_FAILED' }) as Error,
     );
   });
@@ -78,7 +80,7 @@ describe('IdempotencyInterceptor', () => {
     const result = await interceptorFor(f, true).intercept(f.context, f.handler);
 
     await expect(firstValueFrom(result)).resolves.toEqual({ id: 'tr_1' });
-    expect(f.store.saved).toEqual([
+    expect(f.saved).toEqual([
       { scope: 'cust-1:POST:/v1/transfers', key: 'key-1', statusCode: 200, body: { id: 'tr_1' } },
     ]);
   });
@@ -94,7 +96,7 @@ describe('IdempotencyInterceptor', () => {
     const result = await interceptorFor(f, true).intercept(f.context, f.handler);
 
     await expect(firstValueFrom(result)).resolves.toEqual({ id: 'tr_original' });
-    expect(f.handler.handle).not.toHaveBeenCalled();
+    expect(f.handle).not.toHaveBeenCalled();
     expect(f.reply.status).toHaveBeenCalledWith(201);
   });
 
@@ -104,6 +106,6 @@ describe('IdempotencyInterceptor', () => {
     const result = await interceptorFor(f, true).intercept(f.context, f.handler);
 
     await firstValueFrom(result);
-    expect(f.store.find).toHaveBeenCalledWith('cust-2:POST:/v1/transfers', 'key-1');
+    expect(f.find).toHaveBeenCalledWith('cust-2:POST:/v1/transfers', 'key-1');
   });
 });

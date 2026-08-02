@@ -66,7 +66,10 @@ export function cardControls(overrides: Partial<CardControls> = {}): CardControl
   return { ...base, ...overrides };
 }
 
-export function cardLimits(currency: CurrencyCode, overrides: Partial<CardLimits> = {}): CardLimits {
+export function cardLimits(
+  currency: CurrencyCode,
+  overrides: Partial<CardLimits> = {},
+): CardLimits {
   const base: CardLimits = {
     perTransaction: moneyDto(PER_TRANSACTION_LIMIT, currency),
     daily: moneyDto(DAILY_LIMIT, currency),

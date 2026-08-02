@@ -22,13 +22,16 @@ import { IDEMPOTENCY_STORE, type IdempotencyStore } from './idempotency-store.po
  * Scope includes the caller and route, so one customer's key never replays another's request.
  */
 @Injectable()
-export class IdempotencyInterceptor implements NestInterceptor {
+export class IdempotencyInterceptor implements NestInterceptor<unknown, unknown> {
   constructor(
     @Inject(IDEMPOTENCY_STORE) private readonly store: IdempotencyStore,
     private readonly reflector: Reflector,
   ) {}
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
+  async intercept(
+    context: ExecutionContext,
+    next: CallHandler<unknown>,
+  ): Promise<Observable<unknown>> {
     const required = this.reflector.getAllAndOverride<boolean>(IDEMPOTENT_KEY, [
       context.getHandler(),
       context.getClass(),

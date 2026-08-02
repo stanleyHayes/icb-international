@@ -14,19 +14,19 @@ describe('encodeCursor / decodeCursor', () => {
   });
 
   it('rejects a cursor from another version', () => {
-    expect(() => decodeCursor('v9.bm9wZQ')).toThrowError(
+    expect(() => decodeCursor('v9.bm9wZQ')).toThrow(
       expect.objectContaining({ code: 'VALIDATION_FAILED' }) as Error,
     );
   });
 
   it('rejects garbage', () => {
-    expect(() => decodeCursor('not-a-cursor')).toThrowError(
+    expect(() => decodeCursor('not-a-cursor')).toThrow(
       expect.objectContaining({ code: 'VALIDATION_FAILED' }) as Error,
     );
   });
 
   it('rejects a cursor whose payload does not re-encode identically', () => {
-    expect(() => decodeCursor('v1.###')).toThrowError(
+    expect(() => decodeCursor('v1.###')).toThrow(
       expect.objectContaining({ code: 'VALIDATION_FAILED' }) as Error,
     );
   });

@@ -1,11 +1,9 @@
 import { makeRepaymentRequestSchema, type LoanDetail, type PayoffQuote } from '@icb/contracts';
 import {
-  add,
   format,
   fromMinorUnits,
   isGreaterThan,
   isLessThan,
-  sum,
   type CurrencyCode,
   type Money,
 } from '@icb/money';
@@ -32,22 +30,17 @@ import type { PostingLine } from '../ledger/domain/posting.types.js';
 import { LedgerService } from '../ledger/ledger.service.js';
 import { ageArrears } from './domain/arrears.js';
 import { getLoanProduct } from './domain/loan-products.js';
-import { accrueInterest, buildPayoffQuote, earlyRepaymentFee } from './domain/payoff.js';
+import { buildPayoffQuote } from './domain/payoff.js';
 import {
   allocateRepayment,
   totalOutstanding,
   type OutstandingBalances,
   type RepaymentAllocation,
 } from './domain/repayment-allocation.js';
-import { daysBetweenIso } from './domain/schedule-dates.js';
-import { outstandingOn, toAgeable, toLoanDetail } from './infrastructure/loan.mapper.js';
+import { outstandingFor, positionAt, servicingPatch } from './infrastructure/loan-position.js';
+import { toAgeable, toLoanDetail } from './infrastructure/loan.mapper.js';
 import type { LoanDoc } from './infrastructure/loan.schemas.js';
 import { LIVE_LOAN_STATUSES, LoansRepository } from './infrastructure/loans.repository.js';
-import {
-  ageSchedule,
-  applyPaymentToSchedule,
-  markAllPaid,
-} from './infrastructure/schedule.builder.js';
 
 /**
  * The contract publishes `makeRepaymentRequestSchema` but no inferred alias for it, so the type
@@ -59,11 +52,6 @@ export type RepaymentRequest = ReturnType<typeof makeRepaymentRequestSchema.pars
 /** A payoff figure is only good while the interest it assumes is still accurate. */
 const PAYOFF_VALIDITY_MS = 7 * 86_400_000;
 const LOAN_SOURCE_TYPE = 'loan';
-
-interface Position {
-  readonly outstanding: OutstandingBalances;
-  readonly remainingScheduledInterest: Money;
-}
 
 interface PostingInput {
   readonly loan: LoanDoc;
@@ -103,17 +91,25 @@ function repaymentLines(accountId: string, allocation: RepaymentAllocation): Pos
   return lines;
 }
 
-function statusAfter(settled: boolean, inArrears: boolean): string {
-  if (settled) return 'settled';
-  return inArrears ? 'in_arrears' : 'active';
+/** A repayment must be made in the loan's own currency, from an account held in it. */
+function assertSameCurrency(
+  accountCurrency: string,
+  requestCurrency: string,
+  loanCurrency: string,
+): void {
+  if (accountCurrency !== loanCurrency || requestCurrency !== loanCurrency) {
+    throw new DomainError('ACCOUNT_CURRENCY_MISMATCH', `This loan is repaid in ${loanCurrency}`, {
+      context: { loanCurrency, accountCurrency, requestCurrency },
+    });
+  }
 }
 
 /**
  * Servicing a live loan.
  *
  * Interest accrues ACT/365 on the outstanding principal from the last accrual date, so a customer
- * who pays early pays less and one who pays late pays more — without a nightly batch having to
- * have run first.
+ * who settles early pays for the days they actually held the money and one who pays late pays
+ * more — without a nightly batch having to have run first.
  */
 @Injectable()
 export class LoanRepaymentService {
@@ -130,7 +126,7 @@ export class LoanRepaymentService {
   async payoffQuote(loanId: string, customerId: string): Promise<PayoffQuote> {
     const loan = this.requireLive(await this.repository.requireLoan(loanId, customerId));
     const today = this.clock.today();
-    const position = this.positionAt(loan, today);
+    const position = positionAt(loan, today);
 
     return buildPayoffQuote({
       loanId: loan._id,
@@ -144,11 +140,7 @@ export class LoanRepaymentService {
     });
   }
 
-  async repay(
-    loanId: string,
-    customerId: string,
-    request: RepaymentRequest,
-  ): Promise<LoanDetail> {
+  async repay(loanId: string, customerId: string, request: RepaymentRequest): Promise<LoanDetail> {
     const loan = this.requireLive(await this.repository.requireLoan(loanId, customerId));
     const currency = loan.currency as CurrencyCode;
     const source = await this.accounts.loadSpendable(request.fromAccountId, customerId);
@@ -156,8 +148,14 @@ export class LoanRepaymentService {
 
     const amount = fromMinorUnits(request.amount.minorUnits, currency);
     const today = this.clock.today();
-    const outstanding = this.outstandingFor(loan, today, request.kind);
-    const allocation = this.plan(amount, outstanding, request.kind);
+    const settling = request.kind === 'payoff';
+    const outstanding = outstandingFor(
+      loan,
+      today,
+      settling,
+      getLoanProduct(loan.productCode).earlyRepaymentFeePercent,
+    );
+    const allocation = this.plan(amount, outstanding, settling);
 
     await this.assertFunded(source._id, currency, amount);
 
@@ -169,66 +167,21 @@ export class LoanRepaymentService {
     return toLoanDetail(updated, ageArrears(toAgeable(updated.schedule), today, currency));
   }
 
-  /** Where the loan stands right now, with interest brought up to `today`. */
-  private positionAt(loan: LoanDoc, today: string): Position {
-    const currency = loan.currency as CurrencyCode;
-    const principal = fromMinorUnits(loan.outstandingPrincipalMinorUnits, currency);
-    const elapsed = loan.lastAccrualOn ? Math.max(0, daysBetweenIso(loan.lastAccrualOn, today)) : 0;
-    const interest = add(
-      fromMinorUnits(loan.accruedInterestMinorUnits, currency),
-      accrueInterest(principal, loan.rate, elapsed),
-    );
-
-    return {
-      outstanding: {
-        fees: fromMinorUnits(loan.feesOutstandingMinorUnits, currency),
-        interest,
-        principal,
-      },
-      remainingScheduledInterest: sum(
-        loan.schedule
-          .filter((instalment) => outstandingOn(instalment) > 0)
-          .map((instalment) => fromMinorUnits(instalment.interestMinorUnits, currency)),
-        currency,
-      ),
-    };
-  }
-
-  /** A settlement raises the early-repayment charge; an ordinary repayment does not. */
-  private outstandingFor(
-    loan: LoanDoc,
-    today: string,
-    kind: RepaymentRequest['kind'],
-  ): OutstandingBalances {
-    const { outstanding } = this.positionAt(loan, today);
-    if (kind !== 'payoff') {
-      return outstanding;
-    }
-    return {
-      ...outstanding,
-      fees: earlyRepaymentFee(
-        outstanding.principal,
-        outstanding.fees,
-        getLoanProduct(loan.productCode).earlyRepaymentFeePercent,
-      ),
-    };
-  }
-
+  /** Split the payment fees → interest → principal, refusing anything that does not fit. */
   private plan(
     amount: Money,
     outstanding: OutstandingBalances,
-    kind: RepaymentRequest['kind'],
+    settling: boolean,
   ): RepaymentAllocation {
     const total = totalOutstanding(outstanding);
     const allocation = allocateRepayment(amount, outstanding);
 
     if (allocation.unallocated.minorUnits > 0) {
-      throw new ValidationError(
-        `This is more than the ${format(total)} outstanding on the loan`,
-        [{ path: 'amount', message: 'Exceeds the amount outstanding' }],
-      );
+      throw new ValidationError(`This is more than the ${format(total)} outstanding on the loan`, [
+        { path: 'amount', message: 'Exceeds the amount outstanding' },
+      ]);
     }
-    if (kind === 'payoff' && isLessThan(amount, total)) {
+    if (settling && isLessThan(amount, total)) {
       throw new ValidationError(`Settling this loan in full requires ${format(total)}`, [
         { path: 'amount', message: 'Below the payoff figure' },
       ]);
@@ -264,31 +217,9 @@ export class LoanRepaymentService {
       session,
     );
 
-    const patch = this.servicingPatch(input);
+    const patch = servicingPatch({ ...input, now: this.clock.now() });
     await this.repository.loans.updateOne({ _id: loan._id }, { $set: patch }, { session });
     return { ...loan, ...patch };
-  }
-
-  private servicingPatch(input: PostingInput): Partial<LoanDoc> {
-    const { loan, allocation, outstanding, today } = input;
-    const now = this.clock.now();
-    const principalLeft = loan.outstandingPrincipalMinorUnits - allocation.principal.minorUnits;
-    const settled = principalLeft <= 0;
-
-    const paid = applyPaymentToSchedule(loan.schedule, allocation.applied.minorUnits, now);
-    const schedule = ageSchedule(settled ? markAllPaid(paid, now) : paid, today);
-    const arrears = ageArrears(toAgeable(schedule), today, loan.currency as CurrencyCode);
-
-    return {
-      outstandingPrincipalMinorUnits: Math.max(0, principalLeft),
-      accruedInterestMinorUnits: outstanding.interest.minorUnits - allocation.interest.minorUnits,
-      feesOutstandingMinorUnits: outstanding.fees.minorUnits - allocation.fees.minorUnits,
-      schedule,
-      lastAccrualOn: today,
-      status: statusAfter(settled, arrears !== null),
-      settledAt: settled ? now : loan.settledAt,
-      updatedAt: now,
-    };
   }
 
   private requireLive(loan: LoanDoc): LoanDoc {
@@ -298,20 +229,5 @@ export class LoanRepaymentService {
       });
     }
     return loan;
-  }
-}
-
-/** A repayment must be made in the loan's own currency, from an account held in it. */
-function assertSameCurrency(
-  accountCurrency: string,
-  requestCurrency: string,
-  loanCurrency: string,
-): void {
-  if (accountCurrency !== loanCurrency || requestCurrency !== loanCurrency) {
-    throw new DomainError(
-      'ACCOUNT_CURRENCY_MISMATCH',
-      `This loan is repaid in ${loanCurrency}`,
-      { context: { loanCurrency, accountCurrency, requestCurrency } },
-    );
   }
 }

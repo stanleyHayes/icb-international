@@ -1,14 +1,20 @@
-import { randomUUID } from 'node:crypto';
-import { createHmac } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { randomUUID, createHmac } from 'node:crypto';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { assertUploadAllowed, resourceTypeFor } from './allow-list.js';
-import { buildAssetRef, type AssetRef } from './asset-ref.js';
-import type { AssetStore, DeliveryOptions, SignedDelivery, StoreDeps } from './asset-store.js';
+import { assertAssetRef, buildAssetRef, type AssetRef } from './asset-ref.js';
+import type {
+  AssetStore,
+  AssetUpload,
+  DeliveryOptions,
+  SignedDelivery,
+  StoreDeps,
+} from './asset-store.js';
 import { assetFolder, buildPublicId } from './document-kind.js';
 import { UnsafeAssetPathError } from './errors.js';
 import {
+  CLOUDINARY_DELIVERY_TYPE,
   DEFAULT_DELIVERY_URL_TTL_SECONDS,
   DEFAULT_ROOT_FOLDER,
   DEFAULT_UPLOAD_SIGNATURE_TTL_SECONDS,
@@ -41,6 +47,7 @@ export interface LocalAssetStoreConfig {
   deliveryUrlTtlSeconds?: number;
 }
 
+/** Bytes the browser posted to the local upload endpoint, keyed by the minted grant. */
 export interface LocalUpload {
   folder: string;
   publicId: string;
@@ -50,11 +57,11 @@ export interface LocalUpload {
 }
 
 const SAFE_PATH_SEGMENT = /^[a-z0-9][a-z0-9_-]*$/i;
+const DOWNLOAD_QUERY_FLAG = '&dl=1';
 
 /**
- * Keyless-development stand-in for Cloudinary. Answers `mintUploadSignature` and
- * `signedDeliveryUrl` with the same shapes as the real store and persists uploaded bytes
- * under `rootDir`. The asset refs it produces satisfy the contract's `assetRefSchema`
+ * Keyless-development stand-in for Cloudinary. Implements the same `AssetStore` port against
+ * the filesystem, and the asset refs it produces satisfy the contract's `assetRefSchema`
  * (`provider: 'cloudinary'`) because the store emulates Cloudinary — swapping in real
  * credentials changes nothing downstream.
  */
@@ -73,7 +80,7 @@ export class LocalAssetStore implements AssetStore {
   mintUploadSignature(input: MintUploadInput): SignedUpload {
     assertUploadAllowed(input);
 
-    const folder = assetFolder(this.config.rootFolder ?? DEFAULT_ROOT_FOLDER, input.kind, input.ownerId);
+    const folder = assetFolder(this.rootFolder(), input.kind, input.ownerId);
     const publicId = buildPublicId(input.label ?? input.kind, this.generateId());
     const timestamp = epochSeconds(this.now());
     const ttl = this.config.uploadSignatureTtlSeconds ?? DEFAULT_UPLOAD_SIGNATURE_TTL_SECONDS;
@@ -89,19 +96,68 @@ export class LocalAssetStore implements AssetStore {
       ),
       apiKey: LOCAL_API_KEY,
       expiresAt: isoAfter(this.now(), ttl),
+      type: CLOUDINARY_DELIVERY_TYPE,
     };
   }
 
-  /** Persists an accepted upload and returns the asset ref to store on the document. */
+  /** Server-side upload of bytes the API generated (a rendered statement, a letter). */
+  async upload(input: AssetUpload): Promise<AssetRef> {
+    assertUploadAllowed({
+      kind: input.kind,
+      contentType: input.contentType,
+      sizeBytes: input.bytes.byteLength,
+    });
+
+    const folder = assetFolder(this.rootFolder(), input.kind, input.ownerId);
+    const publicId = buildPublicId(input.label ?? input.kind, this.generateId());
+    return this.persist({ folder, publicId, ...input });
+  }
+
+  /** Persists bytes the browser posted to the local upload endpoint. */
   async save(upload: LocalUpload): Promise<AssetRef> {
+    return this.persist(upload);
+  }
+
+  /**
+   * A signed local link: the delivery server checks `exp` against the HMAC. Unlike the
+   * provider's render signature, this one genuinely expires — which is what a dev flow needs.
+   */
+  buildSignedUrl(ref: AssetRef, ttlSeconds?: number, options: DeliveryOptions = {}): SignedDelivery {
+    const ttl = ttlSeconds ?? this.config.deliveryUrlTtlSeconds ?? DEFAULT_DELIVERY_URL_TTL_SECONDS;
+    const exp = epochSeconds(this.now()) + ttl;
+    const prefix = this.config.deliveryPathPrefix ?? LOCAL_DELIVERY_PATH_PREFIX;
+    const path = withExtension(ref.publicId, ref.format);
+    const signature = this.signDelivery(path, exp);
+    const downloadFlag = options.download === true ? DOWNLOAD_QUERY_FLAG : '';
+
+    return {
+      url: `${this.config.baseUrl}${prefix}/${path}?exp=${String(exp)}&sig=${signature}${downloadFlag}`,
+      expiresAt: isoAfter(this.now(), ttl),
+    };
+  }
+
+  /** Removes the persisted bytes. Idempotent, like the provider's destroy. */
+  async destroy(ref: AssetRef): Promise<void> {
+    const asset = assertAssetRef(ref);
+    assertSafeSegment(asset.publicId);
+    await rm(join(this.config.rootDir, withExtension(asset.publicId, asset.format)), {
+      force: true,
+    });
+  }
+
+  /** Recomputes the delivery HMAC; the local delivery handler compares against `sig`. */
+  verifyDeliverySignature(path: string, exp: number, signature: string): boolean {
+    return this.signDelivery(path, exp) === signature;
+  }
+
+  private async persist(upload: LocalUpload): Promise<AssetRef> {
     assertSafeSegment(upload.folder);
     assertSafeSegment(upload.publicId);
 
     const format = MIME_TYPE_EXTENSIONS[upload.contentType];
     const publicId = `${upload.folder}/${upload.publicId}`;
-    const relativePath = withExtension(publicId, format);
     await mkdir(join(this.config.rootDir, upload.folder), { recursive: true });
-    await writeFile(join(this.config.rootDir, relativePath), upload.bytes);
+    await writeFile(join(this.config.rootDir, withExtension(publicId, format)), upload.bytes);
 
     return buildAssetRef({
       publicId,
@@ -115,33 +171,14 @@ export class LocalAssetStore implements AssetStore {
     });
   }
 
-  /**
-   * A signed local link: the delivery server checks `exp` against the HMAC. Unlike the
-   * provider's signature, this one genuinely expires, which is what a dev flow needs.
-   */
-  signedDeliveryUrl(ref: AssetRef, options: DeliveryOptions = {}): SignedDelivery {
-    const ttl = options.expiresInSeconds ?? this.config.deliveryUrlTtlSeconds ??
-      DEFAULT_DELIVERY_URL_TTL_SECONDS;
-    const exp = epochSeconds(this.now()) + ttl;
-    const prefix = this.config.deliveryPathPrefix ?? LOCAL_DELIVERY_PATH_PREFIX;
-    const path = withExtension(ref.publicId, ref.format);
-    const signature = this.signDelivery(path, exp);
-
-    return {
-      url: `${this.config.baseUrl}${prefix}/${path}?exp=${String(exp)}&sig=${signature}`,
-      expiresAt: isoAfter(this.now(), ttl),
-    };
-  }
-
-  /** Recomputes the delivery HMAC; the local delivery handler compares against `sig`. */
-  verifyDeliverySignature(path: string, exp: number, signature: string): boolean {
-    return this.signDelivery(path, exp) === signature;
-  }
-
-  private signDelivery(publicId: string, exp: number): string {
+  private signDelivery(path: string, exp: number): string {
     return createHmac('sha256', this.signingSecret())
-      .update(`${publicId}.${String(exp)}`)
+      .update(`${path}.${String(exp)}`)
       .digest('hex');
+  }
+
+  private rootFolder(): string {
+    return this.config.rootFolder ?? DEFAULT_ROOT_FOLDER;
   }
 
   private signingSecret(): string {

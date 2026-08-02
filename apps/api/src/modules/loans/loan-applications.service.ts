@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { ConflictError } from '../../common/errors/index.js';
 import { newId, newReference } from '../../infrastructure/database/identifier.js';
+import { TransactionManager } from '../../infrastructure/database/transaction.manager.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
 import { AccountsService } from '../accounts/accounts.service.js';
 import { toProductMoney } from './domain/eligibility.js';
@@ -70,6 +71,7 @@ export class LoanApplicationsService {
     private readonly underwriting: LoanUnderwritingService,
     private readonly disbursement: LoanDisbursementService,
     private readonly accounts: AccountsService,
+    private readonly transactionManager: TransactionManager,
     private readonly clock: ClockService,
   ) {}
 
@@ -106,6 +108,9 @@ export class LoanApplicationsService {
   /**
    * Accepting an offer books the loan immediately but does not advance a penny — drawdown is a
    * separate, authorised step.
+   *
+   * Booking the loan and marking the offer accepted commit together: an accepted offer with no
+   * loan behind it, or a loan nobody agreed to, are both worse than a failed request.
    */
   async accept(applicationId: string, customerId: string): Promise<LoanApplication> {
     const application = await this.repository.requireApplication(applicationId, customerId);
@@ -113,12 +118,18 @@ export class LoanApplicationsService {
     const now = this.clock.now();
     const accepted = { ...offer, acceptedAt: now };
 
-    const loan = await this.disbursement.book({ ...application, offer: accepted });
-    const patch = { offer: accepted, status: 'approved', loanId: loan._id, updatedAt: now };
+    const patch = await this.transactionManager.withTransaction(async (session) => {
+      const loan = await this.disbursement.book({ ...application, offer: accepted }, session);
+      const update = { offer: accepted, status: 'approved', loanId: loan._id, updatedAt: now };
+      await this.repository.applications.updateOne(
+        { _id: applicationId },
+        { $set: update },
+        { session },
+      );
+      return update;
+    });
 
-    await this.repository.applications.updateOne({ _id: applicationId }, { $set: patch });
-    this.logger.log({ applicationId, loanId: loan._id }, 'Loan offer accepted');
-
+    this.logger.log({ applicationId, loanId: patch.loanId }, 'Loan offer accepted');
     return toLoanApplication({ ...application, ...patch });
   }
 

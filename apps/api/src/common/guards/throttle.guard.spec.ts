@@ -35,12 +35,14 @@ function detail(ttlMs: number): ThrottlerLimitDetail {
 
 describe('ThrottleGuard', () => {
   it('tracks authenticated callers by subject', async () => {
-    const request = { user: { sub: 'user-9' }, ip: '10.0.0.1' };
+    // eslint-disable-next-line sonarjs/no-hardcoded-ip -- documentation-only address in a unit test
+    const request = { user: { sub: 'user-9' }, ip: '192.0.2.1' };
     await expect(build().tracker(request)).resolves.toBe('user-9');
   });
 
   it('falls back to the client IP for anonymous callers', async () => {
-    await expect(build().tracker({ ip: '203.0.113.7' })).resolves.toBe('203.0.113.7');
+    // eslint-disable-next-line sonarjs/no-hardcoded-ip -- TEST-NET-1 documentation range, not a real host
+    await expect(build().tracker({ ip: '192.0.2.1' })).resolves.toBe('192.0.2.1');
   });
 
   it('never returns an empty tracker', async () => {
@@ -48,13 +50,13 @@ describe('ThrottleGuard', () => {
   });
 
   it('throws a typed RateLimitedError with whole-second retryAfter', () => {
-    expect(() => build().reject(detail(30_000))).toThrowError(
+    expect(() => build().reject(detail(30_000))).toThrow(
       expect.objectContaining({ code: 'RATE_LIMITED', retryAfterSeconds: 30 }) as Error,
     );
   });
 
   it('rounds sub-second ttls up to one second', () => {
-    expect(() => build().reject(detail(1))).toThrowError(
+    expect(() => build().reject(detail(1))).toThrow(
       expect.objectContaining({ code: 'RATE_LIMITED', retryAfterSeconds: 1 }) as Error,
     );
   });

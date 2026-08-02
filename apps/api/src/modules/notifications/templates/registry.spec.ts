@@ -25,7 +25,11 @@ describe('template registry', () => {
   });
 
   it('carries the ICB brand into the HTML without an external asset', () => {
-    const rendered = renderNotification('statement_ready', { ...BASE, payload: {} });
+    const rendered = renderNotification('statement_ready', {
+      ...BASE,
+      // The primary colour lives on the call to action, so the assertion needs one.
+      payload: { period: 'July 2026', actionUrl: 'https://app.icb.example/statements/1' },
+    });
 
     expect(rendered.html).toContain('#0B2C4D');
     expect(rendered.html).toContain('#0F4C81');

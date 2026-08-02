@@ -27,8 +27,8 @@ describe('createMongoTestHarness', () => {
   it('prefers an explicit uri over the environment', async () => {
     // Unreachable host: a failure proves it attempted *this* uri, not a missing-env error.
     const unreachable = 'mongodb://127.0.0.1:1/icb';
-    await expect(
-      createMongoTestHarness({ uri: unreachable, env: {} }),
-    ).rejects.not.toThrow(MongoUriMissingError);
+    await expect(createMongoTestHarness({ uri: unreachable, env: {} })).rejects.not.toThrow(
+      MongoUriMissingError,
+    );
   }, 15_000);
 });

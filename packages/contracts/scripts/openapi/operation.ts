@@ -46,7 +46,7 @@ function buildRequestParams(spec: OperationSpec): {
 }
 
 /** Query schemas are always Zod objects; the library's parameter input type is narrower. */
-function asParamObject(schema: z.ZodType): ZodOpenApiParameters['query'] {
+function asParamObject(schema: z.ZodType): NonNullable<ZodOpenApiParameters['query']> {
   return schema as z.ZodType<unknown, Record<string, unknown>>;
 }
 

@@ -68,8 +68,7 @@ export function signUploadParamsSha1(
     .map(([key, value]) => `${key}=${String(value)}`)
     .sort((left, right) => (left < right ? -1 : 1))
     .join('&');
-  // eslint-disable-next-line sonarjs/hashing -- SHA-1 is dictated by Cloudinary's signature
-  // scheme. Reimplementing it verbatim is what lets the local store verify the same grant.
+  // eslint-disable-next-line sonarjs/hashing -- dictated by the provider's signature scheme
   return createHash('sha1').update(`${canonical}${secret}`).digest('hex');
 }
 

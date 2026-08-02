@@ -3,11 +3,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const configMock = vi.fn();
 const signMock = vi.fn<(params: Record<string, unknown>, secret: string) => string>();
 const urlMock = vi.fn<(publicId: string, options: Record<string, unknown>) => string>();
+const privateDownloadMock =
+  vi.fn<(publicId: string, format: string, options: Record<string, unknown>) => string>();
+const uploadMock =
+  vi.fn<(file: string, options: Record<string, unknown>) => Promise<Record<string, unknown>>>();
+const destroyMock =
+  vi.fn<(publicId: string, options: Record<string, unknown>) => Promise<Record<string, unknown>>>();
 
 vi.mock('cloudinary', () => ({
   v2: {
     config: configMock,
-    utils: { api_sign_request: signMock },
+    utils: { api_sign_request: signMock, private_download_url: privateDownloadMock },
+    uploader: { upload: uploadMock, destroy: destroyMock },
     url: urlMock,
   },
 }));
@@ -17,6 +24,14 @@ const { createCloudinaryAssetStore, createCloudinaryPorts } = await import(
 );
 
 const CREDENTIALS = { cloudName: 'icb-cloud', apiKey: 'key-1', apiSecret: 'secret-1' };
+const AVATAR_TRANSFORMATION = {
+  width: 256,
+  height: 256,
+  crop: 'fill',
+  gravity: 'face',
+  quality: 'auto:good',
+  fetchFormat: 'auto',
+} as const;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -43,29 +58,25 @@ describe('createCloudinaryPorts', () => {
     expect(signMock).toHaveBeenCalledWith({ folder: 'f', timestamp: 1 }, 'secret-1');
   });
 
-  it('builds signed delivery URLs with the mapped transformation', () => {
-    urlMock.mockReturnValue('https://res.cloudinary.com/icb-cloud/image/upload/s--x--/p');
+  it('builds a signed authenticated render URL with the mapped transformation', () => {
+    urlMock.mockReturnValue('https://res.cloudinary.com/icb-cloud/image/authenticated/s--x--/p');
     const ports = createCloudinaryPorts(CREDENTIALS);
 
     const url = ports.delivery.signedUrl({
       publicId: 'p',
       resourceType: 'image',
-      transformation: {
-        width: 256,
-        height: 256,
-        crop: 'fill',
-        gravity: 'face',
-        quality: 'auto:good',
-        fetchFormat: 'auto',
-      },
+      transformation: AVATAR_TRANSFORMATION,
+      expiresAtEpochSeconds: 1_700_000_300,
+      attachment: false,
     });
 
     expect(url).toContain('s--x--');
     expect(urlMock).toHaveBeenCalledWith('p', {
       resource_type: 'image',
-      type: 'upload',
+      type: 'authenticated',
       secure: true,
       sign_url: true,
+      expires_at: 1_700_000_300,
       transformation: {
         width: 256,
         height: 256,
@@ -77,16 +88,66 @@ describe('createCloudinaryPorts', () => {
     });
   });
 
-  it('passes the format through for raw assets and omits absent options', () => {
+  it('routes downloads through the endpoint that enforces expiry', () => {
+    privateDownloadMock.mockReturnValue('https://api.cloudinary.com/v1_1/icb-cloud/raw/download?x');
     const ports = createCloudinaryPorts(CREDENTIALS);
-    ports.delivery.signedUrl({ publicId: 'doc', resourceType: 'raw', format: 'pdf' });
 
-    expect(urlMock).toHaveBeenCalledWith('doc', {
-      resource_type: 'raw',
-      type: 'upload',
-      secure: true,
-      sign_url: true,
+    const url = ports.delivery.signedUrl({
+      publicId: 'icb/statements/a/june',
+      resourceType: 'raw',
       format: 'pdf',
+      expiresAtEpochSeconds: 1_700_000_300,
+      attachment: true,
+    });
+
+    expect(url).toContain('/download');
+    expect(privateDownloadMock).toHaveBeenCalledWith('icb/statements/a/june', 'pdf', {
+      resource_type: 'raw',
+      type: 'authenticated',
+      expires_at: 1_700_000_300,
+      attachment: true,
+    });
+    expect(urlMock).not.toHaveBeenCalled();
+  });
+
+  it('uploads bytes as a data URI under the authenticated delivery type', async () => {
+    uploadMock.mockResolvedValue({
+      public_id: 'icb/statements/a/june-1',
+      resource_type: 'raw',
+      format: 'pdf',
+      bytes: 4,
+    });
+    const ports = createCloudinaryPorts(CREDENTIALS);
+
+    const result = await ports.uploads.upload({
+      folder: 'icb/statements/a',
+      publicId: 'june-1',
+      resourceType: 'raw',
+      contentType: 'application/pdf',
+      bytes: new Uint8Array([37, 80, 68, 70]),
+    });
+
+    expect(result).toEqual({
+      publicId: 'icb/statements/a/june-1',
+      resourceType: 'raw',
+      format: 'pdf',
+      bytes: 4,
+    });
+    const [file, options] = uploadMock.mock.calls[0] ?? [];
+    expect(file).toBe('data:application/pdf;base64,JVBERg==');
+    expect(options).toMatchObject({ type: 'authenticated', overwrite: false });
+  });
+
+  it('deletes an asset and invalidates the CDN copy', async () => {
+    destroyMock.mockResolvedValue({ result: 'ok' });
+    const ports = createCloudinaryPorts(CREDENTIALS);
+
+    await ports.uploads.destroy({ publicId: 'icb/kyc/c/passport-1', resourceType: 'image' });
+
+    expect(destroyMock).toHaveBeenCalledWith('icb/kyc/c/passport-1', {
+      resource_type: 'image',
+      type: 'authenticated',
+      invalidate: true,
     });
   });
 });
@@ -108,5 +169,6 @@ describe('createCloudinaryAssetStore', () => {
 
     expect(grant.signature).toBe('client-signature');
     expect(grant.uploadUrl).toContain('icb-cloud');
+    expect(grant.type).toBe('authenticated');
   });
 });

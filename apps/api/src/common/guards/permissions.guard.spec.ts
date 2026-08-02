@@ -64,7 +64,7 @@ describe('PermissionsGuard', () => {
     const request = { user: { roles: ['support'] } };
     const guard = guardRequiring(['transactions:reverse', 'audit:read']);
 
-    expect(() => guard.canActivate(contextWith(request))).toThrowError(
+    expect(() => guard.canActivate(contextWith(request))).toThrow(
       expect.objectContaining({
         code: 'PERMISSION_DENIED',
         context: { missing: ['transactions:reverse', 'audit:read'] },
@@ -75,7 +75,7 @@ describe('PermissionsGuard', () => {
   it('denies an unauthenticated principal', () => {
     const guard = guardRequiring(['customers:read']);
 
-    expect(() => guard.canActivate(contextWith({}))).toThrowError(
+    expect(() => guard.canActivate(contextWith({}))).toThrow(
       expect.objectContaining({ code: 'PERMISSION_DENIED' }) as Error,
     );
   });

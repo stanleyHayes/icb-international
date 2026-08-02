@@ -17,6 +17,7 @@ import { STATUS, TAG } from '../constants.js';
 import { defineOperations, success } from '../spec.js';
 
 const CARD_ID = { cardId: idSchema } as const;
+const UPDATED_CARD = 'The updated card.';
 
 export const cardsOperations = defineOperations([
   {
@@ -44,7 +45,7 @@ export const cardsOperations = defineOperations([
     summary: 'Freeze, unfreeze, rename, or toggle contactless',
     pathParams: CARD_ID,
     request: updateCardRequestSchema,
-    response: success(STATUS.ok, 'The updated card.', cardDetailSchema),
+    response: success(STATUS.ok, UPDATED_CARD, cardDetailSchema),
     errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
   },
   {
@@ -63,7 +64,7 @@ export const cardsOperations = defineOperations([
     summary: 'Set channel, category, and country controls',
     pathParams: CARD_ID,
     request: updateCardControlsRequestSchema,
-    response: success(STATUS.ok, 'The updated card.', cardDetailSchema),
+    response: success(STATUS.ok, UPDATED_CARD, cardDetailSchema),
     errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
   },
   {
@@ -71,7 +72,7 @@ export const cardsOperations = defineOperations([
     summary: 'Set spend limits',
     pathParams: CARD_ID,
     request: updateCardLimitsRequestSchema,
-    response: success(STATUS.ok, 'The updated card.', cardDetailSchema),
+    response: success(STATUS.ok, UPDATED_CARD, cardDetailSchema),
     errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
   },
   {
@@ -99,7 +100,7 @@ export const cardsOperations = defineOperations([
     summary: 'Register upcoming travel to avoid false fraud declines',
     pathParams: CARD_ID,
     request: travelNoticeRequestSchema,
-    response: success(STATUS.ok, 'The updated card.', cardDetailSchema),
+    response: success(STATUS.ok, UPDATED_CARD, cardDetailSchema),
     errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
   },
   {

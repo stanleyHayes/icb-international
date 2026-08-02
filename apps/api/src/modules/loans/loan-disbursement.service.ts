@@ -113,8 +113,11 @@ export class LoanDisbursementService {
     private readonly clock: ClockService,
   ) {}
 
-  /** Turn an accepted offer into a loan, scheduled but not yet drawn. */
-  async book(application: LoanApplicationDoc): Promise<LoanDoc> {
+  /**
+   * Turn an accepted offer into a loan, scheduled but not yet drawn. Takes the caller's session
+   * so that booking and marking the application accepted commit as one unit.
+   */
+  async book(application: LoanApplicationDoc, session: ClientSession): Promise<LoanDoc> {
     const offer = application.offer;
     if (!offer?.acceptedAt) {
       throw new ConflictError('A loan cannot be booked before its offer is accepted');
@@ -128,7 +131,7 @@ export class LoanDisbursementService {
       now,
     });
 
-    await this.repository.loans.create([document], { ordered: true });
+    await this.repository.loans.create([document], { session, ordered: true });
     return document;
   }
 

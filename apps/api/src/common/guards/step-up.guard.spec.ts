@@ -49,7 +49,7 @@ describe('StepUpGuard', () => {
 
   it('rejects when the step-up token header is absent', async () => {
     const guard = build({ purpose: PURPOSE });
-    await expect(guard.canActivate(contextWith(requestWithStepUp()))).rejects.toThrowError(
+    await expect(guard.canActivate(contextWith(requestWithStepUp()))).rejects.toThrow(
       expect.objectContaining({ code: 'STEP_UP_REQUIRED' }) as Error,
     );
   });
@@ -67,7 +67,7 @@ describe('StepUpGuard', () => {
       purpose: PURPOSE,
       verify: () => Promise.resolve({ sub: 'user-1', purpose: 'pan-reveal' }),
     });
-    await expect(guard.canActivate(contextWith(requestWithStepUp('tok')))).rejects.toThrowError(
+    await expect(guard.canActivate(contextWith(requestWithStepUp('tok')))).rejects.toThrow(
       expect.objectContaining({ code: 'STEP_UP_REQUIRED' }) as Error,
     );
   });
@@ -77,7 +77,7 @@ describe('StepUpGuard', () => {
       purpose: PURPOSE,
       verify: () => Promise.resolve({ sub: 'user-2', purpose: PURPOSE }),
     });
-    await expect(guard.canActivate(contextWith(requestWithStepUp('tok')))).rejects.toThrowError(
+    await expect(guard.canActivate(contextWith(requestWithStepUp('tok')))).rejects.toThrow(
       expect.objectContaining({ code: 'STEP_UP_REQUIRED' }) as Error,
     );
   });
@@ -87,7 +87,7 @@ describe('StepUpGuard', () => {
       purpose: PURPOSE,
       verify: () => Promise.reject(new Error('jwt expired')),
     });
-    await expect(guard.canActivate(contextWith(requestWithStepUp('tok')))).rejects.toThrowError(
+    await expect(guard.canActivate(contextWith(requestWithStepUp('tok')))).rejects.toThrow(
       expect.objectContaining({ code: 'STEP_UP_REQUIRED' }) as Error,
     );
   });

@@ -1,6 +1,12 @@
 export { buildAssetRef, assertAssetRef } from './asset-ref.js';
 export type { AssetRef, UploadedAssetInfo } from './asset-ref.js';
-export type { AssetStore, DeliveryOptions, SignedDelivery, StoreDeps } from './asset-store.js';
+export type {
+  AssetStore,
+  AssetUpload,
+  DeliveryOptions,
+  SignedDelivery,
+  StoreDeps,
+} from './asset-store.js';
 export {
   assertUploadAllowed,
   isAllowedMimeType,
@@ -8,14 +14,11 @@ export {
   resourceTypeFor,
 } from './allow-list.js';
 export type { UploadConstraints } from './allow-list.js';
-export {
-  createCloudinaryAssetStore,
-  createCloudinaryPorts,
-} from './cloudinary-adapter.js';
+export { createCloudinaryAssetStore, createCloudinaryPorts } from './cloudinary-adapter.js';
 export type { CloudinaryCredentials } from './cloudinary-adapter.js';
 export { CloudinaryAssetStore } from './cloudinary-store.js';
 export type { CloudinaryStoreConfig } from './cloudinary-store.js';
-export { DOCUMENT_KINDS, assetFolder, buildPublicId } from './document-kind.js';
+export { DOCUMENT_KINDS, assetFolder, buildPublicId, slugify } from './document-kind.js';
 export type { AssetResourceType, DocumentKind } from './document-kind.js';
 export {
   MediaError,
@@ -27,11 +30,24 @@ export {
 } from './errors.js';
 export { LocalAssetStore } from './local-store.js';
 export type { LocalAssetStoreConfig, LocalUpload } from './local-store.js';
+export {
+  ALLOWED_MIME_TYPES,
+  CLOUDINARY_DELIVERY_TYPE,
+  DEFAULT_DELIVERY_URL_TTL_SECONDS,
+  DEFAULT_ROOT_FOLDER,
+  IMAGE_MIME_TYPES,
+  MAX_UPLOAD_BYTES,
+  MIME_TYPE_EXTENSIONS,
+  PDF_MIME_TYPE,
+} from './media.constants.js';
 export type {
+  CloudinaryAssetLocator,
   CloudinaryDeliveryPort,
   CloudinaryDeliveryRequest,
   CloudinaryPorts,
   CloudinaryUploadPort,
+  CloudinaryUploadRequest,
+  CloudinaryUploadResult,
 } from './ports.js';
 export { TRANSFORMATION_PRESET_NAMES, transformationPreset } from './transformation.js';
 export type { TransformationPreset, TransformationPresetName } from './transformation.js';

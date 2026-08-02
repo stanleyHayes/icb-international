@@ -1,5 +1,5 @@
 import { createDocument } from 'zod-openapi';
-import type { ZodOpenApiObject, ZodOpenApiPathsObject } from 'zod-openapi';
+import type { ZodOpenApiPathsObject } from 'zod-openapi';
 
 import { buildAllSchemas } from './components.js';
 import {
@@ -45,7 +45,7 @@ const TAG_DESCRIPTIONS: Readonly<Record<TagName, string>> = {
 };
 
 /** Builds the complete OpenAPI 3.1 document from the contract schemas and route tables. */
-export function buildOpenApiDocument(): ZodOpenApiObject {
+export function buildOpenApiDocument(): ReturnType<typeof createDocument> {
   return createDocument({
     openapi: OPENAPI_VERSION,
     info: {
@@ -78,5 +78,5 @@ function buildPaths(operations: readonly OperationSpec[]): ZodOpenApiPathsObject
     pathItem[spec.method] = toOperation(spec);
     paths[spec.path] = pathItem;
   }
-  return paths as ZodOpenApiPathsObject;
+  return paths;
 }

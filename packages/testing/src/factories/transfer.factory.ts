@@ -24,7 +24,8 @@ export function transferDetail(ctx: FactoryContext, options: TransferOptions = {
   const { currency = 'GHS', ...overrides } = options;
   const amount = randomMoney(ctx, currency);
   const destination = transferDestination(ctx);
-  const recipientNumber = destination.kind === 'icb_customer' ? destination.accountNumber : '0000000000';
+  const recipientNumber =
+    destination.kind === 'icb_customer' ? destination.accountNumber : '0000000000';
   const base: TransferDetail = {
     id: ctx.nextId(),
     reference: ctx.reference('TRF'),

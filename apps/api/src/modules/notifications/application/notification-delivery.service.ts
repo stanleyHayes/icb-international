@@ -151,7 +151,9 @@ export class NotificationDeliveryService {
         event: input.event,
         channel: input.decision.channel,
         title: input.rendered.subject,
-        body: input.decision.channel === 'in_app' ? input.rendered.summary : input.rendered.text,
+        // Only an inbox wants the full plain-text body; a bell, an SMS and a push notification
+        // all want the one-line summary, and storing what was actually shown keeps the log honest.
+        body: input.decision.channel === 'email' ? input.rendered.text : input.rendered.summary,
         state: 'queued',
         actionUrl: input.payload.actionUrl ?? null,
         payload: { ...input.payload },

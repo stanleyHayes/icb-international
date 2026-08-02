@@ -13,18 +13,23 @@ import { ResendEmailTransport } from './resend.transport.js';
  * automatic: clone the repository, run it with no secrets, and every email is rendered and
  * recorded rather than failing. No domain code has ever heard of either adapter.
  */
+export function createEmailTransport(
+  config: AppConfiguration,
+  clock: ClockService,
+): EmailTransport {
+  const logger = new Logger('EmailTransport');
+
+  if (config.email.enabled) {
+    logger.log(`Sending live email through Resend as ${config.email.from}`);
+    return new ResendEmailTransport(config);
+  }
+
+  logger.warn('RESEND_API_KEY is not set — email is rendered and recorded, never sent');
+  return new RecordingEmailTransport(clock);
+}
+
 export const emailTransportProvider: Provider = {
   provide: EMAIL_TRANSPORT,
   inject: [CONFIG, ClockService],
-  useFactory: (config: AppConfiguration, clock: ClockService): EmailTransport => {
-    const logger = new Logger('EmailTransport');
-
-    if (config.email.enabled) {
-      logger.log(`Sending live email through Resend as ${config.email.from}`);
-      return new ResendEmailTransport(config);
-    }
-
-    logger.warn('RESEND_API_KEY is not set — email is rendered and recorded, never sent');
-    return new RecordingEmailTransport(clock);
-  },
+  useFactory: createEmailTransport,
 };

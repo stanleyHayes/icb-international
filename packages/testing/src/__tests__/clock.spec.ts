@@ -38,6 +38,8 @@ describe('TestClock', () => {
   });
 
   it('exposes epoch seconds for JWT iat claims', () => {
-    expect(TestClock.fixed().epochSeconds()).toBe(Math.floor(Date.parse(DEFAULT_EPOCH_ISO) / 1_000));
+    expect(TestClock.fixed().epochSeconds()).toBe(
+      Math.floor(Date.parse(DEFAULT_EPOCH_ISO) / 1_000),
+    );
   });
 });

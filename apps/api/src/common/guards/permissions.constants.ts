@@ -28,17 +28,19 @@ export const PERMISSIONS = [
 export type Permission = (typeof PERMISSIONS)[number];
 
 const READERS: readonly Permission[] = ['customers:read', 'accounts:read', 'transactions:read'];
+const RISK_REVIEWERS: readonly Permission[] = [...READERS, 'risk:review'];
+const AUDIT_READERS: readonly Permission[] = [...RISK_REVIEWERS, 'audit:read'];
 
 export const ROLE_PERMISSIONS: Readonly<Record<StaffRole, readonly Permission[]>> = {
   support: [...READERS],
   teller: [...READERS, 'customers:write'],
   operations: [...READERS, 'transactions:reverse', 'cards:manage', 'disputes:manage'],
   underwriter: [...READERS, 'loans:read'],
-  fraud_analyst: [...READERS, 'risk:review'],
-  aml_officer: [...READERS, 'risk:review', 'audit:read'],
-  compliance: [...READERS, 'kyc:review', 'risk:review', 'audit:read'],
+  fraud_analyst: [...RISK_REVIEWERS],
+  aml_officer: [...AUDIT_READERS],
+  compliance: [...AUDIT_READERS, 'kyc:review'],
   admin: [
-    ...READERS,
+    ...AUDIT_READERS,
     'customers:write',
     'accounts:freeze',
     'transactions:reverse',

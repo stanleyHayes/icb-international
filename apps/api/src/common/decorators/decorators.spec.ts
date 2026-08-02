@@ -21,24 +21,26 @@ class Sample {
   }
 }
 
+function metadataOn(key: string): unknown {
+  const descriptor = Object.getOwnPropertyDescriptor(Sample.prototype, 'reverse');
+  return Reflect.getMetadata(key, descriptor?.value as object);
+}
+
 describe('cross-cutting decorators', () => {
   it('stores the required permissions', () => {
-    const metadata = Reflect.getMetadata(PERMISSIONS_KEY, Sample.prototype.reverse) as string[];
-    expect(metadata).toEqual(['transactions:reverse', 'accounts:freeze']);
+    expect(metadataOn(PERMISSIONS_KEY)).toEqual(['transactions:reverse', 'accounts:freeze']);
   });
 
   it('stores the step-up purpose', () => {
-    expect(Reflect.getMetadata(STEP_UP_KEY, Sample.prototype.reverse)).toBe('transaction-reverse');
+    expect(metadataOn(STEP_UP_KEY)).toBe('transaction-reverse');
   });
 
   it('marks the handler idempotent', () => {
-    expect(Reflect.getMetadata(IDEMPOTENT_KEY, Sample.prototype.reverse)).toBe(true);
+    expect(metadataOn(IDEMPOTENT_KEY)).toBe(true);
   });
 
   it('stores the audit action name', () => {
-    expect(Reflect.getMetadata(AUDIT_ACTION_KEY, Sample.prototype.reverse)).toBe(
-      'transaction.reverse',
-    );
+    expect(metadataOn(AUDIT_ACTION_KEY)).toBe('transaction.reverse');
   });
 
   it('names the step-up header the guard reads', () => {

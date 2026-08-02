@@ -18,8 +18,11 @@ export interface KycCaseOptions extends Partial<KycCase> {
  * screenings pending. The state an ops-queue test most often needs.
  */
 export function kycCase(ctx: FactoryContext, options: KycCaseOptions = {}): KycCase {
-  const { customerId = ctx.nextId(), customerName = ctx.faker.person.fullName(), ...overrides } =
-    options;
+  const {
+    customerId = ctx.nextId(),
+    customerName = ctx.faker.person.fullName(),
+    ...overrides
+  } = options;
   const base: KycCase = {
     id: ctx.nextId(),
     customerId,
@@ -62,7 +65,13 @@ export function kycChecks(ctx: FactoryContext): KycCheck[] {
     { kind: 'document_authenticity', outcome: 'pass', score: 0.98, detail: null, completedAt },
     { kind: 'face_match', outcome: 'pass', score: 0.95, detail: null, completedAt },
     { kind: 'liveness', outcome: 'pass', score: 0.99, detail: null, completedAt },
-    { kind: 'sanctions_screening', outcome: 'pending', score: null, detail: null, completedAt: null },
+    {
+      kind: 'sanctions_screening',
+      outcome: 'pending',
+      score: null,
+      detail: null,
+      completedAt: null,
+    },
     { kind: 'pep_screening', outcome: 'pending', score: null, detail: null, completedAt: null },
   ];
 }

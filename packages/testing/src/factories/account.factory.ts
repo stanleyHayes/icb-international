@@ -1,4 +1,9 @@
-import type { AccountBalances, AccountDetail, AccountIdentifiers, AccountSummary } from '@icb/contracts';
+import type {
+  AccountBalances,
+  AccountDetail,
+  AccountIdentifiers,
+  AccountSummary,
+} from '@icb/contracts';
 import type { CurrencyCode } from '@icb/money';
 
 import type { FactoryContext } from '../core/context.js';
@@ -37,10 +42,7 @@ export function accountDetail(ctx: FactoryContext, options: AccountOptions = {})
   return { ...base, ...overrides };
 }
 
-export function accountSummary(
-  ctx: FactoryContext,
-  options: AccountOptions = {},
-): AccountSummary {
+export function accountSummary(ctx: FactoryContext, options: AccountOptions = {}): AccountSummary {
   const { ledgerMinorUnits = DEFAULT_LEDGER_MINOR_UNITS, currency = 'GHS', ...overrides } = options;
   const base: AccountSummary = {
     id: ctx.nextId(),

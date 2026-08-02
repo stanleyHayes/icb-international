@@ -1,8 +1,12 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { LoggerModule } from 'nestjs-pino';
+
+import { buildLoggerConfig } from './common/observability/logger.config.js';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { ConfigModule } from './config/config.module.js';
+import { CONFIG, type AppConfiguration } from './config/configuration.js';
 import { DatabaseModule } from './infrastructure/database/database.module.js';
 import { ClockModule } from './simulation/clock/clock.module.js';
 
@@ -31,6 +35,10 @@ import { TransfersModule } from './modules/transfers/transfers.module.js';
 @Module({
   imports: [
     ConfigModule,
+    LoggerModule.forRootAsync({
+      inject: [CONFIG],
+      useFactory: (config: AppConfiguration) => buildLoggerConfig(config),
+    }),
     DatabaseModule,
     ClockModule,
     // ─── DOMAIN MODULES ───
