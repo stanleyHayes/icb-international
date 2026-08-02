@@ -35,13 +35,11 @@ function detail(ttlMs: number): ThrottlerLimitDetail {
 
 describe('ThrottleGuard', () => {
   it('tracks authenticated callers by subject', async () => {
-    // eslint-disable-next-line sonarjs/no-hardcoded-ip -- documentation-only address in a unit test
     const request = { user: { sub: 'user-9' }, ip: '192.0.2.1' };
     await expect(build().tracker(request)).resolves.toBe('user-9');
   });
 
   it('falls back to the client IP for anonymous callers', async () => {
-    // eslint-disable-next-line sonarjs/no-hardcoded-ip -- TEST-NET-1 documentation range, not a real host
     await expect(build().tracker({ ip: '192.0.2.1' })).resolves.toBe('192.0.2.1');
   });
 

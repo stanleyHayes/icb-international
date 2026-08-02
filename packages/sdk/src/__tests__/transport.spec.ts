@@ -43,7 +43,7 @@ function problem(status: number, code: string): Record<string, unknown> {
 
 function harness(handler: FetchHandler, token: string | null = 'token-123') {
   const calls: { url: string; init: RequestInit }[] = [];
-  const fetchFn = (async (url: RequestInfo | URL, init?: RequestInit) => {
+  const fetchFn = (async (url: string | URL, init?: RequestInit) => {
     const request = { url: String(url), init: init ?? {} };
     calls.push(request);
     return handler(request.url, request.init);

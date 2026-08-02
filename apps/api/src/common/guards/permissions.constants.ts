@@ -50,7 +50,6 @@ export const ROLE_PERMISSIONS: Readonly<Record<StaffRole, readonly Permission[]>
     'kyc:review',
     'disputes:manage',
     'staff:manage',
-    'audit:read',
   ],
   super_admin: [...PERMISSIONS],
 };

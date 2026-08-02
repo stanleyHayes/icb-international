@@ -54,7 +54,7 @@ describe('assertUploadAllowed', () => {
       assertUploadAllowed({
         kind: 'statements',
         contentType: 'application/pdf',
-        sizeBytes: MAX_UPLOAD_BYTES.statements,
+        sizeBytes: MAX_UPLOAD_BYTES,
       }),
     ).not.toThrow();
   });

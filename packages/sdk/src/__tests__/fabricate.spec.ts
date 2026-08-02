@@ -130,17 +130,18 @@ const SCHEMAS: Record<string, z.ZodType> = {
 };
 
 describe('fabricate', () => {
-  it.each(Object.keys(SCHEMAS))('generates data satisfying %s', (name) => {
-    const schema = SCHEMAS[name];
-    const faker = createMockFaker(99);
-    for (let iteration = 0; iteration < ITERATIONS; iteration += 1) {
-      const candidate: unknown = fabricate(schema ?? z.unknown(), faker);
-      const parsed = schema?.safeParse(candidate);
-      expect(parsed?.success, JSON.stringify(parsed?.success ? null : parsed.error.issues)).toBe(
-        true,
-      );
-    }
-  });
+  for (const [name, schema] of Object.entries(SCHEMAS)) {
+    it(`generates data satisfying ${name}`, () => {
+      const faker = createMockFaker(99);
+      for (let iteration = 0; iteration < ITERATIONS; iteration += 1) {
+        const candidate: unknown = fabricate(schema, faker);
+        const parsed = schema.safeParse(candidate);
+        expect(parsed.success, JSON.stringify(parsed.success ? null : parsed.error.issues)).toBe(
+          true,
+        );
+      }
+    });
+  }
 
   it('is deterministic for a given seed', () => {
     const first = fabricate(accountDetailSchema, createMockFaker(7));

@@ -60,6 +60,7 @@ describe('canonicalUploadParams', () => {
       folder: 'icb/kyc/cus_1',
       public_id: 'passport-x',
       timestamp: 1700000000,
+      type: 'authenticated',
     });
   });
 });
