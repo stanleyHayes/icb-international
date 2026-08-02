@@ -57,6 +57,20 @@ export default async function TransactionDetailPage({ params }: Readonly<{ param
       </header>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <PostingsTable transaction={transaction} totalDebits={totalDebits} totalCredits={totalCredits} />
+        <TransactionSidebar transaction={transaction} />
+      </div>
+    </>
+  );
+}
+
+/** Both sides of the transaction, and proof that they balance. */
+function PostingsTable({
+  transaction,
+  totalDebits,
+  totalCredits,
+}: Readonly<{ transaction: TransactionDetail; totalDebits: number; totalCredits: number }>) {
+  return (
         <Card className="overflow-hidden">
           <CardHeader
             title="Postings"
@@ -121,7 +135,11 @@ export default async function TransactionDetailPage({ params }: Readonly<{ param
             </table>
           </div>
         </Card>
+  );
+}
 
+function TransactionSidebar({ transaction }: Readonly<{ transaction: TransactionDetail }>) {
+  return (
         <div className="space-y-6">
           <Card>
             <CardHeader title="Details" />
@@ -174,8 +192,6 @@ export default async function TransactionDetailPage({ params }: Readonly<{ param
             </Card>
           ) : null}
         </div>
-      </div>
-    </>
   );
 }
 

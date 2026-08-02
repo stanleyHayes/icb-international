@@ -75,68 +75,8 @@ export default async function KycCasePage({ params }: Readonly<{ params: Params 
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         <div className="space-y-6">
-          <Card className="overflow-hidden">
-            <CardHeader
-              title="Checks"
-              description="Every screening result behind this decision."
-            />
-            <ul className="divide-y divide-[var(--icb-border)]">
-              {kycCase.checks.map((check) => (
-                <li key={check.kind} className="flex items-start gap-3 px-5 py-3.5">
-                  <CheckIcon outcome={check.outcome} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">
-                      {CHECK_LABELS[check.kind] ?? check.kind.replaceAll('_', ' ')}
-                    </p>
-                    {check.detail ? (
-                      <p className="mt-0.5 text-xs text-[var(--icb-text-subtle)]">{check.detail}</p>
-                    ) : null}
-                  </div>
-                  {check.score !== null ? (
-                    <span className="tabular shrink-0 text-xs text-[var(--icb-text-subtle)]">
-                      {Math.round(check.score * 100)}%
-                    </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </Card>
-
-          <Card className="overflow-hidden">
-            <CardHeader title="Documents" description={`${kycCase.documents.length} uploaded`} />
-            {kycCase.documents.length > 0 ? (
-              <ul className="divide-y divide-[var(--icb-border)]">
-                {kycCase.documents.map((document) => (
-                  <li
-                    key={document.id}
-                    className="flex items-center justify-between gap-4 px-5 py-3.5"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium capitalize">
-                        {document.type.replaceAll('_', ' ')}
-                      </p>
-                      <p className="mt-0.5 text-xs text-[var(--icb-text-subtle)]">
-                        Uploaded {formatDate(document.uploadedAt, 'medium')}
-                        {document.expiresOn
-                          ? ` · expires ${formatDate(document.expiresOn, 'medium')}`
-                          : ''}
-                      </p>
-                      {document.rejectionReason ? (
-                        <p className="mt-1 text-xs text-[var(--icb-danger-fg)]">
-                          {document.rejectionReason}
-                        </p>
-                      ) : null}
-                    </div>
-                    <StatusBadge status={document.status} />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <CardBody className="pt-0 text-sm text-[var(--icb-text-muted)]">
-                No documents have been uploaded for this case.
-              </CardBody>
-            )}
-          </Card>
+          <ChecksPanel checks={kycCase.checks} />
+          <DocumentsPanel documents={kycCase.documents} />
         </div>
 
         <Card>
@@ -179,6 +119,72 @@ export default async function KycCasePage({ params }: Readonly<{ params: Params 
         </Card>
       </div>
     </>
+  );
+}
+
+/** Screening results, never collapsed: approving without seeing them should not be possible. */
+function ChecksPanel({ checks }: Readonly<{ checks: KycCase['checks'] }>) {
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader title="Checks" description="Every screening result behind this decision." />
+      <ul className="divide-y divide-[var(--icb-border)]">
+        {checks.map((check) => (
+          <li key={check.kind} className="flex items-start gap-3 px-5 py-3.5">
+            <CheckIcon outcome={check.outcome} />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">
+                {CHECK_LABELS[check.kind] ?? check.kind.replaceAll('_', ' ')}
+              </p>
+              {check.detail ? (
+                <p className="mt-0.5 text-xs text-[var(--icb-text-subtle)]">{check.detail}</p>
+              ) : null}
+            </div>
+            {check.score !== null ? (
+              <span className="tabular shrink-0 text-xs text-[var(--icb-text-subtle)]">
+                {Math.round(check.score * 100)}%
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+function DocumentsPanel({ documents }: Readonly<{ documents: KycCase['documents'] }>) {
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader title="Documents" description={`${documents.length} uploaded`} />
+      {documents.length > 0 ? (
+        <ul className="divide-y divide-[var(--icb-border)]">
+          {documents.map((document) => (
+            <li key={document.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
+              <div className="min-w-0">
+                <p className="text-sm font-medium capitalize">
+                  {document.type.replaceAll('_', ' ')}
+                </p>
+                <p className="mt-0.5 text-xs text-[var(--icb-text-subtle)]">
+                  Uploaded {formatDate(document.uploadedAt, 'medium')}
+                  {document.expiresOn
+                    ? ` · expires ${formatDate(document.expiresOn, 'medium')}`
+                    : ''}
+                </p>
+                {document.rejectionReason ? (
+                  <p className="mt-1 text-xs text-[var(--icb-danger-fg)]">
+                    {document.rejectionReason}
+                  </p>
+                ) : null}
+              </div>
+              <StatusBadge status={document.status} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <CardBody className="pt-0 text-sm text-[var(--icb-text-muted)]">
+          No documents have been uploaded for this case.
+        </CardBody>
+      )}
+    </Card>
   );
 }
 

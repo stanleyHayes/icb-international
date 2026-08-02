@@ -1,5 +1,5 @@
 import type { SavingsGoal, TermDeposit } from '@icb/contracts';
-import { Amount, Card, CardBody, CardHeader, EmptyState, StatusBadge, formatDate } from '@icb/ui';
+import { Amount, Card, CardBody, EmptyState, StatusBadge, formatDate } from '@icb/ui';
 import { PiggyBank, Target } from 'lucide-react';
 import type { Metadata } from 'next';
 

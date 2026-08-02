@@ -1,5 +1,5 @@
 import type { Loan, LoanApplication, LoanProduct } from '@icb/contracts';
-import { Amount, Card, CardBody, CardHeader, EmptyState, StatusBadge, formatDate } from '@icb/ui';
+import { Amount, Card, CardBody, EmptyState, StatusBadge, formatDate } from '@icb/ui';
 import { Landmark } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -29,13 +29,22 @@ export default async function LoansPage() {
         </p>
       </header>
 
-      {loans.items.length > 0 ? (
-        <section aria-labelledby="active" className="mt-8">
+      <ActiveLoans loans={loans.items} />
+      <Applications applications={applications.items} />
+      <Products products={products.items} />
+    </>
+  );
+}
+
+function ActiveLoans({ loans }: Readonly<{ loans: Loan[] }>) {
+  if (loans.length === 0) return null;
+  return (
+              <section aria-labelledby="active" className="mt-8">
           <h2 id="active" className="font-display text-xl font-bold tracking-[-0.02em]">
             Your loans
           </h2>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            {loans.items.map((loan) => (
+            {loans.map((loan) => (
               <Card key={loan.id}>
                 <CardBody className="pt-5">
                   <div className="flex items-start justify-between gap-4">
@@ -82,17 +91,20 @@ export default async function LoansPage() {
               </Card>
             ))}
           </div>
-        </section>
-      ) : null}
+    </section>
+  );
+}
 
-      {applications.items.length > 0 ? (
-        <section aria-labelledby="applications" className="mt-10">
+function Applications({ applications }: Readonly<{ applications: LoanApplication[] }>) {
+  if (applications.length === 0) return null;
+  return (
+              <section aria-labelledby="applications" className="mt-10">
           <h2 id="applications" className="font-display text-xl font-bold tracking-[-0.02em]">
             Applications
           </h2>
           <Card className="mt-4 overflow-hidden">
             <ul className="divide-y divide-[var(--icb-border)]">
-              {applications.items.map((application) => (
+              {applications.map((application) => (
                 <li key={application.id} className="px-5 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -138,17 +150,20 @@ export default async function LoansPage() {
               ))}
             </ul>
           </Card>
-        </section>
-      ) : null}
+    </section>
+  );
+}
 
+function Products({ products }: Readonly<{ products: LoanProduct[] }>) {
+  return (
       <section aria-labelledby="products" className="mt-10">
         <h2 id="products" className="font-display text-xl font-bold tracking-[-0.02em]">
           What you could borrow
         </h2>
 
-        {products.items.length > 0 ? (
+        {products.length > 0 ? (
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {products.items.map((product) => (
+            {products.map((product) => (
               <Card key={product.code}>
                 <CardBody className="pt-5">
                   <h3 className="text-base font-semibold">{product.name}</h3>
@@ -178,7 +193,6 @@ export default async function LoansPage() {
           </Card>
         )}
       </section>
-    </>
   );
 }
 

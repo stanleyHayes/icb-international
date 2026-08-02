@@ -21,7 +21,8 @@ export async function toggleFreezeAction(
   _previous: CardActionState,
   formData: FormData,
 ): Promise<CardActionState> {
-  const cardId = String(formData.get('cardId') ?? '');
+  const cardIdValue = formData.get('cardId');
+  const cardId = typeof cardIdValue === 'string' ? cardIdValue : '';
   const freeze = formData.get('freeze') === 'true';
 
   try {

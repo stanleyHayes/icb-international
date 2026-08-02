@@ -119,49 +119,56 @@ export default async function AccountDetailPage({ params }: Readonly<{ params: P
           )}
         </Card>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader
-              title="Account details"
-              description="Share these to receive a payment into this account."
-            />
-            <CardBody className="pt-0">
-              <dl className="space-y-3 font-mono text-sm">
-                <DetailRow label="Account number" value={account.identifiers.number} />
-                <DetailRow label="Sort code" value={account.identifiers.sortCode} />
-                <DetailRow label="IBAN" value={groupIdentifier(account.identifiers.iban)} />
-                <DetailRow label="SWIFT / BIC" value={account.identifiers.bic} />
-                <DetailRow label="Currency" value={account.currency} />
-              </dl>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader title="Terms" />
-            <CardBody className="pt-0">
-              <dl className="space-y-3 text-sm">
-                <DetailRow
-                  label="Interest rate"
-                  value={account.interestRate === null ? '—' : `${account.interestRate}% AER`}
-                />
-                <DetailRow
-                  label="Arranged overdraft"
-                  value={
-                    account.balances.overdraftLimit.minorUnits === 0 ? (
-                      'None'
-                    ) : (
-                      <Amount value={account.balances.overdraftLimit} size="sm" />
-                    )
-                  }
-                />
-                <DetailRow label="Statement day" value={`${account.statementDay} of the month`} />
-                <DetailRow label="Opened" value={formatDate(account.openedAt, 'medium')} />
-              </dl>
-            </CardBody>
-          </Card>
-        </div>
+        <AccountSidebar account={account} />
       </div>
     </>
+  );
+}
+
+/** Identifiers and terms. Split out so the page body stays readable. */
+function AccountSidebar({ account }: Readonly<{ account: AccountDetail }>) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader
+          title="Account details"
+          description="Share these to receive a payment into this account."
+        />
+        <CardBody className="pt-0">
+          <dl className="space-y-3 font-mono text-sm">
+            <DetailRow label="Account number" value={account.identifiers.number} />
+            <DetailRow label="Sort code" value={account.identifiers.sortCode} />
+            <DetailRow label="IBAN" value={groupIdentifier(account.identifiers.iban)} />
+            <DetailRow label="SWIFT / BIC" value={account.identifiers.bic} />
+            <DetailRow label="Currency" value={account.currency} />
+          </dl>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="Terms" />
+        <CardBody className="pt-0">
+          <dl className="space-y-3 text-sm">
+            <DetailRow
+              label="Interest rate"
+              value={account.interestRate === null ? '—' : `${account.interestRate}% AER`}
+            />
+            <DetailRow
+              label="Arranged overdraft"
+              value={
+                account.balances.overdraftLimit.minorUnits === 0 ? (
+                  'None'
+                ) : (
+                  <Amount value={account.balances.overdraftLimit} size="sm" />
+                )
+              }
+            />
+            <DetailRow label="Statement day" value={`${account.statementDay} of the month`} />
+            <DetailRow label="Opened" value={formatDate(account.openedAt, 'medium')} />
+          </dl>
+        </CardBody>
+      </Card>
+    </div>
   );
 }
 

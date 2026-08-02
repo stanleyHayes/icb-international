@@ -1,5 +1,6 @@
-import type { RailProfile, SimulationRail } from '@icb/contracts';
+import type { RailProfile, SimulationRail, updateRailProfileRequestSchema } from '@icb/contracts';
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import type { z } from 'zod';
 
 import { NotFoundError, RailRejectedError } from '../../common/errors/index.js';
 import { SimulationStateService } from '../../modules/simulation/simulation-state.service.js';
@@ -79,12 +80,9 @@ export class RailRegistry {
   }
 
   /** Persist a runtime change. Latency, failure rate and cut-off are all editable live. */
-  async updateProfile(
-    rail: SimulationRail,
-    patch: Partial<Omit<RailProfile, 'rail'>>,
-  ): Promise<RailProfile> {
+  async updateProfile(rail: SimulationRail, patch: RailProfilePatch): Promise<RailProfile> {
     const current = await this.profileFor(rail);
-    const updated: RailProfile = { ...current, ...patch, rail };
+    const updated = mergeProfile(current, patch, rail);
     await this.state.saveRailProfile(updated);
     this.logger.warn({ rail, patch }, 'Rail profile changed');
     return updated;
@@ -166,6 +164,33 @@ export class RailRegistry {
     }
     return cursor;
   }
+}
+
+/** The editable subset of a profile, taken straight from the contract's PATCH schema. */
+export type RailProfilePatch = z.infer<typeof updateRailProfileRequestSchema>;
+
+/**
+ * Field-by-field merge rather than a spread.
+ *
+ * A spread would write `undefined` over a value the caller never mentioned, and `cutOffTime`
+ * distinguishes "leave it alone" from an explicit `null` meaning "this rail has no cut-off" —
+ * a distinction `??` silently destroys.
+ */
+function mergeProfile(
+  current: RailProfile,
+  patch: RailProfilePatch,
+  rail: SimulationRail,
+): RailProfile {
+  return {
+    rail,
+    enabled: patch.enabled ?? current.enabled,
+    minLatencyMs: patch.minLatencyMs ?? current.minLatencyMs,
+    maxLatencyMs: patch.maxLatencyMs ?? current.maxLatencyMs,
+    failureRate: patch.failureRate ?? current.failureRate,
+    failureCodes: patch.failureCodes ?? current.failureCodes,
+    settlementDelayHours: patch.settlementDelayHours ?? current.settlementDelayHours,
+    cutOffTime: patch.cutOffTime === undefined ? current.cutOffTime : patch.cutOffTime,
+  };
 }
 
 async function delay(milliseconds: number): Promise<void> {

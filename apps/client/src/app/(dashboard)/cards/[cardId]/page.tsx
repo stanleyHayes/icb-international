@@ -60,110 +60,116 @@ export default async function CardDetailPage({ params }: Readonly<{ params: Para
             </p>
           </header>
 
-          <Card>
-            <CardHeader
-              title="Spending"
-              description="What is left against each limit right now."
-            />
-            <CardBody className="pt-0">
-              <dl className="space-y-3 text-sm">
-                <SpendRow
-                  label="Today"
-                  spent={card.spend.todaySpent}
-                  remaining={card.spend.dailyRemaining}
-                  limit={card.limits.daily}
-                />
-                <SpendRow
-                  label="This month"
-                  spent={card.spend.monthSpent}
-                  remaining={card.spend.monthlyRemaining}
-                  limit={card.limits.monthly}
-                />
-                <div className="flex items-baseline justify-between gap-4 border-b border-[var(--icb-border)] pb-3">
-                  <dt className="text-[var(--icb-text-subtle)]">Per transaction</dt>
-                  <dd>
-                    <Amount value={card.limits.perTransaction} size="sm" />
-                  </dd>
-                </div>
-                <div className="flex items-baseline justify-between gap-4">
-                  <dt className="text-[var(--icb-text-subtle)]">Contactless</dt>
-                  <dd>
-                    <Amount value={card.limits.contactless} size="sm" />
-                  </dd>
-                </div>
-              </dl>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader
-              title="Where this card works"
-              description="Each switch is enforced when a payment is authorised, not merely recorded."
-            />
-            <CardBody className="pt-0">
-              <ul className="space-y-2.5">
-                {Object.entries(card.controls.channels).map(([channel, enabled]) => (
-                  <li key={channel} className="flex items-center gap-3 text-sm">
-                    {enabled ? (
-                      <Check
-                        size={16}
-                        className="shrink-0 text-[var(--icb-success)]"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <X
-                        size={16}
-                        className="shrink-0 text-[var(--icb-text-subtle)]"
-                        aria-hidden="true"
-                      />
-                    )}
-                    <span className={enabled ? '' : 'text-[var(--icb-text-subtle)] line-through'}>
-                      {CHANNEL_LABELS[channel] ?? channel}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {card.controls.blockedCategories.length > 0 ? (
-                <div className="mt-5 border-t border-[var(--icb-border)] pt-4">
-                  <p className="text-xs font-medium tracking-[0.1em] text-[var(--icb-text-subtle)] uppercase">
-                    Blocked categories
-                  </p>
-                  <p className="mt-2 text-sm capitalize">
-                    {card.controls.blockedCategories.map((c) => c.replaceAll('_', ' ')).join(', ')}
-                  </p>
-                </div>
-              ) : null}
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader title="Details" />
-            <CardBody className="pt-0">
-              <dl className="space-y-3 text-sm">
-                <Row label="Card number" value={`•••• •••• •••• ${card.panLast4}`} mono />
-                <Row
-                  label="Expires"
-                  value={`${String(card.expiryMonth).padStart(2, '0')}/${card.expiryYear}`}
-                  mono
-                />
-                <Row label="Network" value={card.network} capitalise />
-                <Row label="Type" value={card.kind} capitalise />
-                <Row label="PIN" value={card.pinSet ? 'Set' : 'Not set'} />
-                <Row
-                  label="Travel notice"
-                  value={
-                    card.travelNoticeUntil
-                      ? `Until ${formatDate(card.travelNoticeUntil, 'medium')}`
-                      : 'None'
-                  }
-                />
-              </dl>
-            </CardBody>
-          </Card>
+          <SpendingPanel card={card} />
+          <ControlsPanel card={card} />
+          <DetailsPanel card={card} />
         </div>
       </div>
     </>
+  );
+}
+
+function SpendingPanel({ card }: Readonly<{ card: CardDetail }>) {
+  return (
+    <Card>
+      <CardHeader title="Spending" description="What is left against each limit right now." />
+      <CardBody className="pt-0">
+        <dl className="space-y-3 text-sm">
+          <SpendRow
+            label="Today"
+            spent={card.spend.todaySpent}
+            remaining={card.spend.dailyRemaining}
+            limit={card.limits.daily}
+          />
+          <SpendRow
+            label="This month"
+            spent={card.spend.monthSpent}
+            remaining={card.spend.monthlyRemaining}
+            limit={card.limits.monthly}
+          />
+          <div className="flex items-baseline justify-between gap-4 border-b border-[var(--icb-border)] pb-3">
+            <dt className="text-[var(--icb-text-subtle)]">Per transaction</dt>
+            <dd>
+              <Amount value={card.limits.perTransaction} size="sm" />
+            </dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-4">
+            <dt className="text-[var(--icb-text-subtle)]">Contactless</dt>
+            <dd>
+              <Amount value={card.limits.contactless} size="sm" />
+            </dd>
+          </div>
+        </dl>
+      </CardBody>
+    </Card>
+  );
+}
+
+/** Channels and blocked categories. Each is enforced at authorisation, not merely displayed. */
+function ControlsPanel({ card }: Readonly<{ card: CardDetail }>) {
+  return (
+    <Card>
+      <CardHeader
+        title="Where this card works"
+        description="Each switch is enforced when a payment is authorised, not merely recorded."
+      />
+      <CardBody className="pt-0">
+        <ul className="space-y-2.5">
+          {Object.entries(card.controls.channels).map(([channel, enabled]) => (
+            <li key={channel} className="flex items-center gap-3 text-sm">
+              {enabled ? (
+                <Check size={16} className="shrink-0 text-[var(--icb-success)]" aria-hidden="true" />
+              ) : (
+                <X size={16} className="shrink-0 text-[var(--icb-text-subtle)]" aria-hidden="true" />
+              )}
+              <span className={enabled ? '' : 'text-[var(--icb-text-subtle)] line-through'}>
+                {CHANNEL_LABELS[channel] ?? channel}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        {card.controls.blockedCategories.length > 0 ? (
+          <div className="mt-5 border-t border-[var(--icb-border)] pt-4">
+            <p className="text-xs font-medium tracking-[0.1em] text-[var(--icb-text-subtle)] uppercase">
+              Blocked categories
+            </p>
+            <p className="mt-2 text-sm capitalize">
+              {card.controls.blockedCategories.map((c) => c.replaceAll('_', ' ')).join(', ')}
+            </p>
+          </div>
+        ) : null}
+      </CardBody>
+    </Card>
+  );
+}
+
+function DetailsPanel({ card }: Readonly<{ card: CardDetail }>) {
+  return (
+    <Card>
+      <CardHeader title="Details" />
+      <CardBody className="pt-0">
+        <dl className="space-y-3 text-sm">
+          <Row label="Card number" value={`•••• •••• •••• ${card.panLast4}`} mono />
+          <Row
+            label="Expires"
+            value={`${String(card.expiryMonth).padStart(2, '0')}/${card.expiryYear}`}
+            mono
+          />
+          <Row label="Network" value={card.network} capitalise />
+          <Row label="Type" value={card.kind} capitalise />
+          <Row label="PIN" value={card.pinSet ? 'Set' : 'Not set'} />
+          <Row
+            label="Travel notice"
+            value={
+              card.travelNoticeUntil
+                ? `Until ${formatDate(card.travelNoticeUntil, 'medium')}`
+                : 'None'
+            }
+          />
+        </dl>
+      </CardBody>
+    </Card>
   );
 }
 
@@ -214,7 +220,12 @@ function Row({
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-[var(--icb-border)] pb-3 last:border-0 last:pb-0">
       <dt className="shrink-0 text-[var(--icb-text-subtle)]">{label}</dt>
-      <dd className={mono ? 'font-mono text-xs' : capitalise ? 'capitalize' : ''}>{value}</dd>
+      <dd className={rowValueClass(mono, capitalise)}>{value}</dd>
     </div>
   );
+}
+
+function rowValueClass(mono: boolean, capitalise: boolean): string {
+  if (mono) return 'font-mono text-xs';
+  return capitalise ? 'capitalize' : '';
 }

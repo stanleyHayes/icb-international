@@ -22,7 +22,8 @@ export async function decideAction(
   _previous: DecisionState,
   formData: FormData,
 ): Promise<DecisionState> {
-  const caseId = String(formData.get('caseId') ?? '');
+  const caseIdValue = formData.get('caseId');
+  const caseId = typeof caseIdValue === 'string' ? caseIdValue : '';
   const grantedLevel = formData.get('grantedLevel');
 
   const parsed = kycDecisionRequestSchema.safeParse({
