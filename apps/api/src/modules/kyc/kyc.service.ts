@@ -40,7 +40,7 @@ type AttachDocumentRequest = ReturnType<typeof attachDocumentRequestSchema.parse
  * after the fact is not evidence of anything.
  */
 
-/** Operations have two working days to clear a submitted case. */
+/** Operations have 48 hours from submission to clear a case. Elapsed time, not business hours. */
 const SLA_MS = 48 * 60 * 60 * 1000;
 const TERMINAL: readonly KycStatus[] = ['approved', 'rejected', 'expired'];
 const IN_PROGRESS: KycStatus = 'in_progress';

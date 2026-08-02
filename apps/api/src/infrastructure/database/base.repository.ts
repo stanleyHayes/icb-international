@@ -1,8 +1,8 @@
 import type {
   ClientSession,
-  FilterQuery,
   HydratedDocument,
   Model,
+  QueryFilter,
   QueryOptions,
 } from 'mongoose';
 
@@ -30,7 +30,7 @@ export interface Page<T> {
 }
 
 export interface PaginateOptions<TDoc> {
-  readonly filter?: FilterQuery<TDoc>;
+  readonly filter?: QueryFilter<TDoc>;
   readonly sort?: Record<string, 1 | -1>;
   readonly page?: number;
   readonly pageSize?: number;
@@ -71,7 +71,7 @@ export abstract class BaseRepository<TDoc extends VersionedDoc> {
   async paginate(options: PaginateOptions<TDoc> = {}): Promise<Page<HydratedDocument<TDoc>>> {
     const page = Math.max(FIRST_PAGE, options.page ?? FIRST_PAGE);
     const pageSize = clampPageSize(options.pageSize);
-    const filter: FilterQuery<TDoc> = options.filter ?? {};
+    const filter: QueryFilter<TDoc> = options.filter ?? {};
     const itemsQuery = this.model
       .find(filter)
       .sort(options.sort ?? { _id: 1 })
@@ -99,7 +99,7 @@ export abstract class BaseRepository<TDoc extends VersionedDoc> {
     }
     const updated = await this.model
       .findOneAndUpdate(
-        { _id: options.id, version: options.expectedVersion } as FilterQuery<TDoc>,
+        { _id: options.id, version: options.expectedVersion } as QueryFilter<TDoc>,
         { $set: options.update, $inc: { version: 1 } },
         queryOptions,
       )

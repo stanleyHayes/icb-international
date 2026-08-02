@@ -14,6 +14,9 @@ export interface RequestOptions {
 
 export type PathParams = Record<string, string>;
 
+/** `RequestCredentials` without the DOM lib — the SDK typechecks in Node-only projects too. */
+export type CredentialsMode = 'omit' | 'same-origin' | 'include';
+
 /**
  * Query objects arrive as `z.input` of the contract query schemas; `z.coerce` fields type as
  * `unknown`, so the transport narrows values at runtime rather than trusting the compiler.

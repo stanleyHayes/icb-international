@@ -1,4 +1,4 @@
-import { Redis, type RedisOptions } from 'ioredis';
+import { Redis } from 'ioredis';
 
 import { MAX_RETRIES_PER_REQUEST } from './cache.constants.js';
 
@@ -13,10 +13,9 @@ export const REDIS_CLIENT = Symbol('ICB_REDIS_CLIENT');
  * failure into a cache miss rather than a hanging request.
  */
 export function createRedisClient(url: string): Redis {
-  const options: RedisOptions = {
+  return new Redis(url, {
     lazyConnect: true,
     enableOfflineQueue: false,
     maxRetriesPerRequest: MAX_RETRIES_PER_REQUEST,
-  };
-  return new Redis(url, options);
+  });
 }

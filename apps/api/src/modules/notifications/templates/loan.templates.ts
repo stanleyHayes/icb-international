@@ -17,12 +17,13 @@ export const loanPaymentDue: TemplateRenderer = (context) => {
   const { payload } = context;
   const amount = moneyText(payload.amount);
   const due = payload.dueDate === undefined ? undefined : formatDate(payload.dueDate);
+  const when = due === undefined ? ' shortly' : ` on ${due}`;
 
   return renderEmail(
     `Loan repayment of ${amount ?? 'your instalment'} is due`,
     {
       heading: 'Your next repayment is due',
-      intro: `${amount ?? 'Your next instalment'} on ${payload.accountLabel ?? 'your loan'} is due${due === undefined ? ' shortly' : ` on ${due}`}.`,
+      intro: `${amount ?? 'Your next instalment'} on ${payload.accountLabel ?? 'your loan'} is due${when}.`,
       ...figureFor(amount),
       rows: rows(
         row(LABEL.account, payload.accountLabel),

@@ -89,18 +89,16 @@ export function resolveRateBand(
   principalMinorUnits: number,
   currency: CurrencyCode,
 ): DepositRateBand | null {
-  const eligible = BANDS.filter(
-    (band) =>
-      band.termMonths <= termMonths &&
-      toMinorUnits(band.minimumMajorUnits, currency) <= principalMinorUnits,
-  );
+  const best = BANDS.reduce<BandDefinition | null>((winner, candidate) => {
+    const qualifies =
+      candidate.termMonths <= termMonths &&
+      toMinorUnits(candidate.minimumMajorUnits, currency) <= principalMinorUnits;
 
-  if (eligible.length === 0) {
-    return null;
-  }
+    if (!qualifies) {
+      return winner;
+    }
+    return winner === null || candidate.rate > winner.rate ? candidate : winner;
+  }, null);
 
-  const best = eligible.reduce((winner, candidate) =>
-    candidate.rate > winner.rate ? candidate : winner,
-  );
-  return toBand(best, currency);
+  return best === null ? null : toBand(best, currency);
 }

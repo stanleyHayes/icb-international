@@ -22,6 +22,7 @@
     "infra:down": "docker compose down",
     "infra:reset": "docker compose down -v && docker compose up -d",
     "verify:infra": "node tools/scripts/verify-infra.mjs",
+    "contracts:openapi": "pnpm --filter @icb/contracts openapi",
     "seed": "pnpm --filter @icb/api seed",
     "verify:ledger": "pnpm --filter @icb/api verify:ledger",
     "db:reset": "pnpm --filter @icb/api db:reset",

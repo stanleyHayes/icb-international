@@ -1,0 +1,96 @@
+import { z } from 'zod';
+
+import {
+  accountDetailSchema,
+  accountSummarySchema,
+  balanceHistoryQuerySchema,
+  balanceHistorySchema,
+  closeAccountRequestSchema,
+  holdSchema,
+  openAccountRequestSchema,
+  setAccountStatusRequestSchema,
+  setOverdraftRequestSchema,
+  updateAccountRequestSchema,
+} from '../../../src/index.js';
+import { idSchema } from '../../../src/common/primitives.js';
+import { STATUS, TAG } from '../constants.js';
+import { defineOperations, success } from '../spec.js';
+
+const ACCOUNT_ID = { accountId: idSchema } as const;
+
+export const accountsOperations = defineOperations([
+  {
+    method: 'get', path: '/accounts', tag: TAG.accounts, operationId: 'listAccounts',
+    summary: 'The authenticated customer’s accounts',
+    response: success(STATUS.ok, 'All accounts with balances.', z.array(accountSummarySchema)),
+  },
+  {
+    method: 'post', path: '/accounts', tag: TAG.accounts, operationId: 'openAccount',
+    summary: 'Open a new account',
+    request: openAccountRequestSchema,
+    response: success(STATUS.created, 'The opened account.', accountDetailSchema),
+    errors: [
+      { status: STATUS.forbidden, description: 'KYC tier does not permit this product.' },
+      { status: STATUS.unprocessable },
+    ],
+  },
+  {
+    method: 'get', path: '/accounts/{accountId}', tag: TAG.accounts, operationId: 'getAccount',
+    summary: 'Account detail',
+    pathParams: ACCOUNT_ID,
+    response: success(STATUS.ok, 'The account.', accountDetailSchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'patch', path: '/accounts/{accountId}', tag: TAG.accounts, operationId: 'updateAccount',
+    summary: 'Update nickname, primary flag, or statement day',
+    pathParams: ACCOUNT_ID,
+    request: updateAccountRequestSchema,
+    response: success(STATUS.ok, 'The updated account.', accountDetailSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'post', path: '/accounts/{accountId}/close', tag: TAG.accounts, operationId: 'closeAccount',
+    summary: 'Close the account, sweeping any residual balance',
+    pathParams: ACCOUNT_ID,
+    request: closeAccountRequestSchema,
+    idempotent: true,
+    response: success(STATUS.ok, 'The closed account.', accountDetailSchema),
+    errors: [
+      { status: STATUS.notFound },
+      { status: STATUS.conflict, description: 'Already closed, or a non-zero balance without a sweep target.' },
+      { status: STATUS.unprocessable },
+    ],
+  },
+  {
+    method: 'post', path: '/accounts/{accountId}/status', tag: TAG.accounts,
+    operationId: 'setAccountStatus', summary: 'Freeze, unfreeze, or dormancy-mark (staff)',
+    pathParams: ACCOUNT_ID,
+    request: setAccountStatusRequestSchema,
+    response: success(STATUS.ok, 'The updated account.', accountDetailSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
+  },
+  {
+    method: 'post', path: '/accounts/{accountId}/overdraft', tag: TAG.accounts,
+    operationId: 'setOverdraftLimit', summary: 'Set the overdraft limit (staff)',
+    pathParams: ACCOUNT_ID,
+    request: setOverdraftRequestSchema,
+    response: success(STATUS.ok, 'The updated account.', accountDetailSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'get', path: '/accounts/{accountId}/balance-history', tag: TAG.accounts,
+    operationId: 'getBalanceHistory', summary: 'Daily/weekly/monthly closing balances',
+    pathParams: ACCOUNT_ID,
+    query: balanceHistoryQuerySchema,
+    response: success(STATUS.ok, 'The balance series.', balanceHistorySchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'get', path: '/accounts/{accountId}/holds', tag: TAG.accounts, operationId: 'listHolds',
+    summary: 'Authorisation holds against the account',
+    pathParams: ACCOUNT_ID,
+    response: success(STATUS.ok, 'Open and recently released holds.', z.array(holdSchema)),
+    errors: [{ status: STATUS.notFound }],
+  },
+]);

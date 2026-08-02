@@ -99,7 +99,7 @@ export class LocalAssetStore implements AssetStore {
 
     const format = MIME_TYPE_EXTENSIONS[upload.contentType];
     const publicId = `${upload.folder}/${upload.publicId}`;
-    const relativePath = `${publicId}${format !== undefined ? `.${format}` : ''}`;
+    const relativePath = withExtension(publicId, format);
     await mkdir(join(this.config.rootDir, upload.folder), { recursive: true });
     await writeFile(join(this.config.rootDir, relativePath), upload.bytes);
 
@@ -124,7 +124,7 @@ export class LocalAssetStore implements AssetStore {
       DEFAULT_DELIVERY_URL_TTL_SECONDS;
     const exp = epochSeconds(this.now()) + ttl;
     const prefix = this.config.deliveryPathPrefix ?? LOCAL_DELIVERY_PATH_PREFIX;
-    const path = `${ref.publicId}${ref.format !== undefined ? `.${ref.format}` : ''}`;
+    const path = withExtension(ref.publicId, ref.format);
     const signature = this.signDelivery(path, exp);
 
     return {
@@ -154,4 +154,8 @@ function assertSafeSegment(segment: string): void {
   if (parts.some((part) => !SAFE_PATH_SEGMENT.test(part))) {
     throw new UnsafeAssetPathError(segment);
   }
+}
+
+function withExtension(publicId: string, format: string | undefined): string {
+  return format !== undefined ? `${publicId}.${format}` : publicId;
 }

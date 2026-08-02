@@ -17,9 +17,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
-    "lint": "eslint src",
-    "typecheck": "tsc --noEmit",
+    "lint": "eslint src scripts",
+    "typecheck": "tsc --noEmit && tsc -p scripts/tsconfig.json --noEmit",
     "test": "vitest run",
+    "openapi": "pnpm --filter @icb/money build && tsx scripts/build-openapi.ts",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {

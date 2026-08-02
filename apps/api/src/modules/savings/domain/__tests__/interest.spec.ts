@@ -111,13 +111,13 @@ describe('early-break penalty ladder', () => {
     expect(breakForfeitShare(0.24)).toBe(1);
     expect(breakForfeitShare(0.25)).toBe(0.75);
     expect(breakForfeitShare(0.6)).toBe(0.5);
-    expect(breakForfeitShare(0.8)).toBe(0.2);
-    expect(breakForfeitShare(1)).toBe(0.2);
+    expect(breakForfeitShare(0.8)).toBeCloseTo(0.2, 10);
+    expect(breakForfeitShare(1)).toBeCloseTo(0.2, 10);
   });
 
   it('clamps an out-of-range fraction instead of falling off the ladder', () => {
     expect(breakForfeitShare(-4)).toBe(1);
-    expect(breakForfeitShare(9)).toBe(0.2);
+    expect(breakForfeitShare(9)).toBeCloseTo(0.2, 10);
   });
 });
 

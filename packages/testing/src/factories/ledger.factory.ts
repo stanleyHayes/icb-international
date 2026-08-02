@@ -82,6 +82,7 @@ export interface LedgerEntryMeta {
 }
 
 const DEFAULT_NORMAL_SIDE: NormalSide = 'credit';
+const DEFAULT_ACTOR = { kind: 'system', id: null, label: 'test-harness' } as const;
 
 /**
  * Balanced ledger transaction factory.
@@ -97,30 +98,47 @@ export function ledgerTransaction(
   const currency = options.currency ?? 'GHS';
   const lines = options.lines ?? defaultLines(ctx);
   assertBalanced(lines, currency);
-  const transactionId = ctx.nextId();
-  const type = options.type ?? 'deposit';
+  const header = resolveHeader(ctx, options);
+  return {
+    ...header,
+    entries: lines.map((line, index) =>
+      buildEntry(ctx, line, {
+        sequence: index,
+        transactionId: header._id,
+        type: header.type,
+        status: header.status,
+        currency,
+      }),
+    ),
+  };
+}
+
+function resolveHeader(
+  ctx: FactoryContext,
+  options: LedgerPostingOptions,
+): Omit<TestLedgerTransaction, 'entries'> {
   const status = options.status ?? 'posted';
-  const base: TestLedgerTransaction = {
-    _id: transactionId,
+  return {
+    _id: ctx.nextId(),
     reference: ctx.reference('LED'),
-    type,
+    type: options.type ?? 'deposit',
     status,
     description: options.description ?? 'Test posting',
-    actor: options.actor ?? { kind: 'system', id: null, label: 'test-harness' },
+    actor: options.actor ?? DEFAULT_ACTOR,
     valueDate: ctx.clock.today(),
     bookedAt: ctx.clock.now(),
-    settledAt: status === 'settled' || status === 'posted' ? ctx.clock.now() : null,
+    settledAt: settledAtFor(ctx, status),
     reversesTransactionId: options.reversesTransactionId ?? null,
     reversedByTransactionId: null,
     sourceType: options.sourceType ?? null,
     sourceId: options.sourceId ?? null,
     correlationId: null,
     metadata: options.metadata ?? {},
-    entries: lines.map((line, index) =>
-      buildEntry(ctx, line, { sequence: index, transactionId, type, status, currency }),
-    ),
   };
-  return base;
+}
+
+function settledAtFor(ctx: FactoryContext, status: TransactionStatus): Date | null {
+  return status === 'settled' || status === 'posted' ? ctx.clock.now() : null;
 }
 
 function buildEntry(

@@ -107,7 +107,24 @@ export class TermDepositPostingService {
       return deposit.interestPaidMinorUnits;
     }
 
-    const amount = fromMinorUnits(delta, deposit.currency as CurrencyCode);
+    await this.postInterest(deposit, delta, onIso, session);
+    await this.deposits.updateOne(
+      { _id: deposit._id },
+      { $inc: { interestPaidMinorUnits: delta }, $set: { accruedTo: onIso } },
+      { session },
+    );
+    return earned;
+  }
+
+  /** Interest is an expense to the bank (GL 5000) and a credit to the customer. */
+  private async postInterest(
+    deposit: TermDepositDoc,
+    minorUnits: number,
+    onIso: string,
+    session: ClientSession,
+  ): Promise<void> {
+    const amount = fromMinorUnits(minorUnits, deposit.currency as CurrencyCode);
+
     await this.ledger.postWithin(
       {
         type: 'interest',
@@ -128,13 +145,6 @@ export class TermDepositPostingService {
       },
       session,
     );
-
-    await this.deposits.updateOne(
-      { _id: deposit._id },
-      { $inc: { interestPaidMinorUnits: delta }, $set: { accruedTo: onIso } },
-      { session },
-    );
-    return earned;
   }
 
   /**

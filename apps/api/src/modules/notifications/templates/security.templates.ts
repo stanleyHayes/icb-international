@@ -42,12 +42,13 @@ export const securityAlert: TemplateRenderer = (context) => {
 export const loginNewDevice: TemplateRenderer = (context) => {
   const { payload } = context;
   const device = payload.device ?? FALLBACK.device;
+  const where = payload.location === undefined ? '' : ` in ${payload.location}`;
 
   return renderEmail(
     `New sign-in from ${device}`,
     {
       heading: 'A new device signed in',
-      intro: `Your account was accessed from ${device}${payload.location === undefined ? '' : ` in ${payload.location}`}.`,
+      intro: `Your account was accessed from ${device}${where}.`,
       rows: rows(
         row(LABEL.device, payload.device),
         row(LABEL.location, payload.location),

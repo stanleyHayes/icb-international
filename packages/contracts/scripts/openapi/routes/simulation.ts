@@ -1,0 +1,109 @@
+import { z } from 'zod';
+
+import {
+  advanceClockRequestSchema,
+  clockStateSchema,
+  endOfDayReportSchema,
+  featureFlagSchema,
+  ledgerIntegrityReportSchema,
+  railProfileSchema,
+  runScenarioRequestSchema,
+  scenarioRunSchema,
+  scenarioSchema,
+  setClockRequestSchema,
+  simulationStateSchema,
+  updateFeatureFlagRequestSchema,
+  updateRailProfileRequestSchema,
+} from '../../../src/index.js';
+import { idSchema } from '../../../src/common/primitives.js';
+import { transferRailSchema } from '../../../src/common/enums.js';
+import { STATUS, TAG } from '../constants.js';
+import { defineOperations, success } from '../spec.js';
+
+/** Simulation control is `super_admin` only and invisible to customers (agent_plan.md N1). */
+export const simulationOperations = defineOperations([
+  {
+    method: 'get', path: '/simulation/state', tag: TAG.simulation, operationId: 'getSimulationState',
+    summary: 'Clock, rails, active scenario, and chaos toggles',
+    response: success(STATUS.ok, 'The full simulation state.', simulationStateSchema),
+  },
+  {
+    method: 'get', path: '/simulation/clock', tag: TAG.simulation, operationId: 'getClock',
+    summary: 'What the bank believes “now” is',
+    response: success(STATUS.ok, 'The clock state.', clockStateSchema),
+  },
+  {
+    method: 'post', path: '/simulation/clock/advance', tag: TAG.simulation, operationId: 'advanceClock',
+    summary: 'Time travel: jump forward, running end-of-day per crossed day',
+    request: advanceClockRequestSchema,
+    response: success(STATUS.ok, 'The clock after the jump.', clockStateSchema),
+    errors: [{ status: STATUS.unprocessable }],
+  },
+  {
+    method: 'put', path: '/simulation/clock', tag: TAG.simulation, operationId: 'setClock',
+    summary: 'Set an absolute time, or freeze/unfreeze the clock',
+    request: setClockRequestSchema,
+    response: success(STATUS.ok, 'The updated clock.', clockStateSchema),
+    errors: [{ status: STATUS.unprocessable }],
+  },
+  {
+    method: 'post', path: '/simulation/clock/reset', tag: TAG.simulation, operationId: 'resetClock',
+    summary: 'Return the clock to real time',
+    response: success(STATUS.ok, 'The reset clock.', clockStateSchema),
+  },
+  {
+    method: 'get', path: '/simulation/rails', tag: TAG.simulation, operationId: 'listRailProfiles',
+    summary: 'How each simulated rail behaves',
+    response: success(STATUS.ok, 'All rail profiles.', z.array(railProfileSchema)),
+  },
+  {
+    method: 'patch', path: '/simulation/rails/{rail}', tag: TAG.simulation, operationId: 'updateRailProfile',
+    summary: 'Tune latency, failure rate, and settlement delay for a rail',
+    pathParams: { rail: transferRailSchema },
+    request: updateRailProfileRequestSchema,
+    response: success(STATUS.ok, 'The updated profile.', railProfileSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'get', path: '/simulation/scenarios', tag: TAG.simulation, operationId: 'listScenarios',
+    summary: 'The scenario catalogue',
+    response: success(STATUS.ok, 'Runnable scenarios.', z.array(scenarioSchema)),
+  },
+  {
+    method: 'post', path: '/simulation/scenarios/run', tag: TAG.simulation, operationId: 'runScenario',
+    summary: 'Run a scenario (same seed, same outcome)',
+    request: runScenarioRequestSchema,
+    response: success(STATUS.accepted, 'The started run.', scenarioRunSchema),
+    errors: [{ status: STATUS.conflict, description: 'Another scenario is already running.' }],
+  },
+  {
+    method: 'get', path: '/simulation/scenarios/runs/{runId}', tag: TAG.simulation,
+    operationId: 'getScenarioRun', summary: 'Progress and outcome of a run',
+    pathParams: { runId: idSchema },
+    response: success(STATUS.ok, 'The run.', scenarioRunSchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'post', path: '/simulation/end-of-day', tag: TAG.simulation, operationId: 'runEndOfDay',
+    summary: 'Run the end-of-day pipeline now',
+    response: success(STATUS.ok, 'The end-of-day report.', endOfDayReportSchema),
+  },
+  {
+    method: 'get', path: '/simulation/ledger/integrity', tag: TAG.simulation,
+    operationId: 'checkLedgerIntegrity', summary: 'Assert the ledger invariants',
+    response: success(STATUS.ok, 'The integrity report.', ledgerIntegrityReportSchema),
+  },
+  {
+    method: 'get', path: '/simulation/feature-flags', tag: TAG.simulation, operationId: 'listFeatureFlags',
+    summary: 'Runtime feature flags',
+    response: success(STATUS.ok, 'All flags.', z.array(featureFlagSchema)),
+  },
+  {
+    method: 'patch', path: '/simulation/feature-flags/{key}', tag: TAG.simulation,
+    operationId: 'updateFeatureFlag', summary: 'Toggle or roll out a flag',
+    pathParams: { key: z.string().min(1).max(80) },
+    request: updateFeatureFlagRequestSchema,
+    response: success(STATUS.ok, 'The updated flag.', featureFlagSchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+]);

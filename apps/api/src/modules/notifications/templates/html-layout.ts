@@ -12,7 +12,7 @@ import { BRAND, FONT_STACK, escapeHtml, formatInstant, safeUrl } from './theme.j
 
 const TEXT = `font-family:${FONT_STACK};`;
 const CARD_PAD = 'padding:28px 32px;';
-const MUTED_SMALL = `${TEXT}font-size:13px;line-height:20px;color:${BRAND.muted};margin:0;`;
+const MUTED_SMALL = `${TEXT}font-size:13px;line-height:20px;color:${BRAND.muted};`;
 const LABEL_CELL = `${TEXT}font-size:13px;color:${BRAND.muted};padding:9px 12px 9px 0;vertical-align:top;`;
 const VALUE_CELL = `${TEXT}font-size:14px;font-weight:600;color:${BRAND.ink};padding:9px 0;text-align:right;vertical-align:top;`;
 

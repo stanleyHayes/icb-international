@@ -112,10 +112,7 @@ export class ValidationError extends DomainError {
   }
 }
 
-/**
- * A stored ciphertext could not be decrypted: wrong key, tampered payload, or corrupt data.
- * Never carries the payload in context — the ciphertext itself is sensitive.
- */
+/** A stored ciphertext could not be decrypted (wrong key, tampered, or corrupt). Carries no payload — the ciphertext itself is sensitive. */
 export class DecryptionFailedError extends DomainError {
   constructor() {
     super('INTERNAL_ERROR', 'A stored value could not be decrypted');

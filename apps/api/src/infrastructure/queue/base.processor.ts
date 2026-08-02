@@ -1,8 +1,8 @@
-import { Logger } from '@nestjs/common';
 import { WorkerHost } from '@nestjs/bullmq';
+import type { Logger } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
 
-import { ClockService } from '../../simulation/clock/clock.service.js';
+import type { ClockService } from '../../simulation/clock/clock.service.js';
 import { DEAD_LETTER_JOB_NAME } from './queue.constants.js';
 
 /** Snapshot of a job that exhausted its retries, preserved on the dead-letter queue. */

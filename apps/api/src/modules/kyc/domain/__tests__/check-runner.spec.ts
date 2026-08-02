@@ -89,8 +89,9 @@ describe('runChecks', () => {
       checks.every((check) => check.outcome === 'pass'),
     ).length;
 
-    expect(clean).toBeGreaterThan(100);
-    expect(clean).toBeLessThan(200);
+    // Most clear automatically; enough are referred that the review queue is never empty.
+    expect(clean).toBeGreaterThan(120);
+    expect(clean).toBeLessThan(190);
   });
 });
 

@@ -64,7 +64,7 @@ export type GlyphProps = Omit<IconProps, 'children'>;
  * tree-shake the set down to the icons an app actually uses.
  */
 export function createGlyph(displayName: string, content: ReactNode) {
-  function Glyph(props: GlyphProps) {
+  function Glyph(props: Readonly<GlyphProps>) {
     return <Icon {...props}>{content}</Icon>;
   }
   Glyph.displayName = displayName;

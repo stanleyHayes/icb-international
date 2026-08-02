@@ -76,4 +76,3 @@ export function statusAfterFreeze(activatedAt: Date | null, frozen: boolean): st
 }
 
 export const CARD_ACTIVE = ACTIVE;
-export const CARD_FROZEN = FROZEN;

@@ -60,4 +60,3 @@ export class BillerDoc {
 export type BillerDocument = HydratedDocument<BillerDoc>;
 export const BillerSchema = SchemaFactory.createForClass(BillerDoc);
 BillerSchema.index({ active: 1, category: 1 });
-BillerSchema.index({ name: 'text' });

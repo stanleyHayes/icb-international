@@ -5,6 +5,8 @@ import { AccountsModule } from '../accounts/accounts.module.js';
 import { CustomerDoc, CustomerSchema } from '../customers/infrastructure/customer.schemas.js';
 import { LedgerModule } from '../ledger/ledger.module.js';
 import { AdminController } from './admin.controller.js';
+import { CustomerDirectoryController } from './customer-directory.controller.js';
+import { CustomerDirectoryService } from './customer-directory.service.js';
 import { AdminService } from './admin.service.js';
 
 @Module({
@@ -13,7 +15,7 @@ import { AdminService } from './admin.service.js';
     AccountsModule,
     MongooseModule.forFeature([{ name: CustomerDoc.name, schema: CustomerSchema }]),
   ],
-  controllers: [AdminController],
-  providers: [AdminService],
+  controllers: [AdminController, CustomerDirectoryController],
+  providers: [AdminService, CustomerDirectoryService],
 })
 export class AdminModule {}

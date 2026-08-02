@@ -16,9 +16,13 @@ import { formatDate } from './theme.js';
 export const statementReady: TemplateRenderer = (context) => {
   const { payload } = context;
   const period = payload.period ?? 'the latest period';
+  const subject =
+    payload.period === undefined
+      ? 'Your statement is ready'
+      : `Your ${payload.period} statement is ready`;
 
   return renderEmail(
-    `Your ${period} statement is ready`,
+    subject,
     {
       heading: 'Your statement is ready',
       intro: `The statement for ${payload.accountLabel ?? FALLBACK.account} covering ${period} is now available.`,
@@ -42,12 +46,14 @@ export const billDue: TemplateRenderer = (context) => {
   const { payload } = context;
   const amount = moneyText(payload.amount);
   const due = payload.dueDate === undefined ? undefined : formatDate(payload.dueDate);
+  const dueOn = due === undefined ? '' : ` on ${due}`;
+  const scheduledFor = due === undefined ? '' : ` for ${due}`;
 
   return renderEmail(
-    `${payload.counterparty ?? 'A bill'} is due${due === undefined ? '' : ` on ${due}`}`,
+    `${payload.counterparty ?? 'A bill'} is due${dueOn}`,
     {
       heading: 'A bill is coming up',
-      intro: `${amount ?? 'A payment'} to ${payload.counterparty ?? 'your biller'} is scheduled${due === undefined ? '' : ` for ${due}`}.`,
+      intro: `${amount ?? 'A payment'} to ${payload.counterparty ?? 'your biller'} is scheduled${scheduledFor}.`,
       ...figureFor(amount),
       rows: rows(
         row(LABEL.to, payload.counterparty),

@@ -8,10 +8,12 @@ import {
 } from './constants.js';
 import { toApiError } from './errors.js';
 
+import { type CredentialsMode } from './http.js';
+
 export interface RefresherDeps {
   baseUrl: string;
   fetchFn: typeof fetch;
-  credentials: RequestCredentials;
+  credentials: CredentialsMode;
   onTokensRefreshed: ((tokens: AuthTokens) => void) | undefined;
 }
 

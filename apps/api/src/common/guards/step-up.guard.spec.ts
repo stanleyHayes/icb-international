@@ -1,6 +1,5 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
-import type { FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { TokenService } from '../../modules/auth/application/token.service.js';
@@ -9,7 +8,12 @@ import { StepUpGuard } from './step-up.guard.js';
 
 const PURPOSE = 'transfer-create';
 
-function contextWith(request: Partial<FastifyRequest>): ExecutionContext {
+interface FakeRequest {
+  user?: { sub: string };
+  headers?: Record<string, string>;
+}
+
+function contextWith(request: FakeRequest): ExecutionContext {
   return {
     switchToHttp: () => ({ getRequest: () => request }),
     getHandler: () => ({}),
@@ -30,9 +34,9 @@ function build(options: {
   return new StepUpGuard(tokens, reflector);
 }
 
-function requestWithStepUp(token?: string): Partial<FastifyRequest> {
+function requestWithStepUp(token?: string): FakeRequest {
   return {
-    user: { sub: 'user-1' } as FastifyRequest['user'],
+    user: { sub: 'user-1' },
     headers: token === undefined ? {} : { [STEP_UP_TOKEN_HEADER]: token },
   };
 }

@@ -1,5 +1,5 @@
 import type { SavingsGoal } from '@icb/contracts';
-import { isGreaterThan, type CurrencyCode, type Money } from '@icb/money';
+import { isGreaterThan, type Money } from '@icb/money';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { ClientSession, Model } from 'mongoose';
@@ -133,7 +133,7 @@ export class SavingsContributionsService {
     const source = await this.accounts.loadSpendable(command.fromAccountId, command.customerId);
     this.assertCurrency(source.currency, goal.currency, amount.currency);
 
-    const balances = await this.accounts.balancesFor(source._id, amount.currency as CurrencyCode);
+    const balances = await this.accounts.balancesFor(source._id, amount.currency);
     if (isGreaterThan(amount, balances.available)) {
       throw new InsufficientFundsError(source._id, amount, balances.available);
     }

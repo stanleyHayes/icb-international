@@ -1,0 +1,87 @@
+import { z } from 'zod';
+
+import {
+  amlAlertQuerySchema,
+  amlAlertSchema,
+  fileReportRequestSchema,
+  resolveRiskCaseRequestSchema,
+  riskCaseQuerySchema,
+  riskCaseSchema,
+  riskRuleSchema,
+  updateAmlAlertRequestSchema,
+  updateRiskRuleRequestSchema,
+} from '../../../src/index.js';
+import { idSchema } from '../../../src/common/primitives.js';
+import { PAGE_SCHEMAS } from '../components.js';
+import { STATUS, TAG } from '../constants.js';
+import { defineOperations, success } from '../spec.js';
+
+export const riskOperations = defineOperations([
+  {
+    method: 'get', path: '/risk/rules', tag: TAG.risk, operationId: 'listRiskRules',
+    summary: 'The fraud rule set (staff)',
+    response: success(STATUS.ok, 'All rules with weights and parameters.', z.array(riskRuleSchema)),
+  },
+  {
+    method: 'patch', path: '/risk/rules/{ruleId}', tag: TAG.risk, operationId: 'updateRiskRule',
+    summary: 'Tune a rule — weight, parameters, enabled (staff)',
+    pathParams: { ruleId: idSchema },
+    request: updateRiskRuleRequestSchema,
+    response: success(STATUS.ok, 'The updated rule.', riskRuleSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'get', path: '/risk/cases', tag: TAG.risk, operationId: 'listRiskCases',
+    summary: 'The fraud case queue (staff)',
+    query: riskCaseQuerySchema,
+    response: success(STATUS.ok, 'An offset page of cases.', PAGE_SCHEMAS.RiskCasePage),
+  },
+  {
+    method: 'get', path: '/risk/cases/{caseId}', tag: TAG.risk, operationId: 'getRiskCase',
+    summary: 'Case detail with score explainability (staff)',
+    pathParams: { caseId: idSchema },
+    response: success(STATUS.ok, 'The case.', riskCaseSchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'post', path: '/risk/cases/{caseId}/resolve', tag: TAG.risk, operationId: 'resolveRiskCase',
+    summary: 'Release, block, or escalate a case (staff)',
+    pathParams: { caseId: idSchema },
+    request: resolveRiskCaseRequestSchema,
+    response: success(STATUS.ok, 'The resolved case.', riskCaseSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
+  },
+  {
+    method: 'get', path: '/risk/aml/alerts', tag: TAG.risk, operationId: 'listAmlAlerts',
+    summary: 'Screening and monitoring alerts (staff)',
+    query: amlAlertQuerySchema,
+    response: success(STATUS.ok, 'An offset page of alerts.', PAGE_SCHEMAS.AmlAlertPage),
+  },
+  {
+    method: 'get', path: '/risk/aml/alerts/{alertId}', tag: TAG.risk, operationId: 'getAmlAlert',
+    summary: 'Alert detail with match evidence (staff)',
+    pathParams: { alertId: idSchema },
+    response: success(STATUS.ok, 'The alert.', amlAlertSchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'patch', path: '/risk/aml/alerts/{alertId}', tag: TAG.risk, operationId: 'updateAmlAlert',
+    summary: 'Assign, re-status, or narrate an alert (staff)',
+    pathParams: { alertId: idSchema },
+    request: updateAmlAlertRequestSchema,
+    response: success(STATUS.ok, 'The updated alert.', amlAlertSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
+  },
+  {
+    method: 'post', path: '/risk/aml/alerts/{alertId}/reports', tag: TAG.risk,
+    operationId: 'fileAmlReport', summary: 'File a SAR/CTR draft from an alert (staff)',
+    pathParams: { alertId: idSchema },
+    request: fileReportRequestSchema,
+    response: success(STATUS.ok, 'The alert with its filed report.', amlAlertSchema),
+    errors: [
+      { status: STATUS.notFound },
+      { status: STATUS.conflict, description: 'A report was already filed for this alert.' },
+      { status: STATUS.unprocessable },
+    ],
+  },
+]);

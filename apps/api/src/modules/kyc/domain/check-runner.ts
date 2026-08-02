@@ -40,19 +40,23 @@ interface CheckResult {
 }
 
 /**
- * Where the hash has to land for a check to go badly. Deliberately narrow: a bank whose demo
- * fails a quarter of its applicants is not demonstrating anything useful, but a bank where
- * nothing is ever referred does not exercise the review queue at all.
+ * Where the hash has to land for a check to go badly.
+ *
+ * These are calibrated against the *case*, not the check: seven checks each failing 5% of the
+ * time would send two thirds of applicants to manual review. As set, roughly three quarters of
+ * customers clear every check automatically and the rest populate the queue — which is both a
+ * believable auto-approval rate for a retail bank and a demo where the review screen has work
+ * in it.
  */
 const BANDS: Readonly<Record<CheckKind, { fail: number; refer: number }>> = {
-  document_authenticity: { fail: 0.05, refer: 0.17 },
-  face_match: { fail: 0.04, refer: 0.14 },
-  liveness: { fail: 0.03, refer: 0.11 },
-  address_verification: { fail: 0.07, refer: 0.2 },
-  sanctions_screening: { fail: 0.01, refer: 0.06 },
-  pep_screening: { fail: 0.02, refer: 0.08 },
-  adverse_media: { fail: 0.03, refer: 0.13 },
-  business_registry: { fail: 0.05, refer: 0.18 },
+  document_authenticity: { fail: 0.015, refer: 0.055 },
+  face_match: { fail: 0.012, refer: 0.05 },
+  liveness: { fail: 0.01, refer: 0.045 },
+  address_verification: { fail: 0.02, refer: 0.07 },
+  sanctions_screening: { fail: 0.004, refer: 0.02 },
+  pep_screening: { fail: 0.006, refer: 0.025 },
+  adverse_media: { fail: 0.008, refer: 0.04 },
+  business_registry: { fail: 0.015, refer: 0.06 },
 };
 
 /** The document types that make a check answerable. Absent evidence is referred, never failed. */

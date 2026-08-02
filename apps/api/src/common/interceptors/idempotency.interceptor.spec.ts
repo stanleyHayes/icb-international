@@ -1,14 +1,21 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
-import type { FastifyReply, FastifyRequest } from 'fastify';
-import { firstValueFrom, of, throwError } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 
 import { IdempotencyInterceptor } from './idempotency.interceptor.js';
 import type { IdempotencyRecord, IdempotencyStore } from './idempotency-store.port.js';
 
+interface FakeRequest {
+  method: string;
+  url: string;
+  routeOptions: { url: string };
+  user: { sub: string };
+  headers: Record<string, string>;
+}
+
 interface Fixture {
   store: IdempotencyStore & { saved: IdempotencyRecord[] };
-  request: Partial<FastifyRequest>;
+  request: FakeRequest;
   reply: { statusCode: number; status: (code: number) => void };
   context: ExecutionContext;
   handler: CallHandler;
@@ -93,7 +100,7 @@ describe('IdempotencyInterceptor', () => {
 
   it('scopes keys per caller', async () => {
     const f = fixture({ idempotent: true, key: 'key-1' });
-    f.request.user = { sub: 'cust-2' } as FastifyRequest['user'];
+    f.request.user = { sub: 'cust-2' };
     const result = await interceptorFor(f, true).intercept(f.context, f.handler);
 
     await firstValueFrom(result);

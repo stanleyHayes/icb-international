@@ -92,10 +92,10 @@ export type BodyOf<D extends EndpointDef> = [NonNullable<D['body']>] extends [ne
     : never;
 
 export interface CallArgs<D extends EndpointDef> {
-  params?: PathParams;
-  query?: QueryParams;
-  options?: RequestOptions;
-  body?: BodyOf<D>;
+  params?: PathParams | undefined;
+  query?: QueryParams | undefined;
+  options?: RequestOptions | undefined;
+  body?: BodyOf<D> | undefined;
 }
 
 /** The single typed entry point every endpoint method funnels through. */

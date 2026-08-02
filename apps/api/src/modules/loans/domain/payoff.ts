@@ -41,14 +41,22 @@ export interface PayoffInput {
  * Bundling them keeps `principal + interest + fee === totalPayoff` exactly true, so the customer
  * can check the arithmetic themselves.
  */
-export function earlyRepaymentFee(input: PayoffInput): Money {
-  const charge = percentage(input.outstandingPrincipal, input.earlyRepaymentFeePercent);
-  return add(charge, max(input.outstandingFees, zero(input.outstandingFees.currency)));
+export function earlyRepaymentFee(
+  outstandingPrincipal: Money,
+  outstandingFees: Money,
+  feePercent: number,
+): Money {
+  const charge = percentage(outstandingPrincipal, feePercent);
+  return add(charge, max(outstandingFees, zero(outstandingFees.currency)));
 }
 
 export function buildPayoffQuote(input: PayoffInput): PayoffQuote {
   const currency = input.outstandingPrincipal.currency;
-  const fee = earlyRepaymentFee(input);
+  const fee = earlyRepaymentFee(
+    input.outstandingPrincipal,
+    input.outstandingFees,
+    input.earlyRepaymentFeePercent,
+  );
   const total = add(add(input.outstandingPrincipal, input.accruedInterest), fee);
   const avoided = subtract(input.remainingScheduledInterest, input.accruedInterest);
   const savings = max(subtract(avoided, fee), zero(currency));

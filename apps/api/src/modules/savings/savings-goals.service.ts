@@ -14,7 +14,7 @@ import { ConflictError, NotFoundError } from '../../common/errors/index.js';
 import { newId } from '../../infrastructure/database/identifier.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
 import { AccountsService } from '../accounts/accounts.service.js';
-import { nextContributionDate, type ContributionFrequency } from './domain/goal-maths.js';
+import { nextContributionDate } from './domain/goal-maths.js';
 import { toSavingsGoal } from './infrastructure/savings-goal.mapper.js';
 import type { AutoContributionRecord } from './infrastructure/savings-goal.schemas.js';
 import { SavingsGoalDoc } from './infrastructure/savings-goal.schemas.js';
@@ -179,10 +179,7 @@ export class SavingsGoalsService {
     return {
       amountMinorUnits: request.amount.minorUnits,
       frequency: request.frequency,
-      nextRunOn: nextContributionDate(
-        request.frequency as ContributionFrequency,
-        this.clock.today(),
-      ),
+      nextRunOn: nextContributionDate(request.frequency, this.clock.today()),
       fromAccountId: source._id,
     };
   }

@@ -59,7 +59,9 @@ export class CardCaptureService {
       await this.releaseHold(authorisation, 'Card authorisation captured', session);
       const posted = await this.post(authorisation, amount, session);
 
-      await this.authorisations.updateOne(
+      // Filtering on `approved` is what makes a concurrent second capture lose: it matches
+      // nothing, the guard below aborts, and the posting it made rolls back with the transaction.
+      const result = await this.authorisations.updateOne(
         { _id: authorisationId, status: APPROVED },
         {
           $set: {
@@ -72,6 +74,7 @@ export class CardCaptureService {
         },
         { session },
       );
+      assertClaimed(result.matchedCount, authorisationId);
     });
 
     this.logger.log({ authorisationId, capturedMinorUnits: captured }, 'Card authorisation captured');
@@ -89,11 +92,12 @@ export class CardCaptureService {
 
     await this.transactionManager.withTransaction(async (session) => {
       await this.releaseHold(authorisation, 'Card authorisation reversed', session);
-      await this.authorisations.updateOne(
+      const result = await this.authorisations.updateOne(
         { _id: authorisationId, status: APPROVED },
         { $set: { status: 'reversed', reversedAt } },
         { session },
       );
+      assertClaimed(result.matchedCount, authorisationId);
     });
 
     this.logger.log({ authorisationId }, 'Card authorisation reversed');
@@ -172,6 +176,19 @@ export class CardCaptureService {
       throw new NotFoundError(AUTHORISATION, authorisationId);
     }
     return toCardAuthorisation(authorisation);
+  }
+}
+
+/**
+ * The conditional update is the concurrency control. If it matched nothing, another request got
+ * there first — abort, so whatever this transaction already did is rolled back rather than
+ * doubling the customer's money movement.
+ */
+function assertClaimed(matchedCount: number, authorisationId: string): void {
+  if (matchedCount === 0) {
+    throw new ConflictError('This authorisation was already settled by another request', {
+      authorisationId,
+    });
   }
 }
 

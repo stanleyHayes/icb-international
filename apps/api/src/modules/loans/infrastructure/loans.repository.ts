@@ -24,8 +24,8 @@ export interface CustomerProfile {
 
 const DEFAULT_TIER: CustomerTier = 'standard';
 
-/** Statuses a loan can be in while money is still owed. */
-export const LIVE_LOAN_STATUSES = ['active', 'in_arrears'] as const;
+/** Statuses a loan can be in while money is still owed and repayments are accepted. */
+export const LIVE_LOAN_STATUSES: readonly string[] = ['active', 'in_arrears'];
 
 @Injectable()
 export class LoansRepository {

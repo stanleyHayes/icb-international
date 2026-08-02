@@ -1,13 +1,11 @@
-import type {
-  MoneyDto,
-  TransferDetail,
-  TransferDestination,
-  TransferTimelineEvent,
-} from '@icb/contracts';
+import type { MoneyDto, TransferDetail, TransferDestination } from '@icb/contracts';
 import type { CurrencyCode } from '@icb/money';
 
 import type { FactoryContext } from '../core/context.js';
 import { accountNumber, moneyDto, randomMoney, zeroMoney } from './helpers.js';
+
+/** Not exported by `@icb/contracts` directly; derived from the detail shape it does export. */
+type TransferTimelineEvent = TransferDetail['timeline'][number];
 
 const MASK_VISIBLE_DIGITS = 4;
 const ESTIMATED_ARRIVAL_DAYS = 0;

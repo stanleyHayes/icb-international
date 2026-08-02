@@ -61,10 +61,13 @@ export function checkControls(context: AuthorisationContext): AuthorisationDecli
     return { kind: 'control', reason: 'International payments are switched off for this card' };
   }
 
-  if (controls.allowedCountries && country && !controls.allowedCountries.includes(country)) {
-    if (!isTravelling(context)) {
-      return { kind: 'control', reason: `This card is not enabled for payments in ${country}` };
-    }
+  const outsideAllowList =
+    controls.allowedCountries !== null &&
+    country !== null &&
+    !controls.allowedCountries.includes(country);
+
+  if (outsideAllowList && !isTravelling(context)) {
+    return { kind: 'control', reason: `This card is not enabled for payments in ${country}` };
   }
 
   return null;

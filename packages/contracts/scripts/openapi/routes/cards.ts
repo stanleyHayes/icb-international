@@ -1,0 +1,113 @@
+import {
+  cardDetailSchema,
+  cardQuerySchema,
+  cardSensitiveDetailsSchema,
+  issueCardRequestSchema,
+  reportCardRequestSchema,
+  setCardPinRequestSchema,
+  travelNoticeRequestSchema,
+  updateCardControlsRequestSchema,
+  updateCardLimitsRequestSchema,
+  updateCardRequestSchema,
+} from '../../../src/index.js';
+import { idSchema } from '../../../src/common/primitives.js';
+import { cursorQuerySchema } from '../../../src/common/pagination.js';
+import { PAGE_SCHEMAS } from '../components.js';
+import { STATUS, TAG } from '../constants.js';
+import { defineOperations, success } from '../spec.js';
+
+const CARD_ID = { cardId: idSchema } as const;
+
+export const cardsOperations = defineOperations([
+  {
+    method: 'get', path: '/cards', tag: TAG.cards, operationId: 'listCards',
+    summary: 'The customer’s cards',
+    query: cardQuerySchema,
+    response: success(STATUS.ok, 'A cursor page of cards.', PAGE_SCHEMAS.CardSummaryPage),
+  },
+  {
+    method: 'post', path: '/cards', tag: TAG.cards, operationId: 'issueCard',
+    summary: 'Issue a physical or virtual card',
+    request: issueCardRequestSchema,
+    response: success(STATUS.created, 'The issued card.', cardDetailSchema),
+    errors: [{ status: STATUS.unprocessable }],
+  },
+  {
+    method: 'get', path: '/cards/{cardId}', tag: TAG.cards, operationId: 'getCard',
+    summary: 'Card detail with controls, limits, and spend',
+    pathParams: CARD_ID,
+    response: success(STATUS.ok, 'The card.', cardDetailSchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'patch', path: '/cards/{cardId}', tag: TAG.cards, operationId: 'updateCard',
+    summary: 'Freeze, unfreeze, rename, or toggle contactless',
+    pathParams: CARD_ID,
+    request: updateCardRequestSchema,
+    response: success(STATUS.ok, 'The updated card.', cardDetailSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
+  },
+  {
+    method: 'post', path: '/cards/{cardId}/reveal', tag: TAG.cards, operationId: 'revealCard',
+    summary: 'Reveal PAN and CVV (requires a fresh step-up token)',
+    pathParams: CARD_ID,
+    response: success(STATUS.ok, 'Sensitive details; hide after `hideAfter`.', cardSensitiveDetailsSchema),
+    errors: [
+      { status: STATUS.unauthorized, description: 'A valid step-up token is required.' },
+      { status: STATUS.notFound },
+      { status: STATUS.conflict, description: 'The card is blocked or cancelled.' },
+    ],
+  },
+  {
+    method: 'put', path: '/cards/{cardId}/controls', tag: TAG.cards, operationId: 'updateCardControls',
+    summary: 'Set channel, category, and country controls',
+    pathParams: CARD_ID,
+    request: updateCardControlsRequestSchema,
+    response: success(STATUS.ok, 'The updated card.', cardDetailSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'put', path: '/cards/{cardId}/limits', tag: TAG.cards, operationId: 'updateCardLimits',
+    summary: 'Set spend limits',
+    pathParams: CARD_ID,
+    request: updateCardLimitsRequestSchema,
+    response: success(STATUS.ok, 'The updated card.', cardDetailSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'post', path: '/cards/{cardId}/pin', tag: TAG.cards, operationId: 'setCardPin',
+    summary: 'Set or change the PIN (requires step-up)',
+    pathParams: CARD_ID,
+    request: setCardPinRequestSchema,
+    response: success(STATUS.noContent, 'PIN set.'),
+    errors: [
+      { status: STATUS.unauthorized, description: 'A valid step-up token is required.' },
+      { status: STATUS.notFound },
+      { status: STATUS.unprocessable, description: 'The PIN fails the policy.' },
+    ],
+  },
+  {
+    method: 'post', path: '/cards/{cardId}/report', tag: TAG.cards, operationId: 'reportCard',
+    summary: 'Report lost, stolen, or damaged; optionally reissue',
+    pathParams: CARD_ID,
+    request: reportCardRequestSchema,
+    response: success(STATUS.accepted, 'The card (and its replacement when reissued).', cardDetailSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
+  },
+  {
+    method: 'post', path: '/cards/{cardId}/travel-notice', tag: TAG.cards, operationId: 'setTravelNotice',
+    summary: 'Register upcoming travel to avoid false fraud declines',
+    pathParams: CARD_ID,
+    request: travelNoticeRequestSchema,
+    response: success(STATUS.ok, 'The updated card.', cardDetailSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'get', path: '/cards/{cardId}/authorisations', tag: TAG.cards,
+    operationId: 'listCardAuthorisations', summary: 'Authorisation events from the card network',
+    pathParams: CARD_ID,
+    query: cursorQuerySchema,
+    response: success(STATUS.ok, 'A cursor page of authorisations.', PAGE_SCHEMAS.CardAuthorisationPage),
+    errors: [{ status: STATUS.notFound }],
+  },
+]);

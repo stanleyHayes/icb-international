@@ -2,12 +2,7 @@ import { runInNewContext } from 'node:vm';
 
 import { describe, expect, it } from 'vitest';
 
-import {
-  isThemePreference,
-  parseStoredTheme,
-  resolveTheme,
-  themeScriptSource,
-} from '../theme';
+import { isThemePreference, parseStoredTheme, resolveTheme, themeScriptSource } from '../theme';
 import {
   DEFAULT_THEME_PREFERENCE,
   THEME_ATTRIBUTE,
@@ -90,6 +85,7 @@ function runBootScript(options: { stored: string | null; systemDark: boolean }):
       },
     },
   };
+  // eslint-disable-next-line sonarjs/code-eval -- deliberate: the test runs the real boot script against a mock DOM
   runInNewContext(themeScriptSource(), sandbox);
   return { attributes, style, mediaQuery };
 }

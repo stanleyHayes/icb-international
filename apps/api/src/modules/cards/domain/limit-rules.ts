@@ -15,11 +15,11 @@ import type { CardLimitsDoc } from './card-defaults.js';
 
 /** The partial limit update as it arrives from the contract's request schema. */
 export interface LimitPatch {
-  perTransaction?: MoneyDto;
-  daily?: MoneyDto;
-  monthly?: MoneyDto;
-  atmDaily?: MoneyDto;
-  contactless?: MoneyDto;
+  perTransaction?: MoneyDto | undefined;
+  daily?: MoneyDto | undefined;
+  monthly?: MoneyDto | undefined;
+  atmDaily?: MoneyDto | undefined;
+  contactless?: MoneyDto | undefined;
 }
 
 function amountOf(value: MoneyDto | undefined, fallback: number, currency: string): number {

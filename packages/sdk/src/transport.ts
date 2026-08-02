@@ -13,6 +13,7 @@ import {
 } from './constants.js';
 import { type CallArgs, type EndpointDef, type Requester, type ResponseOf } from './endpoint.js';
 import { IcbNetworkError, IcbProtocolError, toApiError } from './errors.js';
+import { type CredentialsMode } from './http.js';
 import { resolveIdempotencyKey } from './idempotency.js';
 import { interpolatePath, serializeQuery } from './query.js';
 import { type Refresher } from './refresh.js';
@@ -26,7 +27,7 @@ export type AccessTokenProvider = () => string | null | Promise<string | null>;
 export interface TransportDeps {
   baseUrl: string;
   fetchFn: typeof fetch;
-  credentials: RequestCredentials;
+  credentials: CredentialsMode;
   getAccessToken: AccessTokenProvider | undefined;
   refresher: Refresher;
 }

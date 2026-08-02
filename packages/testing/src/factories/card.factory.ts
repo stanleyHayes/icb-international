@@ -1,8 +1,11 @@
-import type { CardControls, CardDetail, CardLimits, CardSpend } from '@icb/contracts';
+import type { CardControls, CardDetail, CardLimits } from '@icb/contracts';
 import type { CurrencyCode } from '@icb/money';
 
 import type { FactoryContext } from '../core/context.js';
 import { moneyDto, zeroMoney } from './helpers.js';
+
+/** Not exported by `@icb/contracts` directly; derived from the detail shape it does export. */
+type CardSpend = CardDetail['spend'];
 
 const CARD_EXPIRY_YEARS = 3;
 const PER_TRANSACTION_LIMIT = 500_000;

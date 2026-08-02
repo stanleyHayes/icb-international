@@ -1,0 +1,112 @@
+import { z } from 'zod';
+
+import {
+  bulkTransferRequestSchema,
+  bulkTransferResultSchema,
+  cancelTransferRequestSchema,
+  createTransferRequestSchema,
+  createTransferTemplateRequestSchema,
+  standingOrderSchema,
+  transferDetailSchema,
+  transferQuerySchema,
+  transferQuoteRequestSchema,
+  transferQuoteSchema,
+  transferTemplateSchema,
+} from '../../../src/index.js';
+import { idSchema } from '../../../src/common/primitives.js';
+import { PAGE_SCHEMAS } from '../components.js';
+import { STATUS, TAG } from '../constants.js';
+import { defineOperations, success } from '../spec.js';
+
+const MONEY_MOVEMENT_ERRORS = [
+  { status: STATUS.notFound },
+  { status: STATUS.conflict },
+  {
+    status: STATUS.unprocessable,
+    description: 'Insufficient funds, a breached limit, or a rejected quote.',
+  },
+  { status: STATUS.serviceUnavailable, description: 'The payment rail is unavailable.' },
+] as const;
+
+export const transfersOperations = defineOperations([
+  {
+    method: 'post', path: '/transfers/quotes', tag: TAG.transfers, operationId: 'quoteTransfer',
+    summary: 'Price a transfer before committing (single-use, expiring quote)',
+    request: transferQuoteRequestSchema,
+    response: success(STATUS.created, 'The quote, including fees, FX, and step-up flags.', transferQuoteSchema),
+    errors: MONEY_MOVEMENT_ERRORS,
+  },
+  {
+    method: 'post', path: '/transfers', tag: TAG.transfers, operationId: 'createTransfer',
+    summary: 'Create a transfer, optionally redeeming a quote',
+    request: createTransferRequestSchema,
+    idempotent: true,
+    response: success(STATUS.accepted, 'The transfer as accepted.', transferDetailSchema),
+    errors: MONEY_MOVEMENT_ERRORS,
+  },
+  {
+    method: 'get', path: '/transfers', tag: TAG.transfers, operationId: 'listTransfers',
+    summary: 'Page the customer’s transfers',
+    query: transferQuerySchema,
+    response: success(STATUS.ok, 'A cursor page of transfers.', PAGE_SCHEMAS.TransferSummaryPage),
+  },
+  {
+    method: 'get', path: '/transfers/{transferId}', tag: TAG.transfers, operationId: 'getTransfer',
+    summary: 'Transfer detail with timeline',
+    pathParams: { transferId: idSchema },
+    response: success(STATUS.ok, 'The transfer.', transferDetailSchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'post', path: '/transfers/{transferId}/cancel', tag: TAG.transfers,
+    operationId: 'cancelTransfer', summary: 'Cancel a scheduled or pending transfer',
+    pathParams: { transferId: idSchema },
+    request: cancelTransferRequestSchema,
+    response: success(STATUS.ok, 'The cancelled transfer.', transferDetailSchema),
+    errors: [
+      { status: STATUS.notFound },
+      { status: STATUS.conflict, description: 'The transfer is no longer cancellable.' },
+    ],
+  },
+  {
+    method: 'post', path: '/transfers/bulk', tag: TAG.transfers, operationId: 'createBulkTransfer',
+    summary: 'Submit a batch of payments, validated as a unit',
+    request: bulkTransferRequestSchema,
+    idempotent: true,
+    response: success(STATUS.accepted, 'Per-row acceptance and failure detail.', bulkTransferResultSchema),
+    errors: MONEY_MOVEMENT_ERRORS,
+  },
+  {
+    method: 'get', path: '/transfer-templates', tag: TAG.transfers, operationId: 'listTransferTemplates',
+    summary: 'Saved transfer templates',
+    response: success(STATUS.ok, 'The customer’s templates.', z.array(transferTemplateSchema)),
+  },
+  {
+    method: 'post', path: '/transfer-templates', tag: TAG.transfers, operationId: 'createTransferTemplate',
+    summary: 'Save a set of transfer terms for one-tap reuse',
+    request: createTransferTemplateRequestSchema,
+    response: success(STATUS.created, 'The created template.', transferTemplateSchema),
+    errors: [{ status: STATUS.unprocessable }],
+  },
+  {
+    method: 'delete', path: '/transfer-templates/{templateId}', tag: TAG.transfers,
+    operationId: 'deleteTransferTemplate', summary: 'Delete a template',
+    pathParams: { templateId: idSchema },
+    response: success(STATUS.noContent, 'Template deleted.'),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'get', path: '/standing-orders', tag: TAG.transfers, operationId: 'listStandingOrders',
+    summary: 'Recurring transfers, optionally per account',
+    query: z.object({ accountId: idSchema.optional() }),
+    response: success(STATUS.ok, 'Active and ended standing orders.', z.array(standingOrderSchema)),
+  },
+  {
+    method: 'post', path: '/standing-orders/{standingOrderId}/cancel', tag: TAG.transfers,
+    operationId: 'cancelStandingOrder', summary: 'Cancel a standing order',
+    pathParams: { standingOrderId: idSchema },
+    request: cancelTransferRequestSchema,
+    response: success(STATUS.ok, 'The cancelled standing order.', standingOrderSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
+  },
+]);

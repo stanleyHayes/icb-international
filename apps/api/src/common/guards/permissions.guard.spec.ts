@@ -1,12 +1,15 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
-import type { FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PermissionsGuard } from './permissions.guard.js';
 import { permissionsForRoles, type Permission } from './permissions.constants.js';
 
-function contextWith(request: Partial<FastifyRequest>): ExecutionContext {
+interface FakeRequest {
+  user?: { roles: readonly string[] };
+}
+
+function contextWith(request: FakeRequest): ExecutionContext {
   return {
     switchToHttp: () => ({ getRequest: () => request }),
     getHandler: () => ({}),

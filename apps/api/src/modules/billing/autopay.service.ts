@@ -164,10 +164,14 @@ export class AutopayService {
       const payment = await this.settlement.execute(command);
       return payment.failureReason ? 'failed' : 'paid';
     } catch (error: unknown) {
+      const reason = describe(error);
       if (command.paymentId) {
-        await this.payments.markFailed(command.paymentId, describe(error));
+        await this.payments.markFailed(command.paymentId, reason);
+      } else {
+        // An autopay rule has no record until it posts, so one is written for the failure itself.
+        await this.payments.recordFailedAttempt(command, reason);
       }
-      this.logger.warn({ subject, reason: describe(error) }, 'Bill pay sweep item failed');
+      this.logger.warn({ subject, reason }, 'Bill pay sweep item failed');
       return 'failed';
     }
   }

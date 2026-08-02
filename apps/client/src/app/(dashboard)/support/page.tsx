@@ -40,6 +40,11 @@ const IMMEDIATE = [
     href: '/accounts',
     detail: 'Ledger, holds and available, side by side',
   },
+  {
+    label: 'Sign out everywhere',
+    href: '/settings',
+    detail: 'Ends every session on every device at once',
+  },
 ] as const;
 
 /**

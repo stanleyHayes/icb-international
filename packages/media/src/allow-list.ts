@@ -1,5 +1,10 @@
 import { AssetTooLargeError, UnsupportedMediaTypeError } from './errors.js';
-import { ALLOWED_MIME_TYPES, MAX_UPLOAD_BYTES } from './media.constants.js';
+import {
+  ALLOWED_MIME_TYPES_BY_KIND,
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_BYTES_BY_KIND,
+  PDF_MIME_TYPE,
+} from './media.constants.js';
 import type { AssetResourceType, DocumentKind } from './document-kind.js';
 
 export interface UploadConstraints {
@@ -9,11 +14,12 @@ export interface UploadConstraints {
 }
 
 export function isAllowedMimeType(kind: DocumentKind, contentType: string): boolean {
-  return ALLOWED_MIME_TYPES[kind].includes(contentType);
+  return ALLOWED_MIME_TYPES_BY_KIND[kind].includes(contentType);
 }
 
+/** The tighter of the kind's own ceiling and the bank-wide 15 MB cap. */
 export function maxUploadBytes(kind: DocumentKind): number {
-  return MAX_UPLOAD_BYTES[kind];
+  return Math.min(MAX_UPLOAD_BYTES_BY_KIND[kind], MAX_UPLOAD_BYTES);
 }
 
 /**
@@ -37,5 +43,5 @@ export function assertUploadAllowed(constraints: UploadConstraints): void {
  * provider may transform. There is no video kind today.
  */
 export function resourceTypeFor(contentType: string): AssetResourceType {
-  return contentType === 'application/pdf' ? 'raw' : 'image';
+  return contentType === PDF_MIME_TYPE ? 'raw' : 'image';
 }

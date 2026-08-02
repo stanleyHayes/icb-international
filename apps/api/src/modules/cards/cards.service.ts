@@ -20,13 +20,15 @@ import { CardDoc } from './infrastructure/card.schemas.js';
 
 export type UpdateCardRequest = ReturnType<typeof updateCardRequestSchema.parse>;
 
+const CANCELLED = 'cancelled';
+
 /** Which state a report leaves the card in. Fraud is treated as theft, because it is. */
 const REPORT_STATUS: Readonly<Record<ReportCardRequest['reason'], string>> = {
   lost: 'lost',
   stolen: 'stolen',
   fraud: 'stolen',
-  damaged: 'cancelled',
-  not_received: 'cancelled',
+  damaged: CANCELLED,
+  not_received: CANCELLED,
 };
 
 /**

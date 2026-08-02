@@ -12,12 +12,7 @@ export {
   splitMoney,
   type MoneyLike,
 } from './lib/format';
-export {
-  isThemePreference,
-  parseStoredTheme,
-  resolveTheme,
-  themeScriptSource,
-} from './lib/theme';
+export { isThemePreference, parseStoredTheme, resolveTheme, themeScriptSource } from './lib/theme';
 export {
   DEFAULT_THEME_PREFERENCE,
   THEME_ATTRIBUTE,

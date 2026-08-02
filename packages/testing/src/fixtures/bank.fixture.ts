@@ -33,7 +33,7 @@ export interface MinimalBankOptions {
 export function minimalBank(options: MinimalBankOptions = {}): MinimalBank {
   const currency = options.currency ?? FIXTURE_CURRENCY;
   const fundingMinorUnits = options.fundingMinorUnits ?? FIXTURE_FUNDING_MINOR_UNITS;
-  const context = createFactoryContext({ seed: options.seed });
+  const context = createFactoryContext(options.seed === undefined ? {} : { seed: options.seed });
   const customer = customerProfile(context);
   const currentAccount = accountDetail(context, {
     customerId: customer.id,
