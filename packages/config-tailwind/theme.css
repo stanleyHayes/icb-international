@@ -1,0 +1,80 @@
+/*
+ * Tailwind v4 theme, bound to the ICB brand tokens (see ADR-10).
+ *
+ * Utilities resolve to the same custom properties the brand sheet uses, so a token change in
+ * brand/tokens/colors.json propagates to every app without a second definition anywhere.
+ * Requires tokens.css to be imported first (preset.css does this for you).
+ */
+@theme inline {
+  --color-navy-50: var(--icb-navy-50);
+  --color-navy-100: var(--icb-navy-100);
+  --color-navy-200: var(--icb-navy-200);
+  --color-navy-300: var(--icb-navy-300);
+  --color-navy-400: var(--icb-navy-400);
+  --color-navy-500: var(--icb-navy-500);
+  --color-navy-600: var(--icb-navy-600);
+  --color-navy-700: var(--icb-navy-700);
+  --color-navy-800: var(--icb-navy-800);
+  --color-navy-900: var(--icb-navy-900);
+  --color-navy-950: var(--icb-navy-950);
+
+  --color-gold-50: var(--icb-gold-50);
+  --color-gold-100: var(--icb-gold-100);
+  --color-gold-200: var(--icb-gold-200);
+  --color-gold-300: var(--icb-gold-300);
+  --color-gold-400: var(--icb-gold-400);
+  --color-gold-500: var(--icb-gold-500);
+  --color-gold-600: var(--icb-gold-600);
+
+  --color-slate-50: var(--icb-slate-50);
+  --color-slate-100: var(--icb-slate-100);
+  --color-slate-200: var(--icb-slate-200);
+  --color-slate-300: var(--icb-slate-300);
+  --color-slate-400: var(--icb-slate-400);
+  --color-slate-500: var(--icb-slate-500);
+  --color-slate-600: var(--icb-slate-600);
+  --color-slate-700: var(--icb-slate-700);
+  --color-slate-800: var(--icb-slate-800);
+  --color-slate-900: var(--icb-slate-900);
+  --color-slate-950: var(--icb-slate-950);
+
+  --color-bg: var(--icb-bg);
+  --color-bg-subtle: var(--icb-bg-subtle);
+  --color-bg-muted: var(--icb-bg-muted);
+  --color-surface: var(--icb-surface);
+  --color-border: var(--icb-border);
+  --color-border-strong: var(--icb-border-strong);
+  --color-fg: var(--icb-text);
+  --color-fg-muted: var(--icb-text-muted);
+  --color-fg-subtle: var(--icb-text-subtle);
+  --color-primary: var(--icb-primary);
+  --color-primary-hover: var(--icb-primary-hover);
+  --color-accent: var(--icb-accent);
+  --color-credit: var(--icb-credit);
+  --color-debit: var(--icb-debit);
+  --color-pending: var(--icb-pending);
+  --color-success: var(--icb-success);
+  --color-warning: var(--icb-warning);
+  --color-danger: var(--icb-danger);
+  --color-info: var(--icb-info);
+
+  --font-sans: var(--icb-font-sans);
+  --font-display: var(--icb-font-display);
+  --font-mono: var(--icb-font-mono);
+
+  --radius-xs: var(--icb-radius-xs);
+  --radius-sm: var(--icb-radius-sm);
+  --radius-md: var(--icb-radius-md);
+  --radius-lg: var(--icb-radius-lg);
+  --radius-xl: var(--icb-radius-xl);
+  --radius-2xl: var(--icb-radius-2xl);
+
+  --shadow-xs: var(--icb-shadow-xs);
+  --shadow-sm: var(--icb-shadow-sm);
+  --shadow-md: var(--icb-shadow-md);
+  --shadow-lg: var(--icb-shadow-lg);
+  --shadow-xl: var(--icb-shadow-xl);
+
+  --ease-out: var(--icb-ease-out);
+  --ease-emphasized: var(--icb-ease-emphasized);
+}

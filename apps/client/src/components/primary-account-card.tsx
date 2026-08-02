@@ -1,6 +1,7 @@
 import type { AccountSummary, MoneyDto } from '@icb/contracts';
 import { Card, maskIdentifier } from '@icb/ui';
 import { ArrowRight } from 'lucide-react';
+import type { Route } from 'next';
 import Link from 'next/link';
 
 /**
@@ -36,7 +37,7 @@ export function PrimaryAccountCard({ account }: Readonly<{ account: AccountSumma
               </p>
             </div>
             <Link
-              href={`/accounts/${account.id}`}
+              href={`/accounts/${account.id}` as Route}
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-white/10 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20"
             >
               View account

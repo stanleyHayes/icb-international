@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
+import { IndexSyncService } from './index-sync.service.js';
 import { TransactionManager } from './transaction.manager.js';
 
 /**
@@ -28,7 +29,7 @@ import { TransactionManager } from './transaction.manager.js';
       }),
     }),
   ],
-  providers: [TransactionManager],
+  providers: [TransactionManager, IndexSyncService],
   exports: [MongooseModule, TransactionManager],
 })
 export class DatabaseModule {}

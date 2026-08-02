@@ -1,6 +1,6 @@
 import type { AccountSummary } from '@icb/contracts';
 import { Amount, Card, CardBody, StatusBadge, groupIdentifier, maskIdentifier } from '@icb/ui';
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import Link from 'next/link';
 
 import { api } from '@/lib/api';
@@ -59,13 +59,13 @@ export default async function AccountsPage() {
 
               <div className="mt-5 flex gap-2">
                 <Link
-                  href={`/transactions?account=${account.id}`}
+                  href={`/transactions?account=${account.id}` as Route}
                   className="inline-flex h-9 flex-1 items-center justify-center rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] text-sm font-medium transition-colors hover:bg-[var(--icb-bg-muted)]"
                 >
                   Transactions
                 </Link>
                 <Link
-                  href={`/transfer?from=${account.id}`}
+                  href={`/transfer?from=${account.id}` as Route}
                   className="inline-flex h-9 flex-1 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-primary)] text-sm font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"
                 >
                   Transfer

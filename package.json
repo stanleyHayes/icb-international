@@ -44,10 +44,5 @@
     "trailingComma": "all",
     "semi": true,
     "arrowParens": "always"
-  },
-  "pnpm": {
-    "overrides": {
-      "fastify": "5.11.0"
-    }
   }
 }

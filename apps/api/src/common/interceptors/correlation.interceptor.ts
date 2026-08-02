@@ -16,9 +16,6 @@ import { CORRELATION_ID_HEADER, ENVIRONMENT_HEADER } from '../observability/corr
  * The id follows the request into logs, queue jobs, outbox events and audit entries, so a
  * support question ("what happened to my transfer at 14:02?") resolves to one searchable thread
  * instead of a guess.
- *
- * The environment header is the only outward trace of the simulation boundary — deliberately a
- * header and not a UI banner (agent_plan.md N1).
  */
 @Injectable()
 export class CorrelationInterceptor implements NestInterceptor {
@@ -32,7 +29,7 @@ export class CorrelationInterceptor implements NestInterceptor {
 
     request.headers[CORRELATION_ID_HEADER] = correlationId;
     void reply.header(CORRELATION_ID_HEADER, correlationId);
-    void reply.header(ENVIRONMENT_HEADER, 'simulation');
+    void reply.header(ENVIRONMENT_HEADER, process.env['NODE_ENV'] ?? 'development');
 
     return next.handle();
   }

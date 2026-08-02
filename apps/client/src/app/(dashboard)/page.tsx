@@ -1,7 +1,7 @@
 import type { AccountSummary, CursorPage, TransactionSummary } from '@icb/contracts';
 import { Amount, Button, Card, CardHeader, EmptyState, maskIdentifier } from '@icb/ui';
 import { ArrowLeftRight, Plus, Receipt } from 'lucide-react';
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import Link from 'next/link';
 
 import { CurrencyTotals, type CurrencyTotal } from '@/components/currency-totals';
@@ -85,7 +85,7 @@ export default async function OverviewPage() {
             {accounts.map((account) => (
               <li key={account.id}>
                 <Link
-                  href={`/accounts/${account.id}`}
+                  href={`/accounts/${account.id}` as Route}
                   className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-[var(--icb-bg-subtle)]"
                 >
                   <div className="min-w-0">

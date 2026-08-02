@@ -1,6 +1,7 @@
 import type { TransactionSummary } from '@icb/contracts';
 import { Amount, StatusBadge, formatRelativeDay } from '@icb/ui';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
 
 /**
  * A list of transactions, grouped by day.
@@ -22,39 +23,41 @@ export function TransactionList({
           </h3>
           <ul className="divide-y divide-[var(--icb-border)]">
             {group.items.map((transaction) => (
-              <li
-                key={transaction.id + transaction.accountId}
-                className="flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-[var(--icb-bg-subtle)]"
-              >
-                <span
-                  aria-hidden="true"
-                  className={
-                    transaction.direction === 'credit'
-                      ? 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--icb-success-bg)] text-[var(--icb-success-fg)]'
-                      : 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--icb-bg-muted)] text-[var(--icb-text-muted)]'
-                  }
+              <li key={transaction.id + transaction.accountId}>
+                <Link
+                  href={`/transactions/${transaction.id}`}
+                  className="flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-[var(--icb-bg-subtle)]"
                 >
-                  {transaction.direction === 'credit' ? (
-                    <ArrowDownLeft size={16} />
-                  ) : (
-                    <ArrowUpRight size={16} />
-                  )}
-                </span>
+                  <span
+                    aria-hidden="true"
+                    className={
+                      transaction.direction === 'credit'
+                        ? 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--icb-success-bg)] text-[var(--icb-success-fg)]'
+                        : 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--icb-bg-muted)] text-[var(--icb-text-muted)]'
+                    }
+                  >
+                    {transaction.direction === 'credit' ? (
+                      <ArrowDownLeft size={16} />
+                    ) : (
+                      <ArrowUpRight size={16} />
+                    )}
+                  </span>
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{transaction.description}</p>
-                  <p className="mt-0.5 flex items-center gap-2 text-xs text-[var(--icb-text-subtle)] capitalize">
-                    {transaction.category.replaceAll('_', ' ')}
-                    {transaction.pending ? <StatusBadge status="pending" /> : null}
-                  </p>
-                </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{transaction.description}</p>
+                    <p className="mt-0.5 flex items-center gap-2 text-xs text-[var(--icb-text-subtle)] capitalize">
+                      {transaction.category.replaceAll('_', ' ')}
+                      {transaction.pending ? <StatusBadge status="pending" /> : null}
+                    </p>
+                  </div>
 
-                <Amount
-                  value={transaction.amount}
-                  direction={transaction.direction}
-                  size="sm"
-                  className="shrink-0"
-                />
+                  <Amount
+                    value={transaction.amount}
+                    direction={transaction.direction}
+                    size="sm"
+                    className="shrink-0"
+                  />
+                </Link>
               </li>
             ))}
           </ul>

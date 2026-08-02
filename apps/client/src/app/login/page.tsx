@@ -1,5 +1,5 @@
 import { IcbLogo } from '@icb/ui';
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import Link from 'next/link';
 
 import { LoginForm } from '@/features/auth/login-form';
@@ -19,7 +19,7 @@ export default async function LoginPage({
     <div className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
       <div className="flex flex-col justify-center px-6 py-16 sm:px-12 lg:px-20">
         <div className="mx-auto w-full max-w-sm">
-          <Link href={MARKETING_URL} aria-label="ICB home">
+          <Link href={MARKETING_URL as Route} aria-label="ICB home">
             <IcbLogo id="login" />
           </Link>
 

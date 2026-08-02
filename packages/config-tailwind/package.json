@@ -1,0 +1,24 @@
+{
+  "name": "@icb/config-tailwind",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./preset.css",
+    "./preset.css": "./preset.css",
+    "./theme.css": "./theme.css",
+    "./tokens.css": "./tokens.css"
+  },
+  "files": [
+    "preset.css",
+    "theme.css",
+    "tokens.css"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "clean": "rm -rf .turbo tokens.css"
+  },
+  "devDependencies": {
+    "tailwindcss": "4.3.3"
+  }
+}

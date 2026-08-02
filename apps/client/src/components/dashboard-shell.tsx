@@ -15,6 +15,7 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
@@ -189,7 +190,7 @@ function NavLink({
 
   return (
     <Link
-      href={href}
+      href={href as Route}
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={cn(

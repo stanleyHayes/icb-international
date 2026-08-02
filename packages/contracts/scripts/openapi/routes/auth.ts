@@ -1,0 +1,152 @@
+import { z } from 'zod';
+
+import {
+  authenticatedUserSchema,
+  authTokensSchema,
+  changePasswordRequestSchema,
+  forgotPasswordRequestSchema,
+  loginRequestSchema,
+  loginResponseSchema,
+  mfaChallengeSchema,
+  mfaVerifyRequestSchema,
+  recoveryCodesSchema,
+  registerRequestSchema,
+  resetPasswordRequestSchema,
+  sessionSchema,
+  stepUpRequestSchema,
+  stepUpTokenSchema,
+  stepUpVerifyRequestSchema,
+  totpConfirmRequestSchema,
+  totpEnrolResponseSchema,
+  verifyEmailRequestSchema,
+} from '../../../src/index.js';
+import { idSchema } from '../../../src/common/primitives.js';
+import { STATUS, TAG } from '../constants.js';
+import { defineOperations, success } from '../spec.js';
+
+const INVALID_CREDENTIALS = {
+  status: STATUS.unauthorized,
+  description: 'Invalid credentials, an expired challenge, or a reused refresh token.',
+} as const;
+const INVALID_TOKEN = {
+  status: STATUS.unprocessable,
+  description: 'The token is invalid, expired, or already used.',
+} as const;
+
+export const authOperations = defineOperations([
+  {
+    method: 'post', path: '/auth/register', tag: TAG.auth, operationId: 'register',
+    summary: 'Register a new customer', auth: false,
+    request: registerRequestSchema,
+    response: success(STATUS.created, 'The newly registered customer.', authenticatedUserSchema),
+    errors: [
+      { status: STATUS.conflict, description: 'A customer with this email already exists.' },
+      { status: STATUS.unprocessable },
+    ],
+  },
+  {
+    method: 'post', path: '/auth/login', tag: TAG.auth, operationId: 'login',
+    summary: 'Log in with email and password', auth: false,
+    request: loginRequestSchema,
+    response: success(STATUS.ok, 'Authenticated, or an MFA challenge to complete.', loginResponseSchema),
+    errors: [INVALID_CREDENTIALS, { status: STATUS.locked, description: 'Too many failed attempts.' }],
+  },
+  {
+    method: 'post', path: '/auth/mfa/verify', tag: TAG.auth, operationId: 'verifyMfa',
+    summary: 'Complete an MFA challenge', auth: false,
+    request: mfaVerifyRequestSchema,
+    response: success(STATUS.ok, 'Authenticated session tokens and user.', loginResponseSchema),
+    errors: [INVALID_CREDENTIALS],
+  },
+  {
+    method: 'post', path: '/auth/refresh', tag: TAG.auth, operationId: 'refreshTokens',
+    summary: 'Rotate the refresh-token cookie for new access tokens', auth: false,
+    response: success(STATUS.ok, 'A fresh access token.', authTokensSchema),
+    errors: [INVALID_CREDENTIALS],
+  },
+  {
+    method: 'post', path: '/auth/logout', tag: TAG.auth, operationId: 'logout',
+    summary: 'Revoke the current session',
+    response: success(STATUS.noContent, 'Session revoked.'),
+  },
+  {
+    method: 'get', path: '/auth/me', tag: TAG.auth, operationId: 'getCurrentUser',
+    summary: 'The authenticated user',
+    response: success(STATUS.ok, 'The authenticated user.', authenticatedUserSchema),
+  },
+  {
+    method: 'post', path: '/auth/password/forgot', tag: TAG.auth, operationId: 'forgotPassword',
+    summary: 'Request a password-reset email', auth: false,
+    request: forgotPasswordRequestSchema,
+    response: success(STATUS.accepted, 'Always accepted, to avoid account enumeration.'),
+  },
+  {
+    method: 'post', path: '/auth/password/reset', tag: TAG.auth, operationId: 'resetPassword',
+    summary: 'Reset the password with a reset token', auth: false,
+    request: resetPasswordRequestSchema,
+    response: success(STATUS.noContent, 'Password reset.'),
+    errors: [INVALID_TOKEN],
+  },
+  {
+    method: 'post', path: '/auth/password/change', tag: TAG.auth, operationId: 'changePassword',
+    summary: 'Change the current password',
+    request: changePasswordRequestSchema,
+    response: success(STATUS.noContent, 'Password changed; other sessions revoked.'),
+    errors: [INVALID_CREDENTIALS, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'post', path: '/auth/email/verify', tag: TAG.auth, operationId: 'verifyEmail',
+    summary: 'Verify an email address with its token', auth: false,
+    request: verifyEmailRequestSchema,
+    response: success(STATUS.noContent, 'Email verified.'),
+    errors: [INVALID_TOKEN],
+  },
+  {
+    method: 'post', path: '/auth/totp/enrol', tag: TAG.auth, operationId: 'enrolTotp',
+    summary: 'Start TOTP enrolment',
+    response: success(STATUS.ok, 'The shared secret and provisioning URI.', totpEnrolResponseSchema),
+    errors: [{ status: STATUS.conflict, description: 'TOTP is already enrolled.' }],
+  },
+  {
+    method: 'post', path: '/auth/totp/confirm', tag: TAG.auth, operationId: 'confirmTotp',
+    summary: 'Confirm TOTP enrolment with a first code',
+    request: totpConfirmRequestSchema,
+    response: success(STATUS.ok, 'Recovery codes, shown exactly once.', recoveryCodesSchema),
+    errors: [INVALID_TOKEN],
+  },
+  {
+    method: 'delete', path: '/auth/totp', tag: TAG.auth, operationId: 'disableTotp',
+    summary: 'Disable TOTP (requires step-up)',
+    response: success(STATUS.noContent, 'TOTP disabled.'),
+  },
+  {
+    method: 'get', path: '/auth/sessions', tag: TAG.auth, operationId: 'listSessions',
+    summary: 'List active sessions',
+    response: success(STATUS.ok, 'Active sessions, current one flagged.', z.array(sessionSchema)),
+  },
+  {
+    method: 'delete', path: '/auth/sessions/{sessionId}', tag: TAG.auth, operationId: 'revokeSession',
+    summary: 'Revoke one session',
+    pathParams: { sessionId: idSchema },
+    response: success(STATUS.noContent, 'Session revoked.'),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'delete', path: '/auth/sessions', tag: TAG.auth, operationId: 'revokeAllSessions',
+    summary: 'Sign out everywhere except the current session',
+    response: success(STATUS.noContent, 'All other sessions revoked.'),
+  },
+  {
+    method: 'post', path: '/auth/step-up', tag: TAG.auth, operationId: 'requestStepUp',
+    summary: 'Request a step-up challenge for a sensitive action',
+    request: stepUpRequestSchema,
+    response: success(STATUS.ok, 'The challenge to complete.', mfaChallengeSchema),
+  },
+  {
+    method: 'post', path: '/auth/step-up/verify', tag: TAG.auth, operationId: 'verifyStepUp',
+    summary: 'Complete a step-up challenge for a single-use token',
+    request: stepUpVerifyRequestSchema,
+    response: success(STATUS.ok, 'A short-lived, single-purpose step-up token.', stepUpTokenSchema),
+    errors: [INVALID_CREDENTIALS],
+  },
+]);

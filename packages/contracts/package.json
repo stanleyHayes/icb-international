@@ -11,7 +11,9 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
@@ -29,8 +31,10 @@
     "@icb/config-ts": "workspace:*",
     "@types/node": "26.1.2",
     "eslint": "10.8.0",
+    "tsx": "4.19.2",
     "typescript": "6.0.3",
     "vite": "8.2.0",
-    "vitest": "4.1.10"
+    "vitest": "4.1.10",
+    "zod-openapi": "^6.0.0"
   }
 }

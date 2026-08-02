@@ -1,0 +1,169 @@
+# PLT-03 — PR pipeline.
+# Order inside `verify` is Turbo-cache-friendly: install → lint → typecheck →
+# unit tests (+ coverage gate) → integration tests → build, so each step reuses
+# the local turbo cache restored at the top of the job. Reusable logic lives in
+# tools/scripts/ci-*.sh.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CI: true
+  TURBO_TELEMETRY_DISABLED: 1
+  # Optional turbo remote cache — no-ops when the secrets are absent.
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+jobs:
+  verify:
+    name: Verify (lint · typecheck · test · build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+            turbo-${{ runner.os }}-
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Coverage gate
+        run: bash tools/scripts/ci-coverage-gate.sh
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            apps/api/coverage
+            packages/money/coverage
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # GitHub service containers cannot pass a command to an image, and
+      # mongod needs `--replSet` to support multi-document transactions.
+      # Start Mongo ourselves, mirroring docker-compose.yml's single-node
+      # replica set (mongo + mongo-init services).
+      - name: Start MongoDB (single-node replica set)
+        run: bash tools/scripts/ci-mongo-start.sh
+
+      - name: Initiate replica set
+        run: bash tools/scripts/ci-mongo-replica-init.sh
+
+      - name: Integration tests
+        run: bash tools/scripts/ci-integration-tests.sh
+        env:
+          NODE_ENV: test
+          MONGO_URI: mongodb://localhost:27017/icb-test?replicaSet=icb-rs&directConnection=true
+          REDIS_URL: redis://localhost:6379
+
+      - name: Build
+        run: pnpm build
+
+  security:
+    name: Security (secret scan · dependency audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # gitleaks scans full git history
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Secret scan (gitleaks)
+        run: bash tools/scripts/ci-secret-scan.sh
+
+      - name: Dependency audit (pnpm audit)
+        run: bash tools/scripts/ci-audit.sh
+
+  contracts-staleness:
+    name: Contracts staleness (OpenAPI)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Guarded: SDK-02 adds the `contracts:openapi` script in parallel. The
+      # check runs only once that script exists, so CI is green either way.
+      - name: OpenAPI staleness check
+        run: bash tools/scripts/ci-contracts-openapi-check.sh

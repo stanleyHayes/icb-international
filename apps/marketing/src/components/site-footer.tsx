@@ -1,7 +1,13 @@
 import { IcbMark } from '@icb/ui';
+import type { Route } from 'next';
 import Link from 'next/link';
 
-const COLUMNS = [
+interface FooterColumn {
+  heading: string;
+  links: readonly { href: Route; label: string }[];
+}
+
+const COLUMNS: readonly FooterColumn[] = [
   {
     heading: 'Personal',
     links: [
@@ -38,7 +44,7 @@ const COLUMNS = [
       { href: '/legal/accessibility', label: 'Accessibility' },
     ],
   },
-] as const;
+];
 
 export function SiteFooter() {
   return (

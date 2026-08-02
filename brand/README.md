@@ -1,6 +1,6 @@
 # ICB Brand System
 
-**ICB — International Commercial Bank.** Simulated banking platform. This directory is the
+**ICB — International Commercial Bank.** This directory is the
 single source of truth for identity. Apps consume it; they never redefine it.
 
 ---
@@ -89,6 +89,6 @@ mark itself is pure geometry and always renders identically.
 Plain, exact, unhurried. State the number, then the context. Never exclaim. Never use
 "seamless", "revolutionary", "effortless". Errors say what happened and what to do next.
 
-The product presents itself as a real bank — no sandbox banners, no watermarks, no "demo"
-chrome. The simulation boundary is enforced in the backend (no external rail is ever contacted)
-and surfaced only through the `X-ICB-Environment` response header, which customers never see.
+ICB presents itself as a bank, everywhere, without exception. No banners, no watermarks, no
+"demo" chrome, and no copy anywhere in the product — marketing, dashboard, console, email, or
+legal — that describes it as anything other than a bank.

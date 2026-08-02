@@ -175,3 +175,29 @@
     scrollbar-color: var(--icb-slate-300) transparent;
   }
 }
+
+/*
+ * Focus-visible ring system.
+ *
+ * `@utility` (not a plain class) so the ring composes with variants — `focus-visible:focus-ring`
+ * on an input wrapper, `focus-visible:focus-ring-inset` inside a bordered field, and
+ * `focus-ring-danger` for destructive confirmations. The global `:focus-visible` rule above
+ * covers plain interactive elements; these utilities exist for components that need the ring on
+ * a non-standard target. All three read tokens, so they follow the active theme.
+ */
+@utility focus-ring {
+  outline: 2px solid var(--icb-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--icb-radius-xs);
+}
+
+@utility focus-ring-inset {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--icb-focus-ring);
+}
+
+@utility focus-ring-danger {
+  outline: 2px solid var(--icb-danger);
+  outline-offset: 2px;
+  border-radius: var(--icb-radius-xs);
+}

@@ -3,6 +3,9 @@ packages:
   - 'packages/*'
   - 'tools/*'
 
+overrides:
+  fastify: 5.11.0
+
 onlyBuiltDependencies:
   - '@nestjs/core'
   - argon2

@@ -1,0 +1,41 @@
+{
+  "name": "@icb/sdk",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed API client for ICB, generated from @icb/contracts, plus an MSW mock.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./mock": {
+      "types": "./dist/mock/index.d.ts",
+      "default": "./dist/mock/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@faker-js/faker": "10.5.0",
+    "@icb/contracts": "workspace:*",
+    "msw": "^2.4.9",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@icb/config-eslint": "workspace:*",
+    "@icb/config-ts": "workspace:*",
+    "@types/node": "26.1.2",
+    "eslint": "10.8.0",
+    "typescript": "6.0.3",
+    "vite": "8.2.0",
+    "vitest": "4.1.10"
+  }
+}

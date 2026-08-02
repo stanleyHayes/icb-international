@@ -1,0 +1,13 @@
+/*
+ * ICB shared Tailwind v4 preset.
+ *
+ * One import gives an app Tailwind v4 with the brand tokens (brand/tokens/tokens.css via the
+ * generated tokens.css) and the @theme binding that maps utilities onto the --icb-* custom
+ * properties. Apps currently consume the same stack through `@icb/ui/styles.css`; new surfaces
+ * that do not pull in @icb/ui (email templates, standalone pages) should import this preset:
+ *
+ *   @import '@icb/config-tailwind';
+ */
+@import 'tailwindcss';
+@import './tokens.css';
+@import './theme.css';

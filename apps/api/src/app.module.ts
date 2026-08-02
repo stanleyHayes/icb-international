@@ -10,8 +10,11 @@ import { ClockModule } from './simulation/clock/clock.module.js';
 import { AccountsModule } from './modules/accounts/accounts.module.js';
 import { AdminModule } from './modules/admin/admin.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { CacheModule } from './infrastructure/cache/cache.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { LedgerModule } from './modules/ledger/ledger.module.js';
+import { OutboxModule } from './infrastructure/outbox/outbox.module.js';
+import { QueueModule } from './infrastructure/queue/queue.module.js';
 import { SeedModule } from './simulation/seed/seed.module.js';
 import { TransactionsModule } from './modules/transactions/transactions.module.js';
 import { TransfersModule } from './modules/transfers/transfers.module.js';
@@ -34,8 +37,11 @@ import { TransfersModule } from './modules/transfers/transfers.module.js';
     AccountsModule,
     AdminModule,
     AuthModule,
+    CacheModule,
     HealthModule,
     LedgerModule,
+    OutboxModule,
+    QueueModule,
     SeedModule,
     TransactionsModule,
     TransfersModule,

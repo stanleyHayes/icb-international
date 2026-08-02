@@ -10,6 +10,7 @@
   "scripts": {
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "clean": "rm -rf .turbo *.tsbuildinfo"
   },
   "dependencies": {
@@ -30,6 +31,9 @@
     "@types/react-dom": "19.2.3",
     "eslint": "10.8.0",
     "react": "19.2.8",
-    "typescript": "6.0.3"
+    "react-dom": "19.2.8",
+    "typescript": "6.0.3",
+    "vite": "8.2.0",
+    "vitest": "4.1.10"
   }
 }
