@@ -25,7 +25,9 @@ export const customersEndpoints = {
     body: updatePreferencesRequestSchema,
   }),
   exportData: post('/customers/me/export', downloadLinkSchema, {}),
-  adminSearch: get('/admin/customers', offsetPageSchema(customerAdminViewSchema)),
+  adminSearch: get('/admin/customers', offsetPageSchema(customerAdminViewSchema), {
+    query: adminCustomerQuerySchema,
+  }),
   adminGet: get('/admin/customers/:customerId', customerAdminViewSchema),
   adminSetStatus: post('/admin/customers/:customerId/status', customerAdminViewSchema, {
     body: setCustomerStatusRequestSchema,

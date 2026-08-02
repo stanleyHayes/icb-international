@@ -3,6 +3,17 @@
  * vocabulary (tags, media types, header names, status codes) is declared here once.
  */
 
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+
+/** Repository root — `scripts/openapi/` is four levels deep. */
+export const REPO_ROOT = path.resolve(MODULE_DIR, '..', '..', '..', '..');
+
+/** The committed artifact this build owns. */
+export const OPENAPI_OUTPUT_FILE = path.join(REPO_ROOT, 'docs', 'api', 'openapi.json');
+
 export const OPENAPI_VERSION = '3.1.0';
 
 export const API_TITLE = 'ICB API';

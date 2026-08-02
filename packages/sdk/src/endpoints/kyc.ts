@@ -30,7 +30,9 @@ export const kycEndpoints = {
     body: submitKycRequestSchema,
     idempotent: true,
   }),
-  adminQueue: get('/admin/kyc/cases', offsetPageSchema(kycCaseSchema)),
+  adminQueue: get('/admin/kyc/cases', offsetPageSchema(kycCaseSchema), {
+    query: kycQueueQuerySchema,
+  }),
   adminGetCase: get('/admin/kyc/cases/:caseId', kycCaseSchema),
   adminDecide: post('/admin/kyc/cases/:caseId/decision', kycCaseSchema, {
     body: kycDecisionRequestSchema,

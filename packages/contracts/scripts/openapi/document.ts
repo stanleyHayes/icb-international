@@ -1,3 +1,4 @@
+import { format, resolveConfig } from 'prettier';
 import { createDocument } from 'zod-openapi';
 import type { ZodOpenApiPathsObject } from 'zod-openapi';
 
@@ -7,6 +8,7 @@ import {
   API_TITLE,
   API_VERSION,
   BEARER_SCHEME_NAME,
+  OPENAPI_OUTPUT_FILE,
   OPENAPI_VERSION,
   SERVER_DESCRIPTION,
   SERVER_URL,
@@ -52,6 +54,7 @@ export function buildOpenApiDocument(): ReturnType<typeof createDocument> {
       title: API_TITLE,
       version: API_VERSION,
       description: API_DESCRIPTION,
+      license: { name: 'Proprietary' },
     },
     servers: [{ url: SERVER_URL, description: SERVER_DESCRIPTION }],
     tags: Object.values(TAG).map((name) => ({ name, description: TAG_DESCRIPTIONS[name] })),
@@ -66,9 +69,17 @@ export function buildOpenApiDocument(): ReturnType<typeof createDocument> {
   });
 }
 
-/** The canonical serialisation, byte-identical between write mode and `--check`. */
-export function renderOpenApiJson(): string {
-  return `${JSON.stringify(buildOpenApiDocument(), null, JSON_INDENT)}\n`;
+/**
+ * The canonical serialisation, byte-identical between write mode and `--check`.
+ *
+ * The document is piped through Prettier (with the repository's own resolved config) so the
+ * committed artifact satisfies both gates that read it: this package's `--check` staleness
+ * comparison and the root `format:check`.
+ */
+export async function renderOpenApiJson(): Promise<string> {
+  const raw = `${JSON.stringify(buildOpenApiDocument(), null, JSON_INDENT)}\n`;
+  const config = (await resolveConfig(OPENAPI_OUTPUT_FILE)) ?? {};
+  return format(raw, { ...config, parser: 'json' });
 }
 
 function buildPaths(operations: readonly OperationSpec[]): ZodOpenApiPathsObject {

@@ -161,3 +161,20 @@ describe('drainOnce', () => {
     await expect(first).resolves.toBe(0);
   });
 });
+
+describe('lifecycle', () => {
+  it('starts the poll timer on bootstrap and clears it on destroy', () => {
+    vi.useFakeTimers();
+    try {
+      const { processor } = setup();
+
+      processor.onApplicationBootstrap();
+      expect(vi.getTimerCount()).toBe(1);
+
+      processor.onModuleDestroy();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

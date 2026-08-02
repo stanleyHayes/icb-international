@@ -20,7 +20,9 @@ const reconciliationQuerySchema = z.object({ date: isoDateSchema.optional() });
 
 export const adminEndpoints = {
   dashboard: get('/admin/dashboard', dashboardSchema),
-  monitor: get('/admin/monitor', offsetPageSchema(monitorEntrySchema)),
+  monitor: get('/admin/monitor', offsetPageSchema(monitorEntrySchema), {
+    query: monitorQuerySchema,
+  }),
   manualPosting: post('/admin/postings', transactionDetailSchema, {
     body: manualPostingRequestSchema,
     idempotent: true,
@@ -30,7 +32,9 @@ export const adminEndpoints = {
     idempotent: true,
   }),
   trialBalance: get('/admin/ledger/trial-balance', trialBalanceSchema),
-  reconciliation: get('/admin/ledger/reconciliation', reconciliationSchema),
+  reconciliation: get('/admin/ledger/reconciliation', reconciliationSchema, {
+    query: reconciliationQuerySchema,
+  }),
   health: get('/admin/health', systemHealthSchema),
 };
 

@@ -93,11 +93,19 @@ function generateRecord(def: Def, ctx: FabricateContext): unknown {
   const keyType = def.keyType as z.ZodType;
   const valueType = def.valueType as z.ZodType;
   const result: Record<string, unknown> = {};
-  for (let index = 0; index < RECORD_ENTRIES; index += 1) {
-    const key = String(generateValue(keyType, { ...ctx, hint: undefined, depth: ctx.depth + 1 }));
+  for (const key of recordKeys(keyType, ctx)) {
     result[key] = generateValue(valueType, { ...ctx, hint: undefined, depth: ctx.depth + 1 });
   }
   return result;
+}
+
+/** Enum-keyed records (e.g. card channel controls) are exhaustive in Zod: emit every member. */
+function recordKeys(keyType: z.ZodType, ctx: FabricateContext): string[] {
+  const keyDef = defOf(keyType);
+  if (keyDef.type === 'enum') return Object.values(keyDef.entries as Record<string, string>);
+  return Array.from({ length: RECORD_ENTRIES }, () =>
+    String(generateValue(keyType, { ...ctx, hint: undefined, depth: ctx.depth + 1 })),
+  );
 }
 
 function generateNullable(def: Def, ctx: FabricateContext): unknown {

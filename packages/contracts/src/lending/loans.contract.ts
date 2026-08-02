@@ -218,3 +218,4 @@ export type RepaymentInstalment = z.infer<typeof repaymentInstalmentSchema>;
 export type PayoffQuote = z.infer<typeof payoffQuoteSchema>;
 export type LoanArrears = z.infer<typeof loanArrearsSchema>;
 export type ScorecardFactor = z.infer<typeof scorecardFactorSchema>;
+export type MakeRepaymentRequest = z.infer<typeof makeRepaymentRequestSchema>;

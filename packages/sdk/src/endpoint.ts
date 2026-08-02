@@ -11,12 +11,14 @@ import {
  * One API endpoint, declared once and consumed twice: the typed client builds a method from it
  * and `@icb/sdk/mock` builds an MSW handler from it. Path parameters use `:name` segments.
  */
-export interface EndpointDef<B extends z.ZodType = z.ZodType, R = z.ZodType | never> {
+export interface EndpointDef<B extends z.ZodType = z.ZodType, R = z.ZodType> {
   readonly method: HttpMethod;
   readonly path: string;
   readonly body?: B;
   /** `never` means the endpoint returns no content (204). */
   readonly response?: R;
+  /** The contract schema for the query string, when the endpoint accepts one. */
+  readonly query?: z.ZodType;
   /** The transport attaches an `Idempotency-Key` header automatically (agent_plan.md N6). */
   readonly idempotent?: boolean;
   /** False for pre-auth endpoints (login, register, refresh…); default true. */
@@ -30,6 +32,7 @@ interface BodyExtras<B extends z.ZodType = z.ZodType> {
 }
 
 interface NoBodyExtras {
+  query?: z.ZodType;
   idempotent?: boolean;
   auth?: boolean;
 }

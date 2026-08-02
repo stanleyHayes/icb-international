@@ -9,16 +9,22 @@ const healthStatusSchema = z.object({
 
 export const systemOperations = defineOperations([
   {
-    method: 'get', path: '/health', tag: TAG.system, operationId: 'healthCheck',
-    summary: 'Liveness probe', auth: false,
+    method: 'get',
+    path: '/health',
+    tag: TAG.system,
+    operationId: 'healthCheck',
+    summary: 'Liveness probe',
+    auth: false,
     response: success(STATUS.ok, 'The process is alive.', healthStatusSchema),
   },
   {
-    method: 'get', path: '/health/ready', tag: TAG.system, operationId: 'readinessCheck',
-    summary: 'Readiness probe — database and cache reachable', auth: false,
+    method: 'get',
+    path: '/health/ready',
+    tag: TAG.system,
+    operationId: 'readinessCheck',
+    summary: 'Readiness probe — database and cache reachable',
+    auth: false,
     response: success(STATUS.ok, 'The service can take traffic.', healthStatusSchema),
-    errors: [
-      { status: STATUS.serviceUnavailable, description: 'A required dependency is down.' },
-    ],
+    errors: [{ status: STATUS.serviceUnavailable, description: 'A required dependency is down.' }],
   },
 ]);

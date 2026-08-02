@@ -11,42 +11,12 @@ import { ZodError } from 'zod';
 
 import { isDomainError, type DomainError } from '../errors/domain.error.js';
 import { CORRELATION_ID_HEADER } from '../observability/correlation.constants.js';
-
-const PROBLEM_TYPE_BASE = 'https://icb.example/problems';
-
-const TITLES: Partial<Record<ErrorCode, string>> = {
-  VALIDATION_FAILED: 'Validation failed',
-  NOT_FOUND: 'Resource not found',
-  UNAUTHENTICATED: 'Authentication required',
-  FORBIDDEN: 'Not permitted',
-  CONFLICT: 'Conflicting state',
-  RATE_LIMITED: 'Too many requests',
-  INTERNAL_ERROR: 'Something went wrong',
-};
-
-/** Framework exceptions arrive with a status but no ICB code; this maps one to the other. */
-const STATUS_CODES: Readonly<Record<number, ErrorCode>> = {
-  401: 'UNAUTHENTICATED',
-  403: 'FORBIDDEN',
-  404: 'NOT_FOUND',
-  409: 'CONFLICT',
-  429: 'RATE_LIMITED',
-};
-
-function codeForStatus(status: number): ErrorCode {
-  return STATUS_CODES[status] ?? (status >= 500 ? 'INTERNAL_ERROR' : 'VALIDATION_FAILED');
-}
-
-function titleFor(code: ErrorCode): string {
-  return TITLES[code] ?? code.toLowerCase().replaceAll('_', ' ').replace(/^./, (c) => c.toUpperCase());
-}
+import { codeForStatus, PROBLEM_TYPE_BASE, titleFor } from './problem-details.constants.js';
 
 /**
- * Turns every thrown value into RFC 9457 problem+json.
- *
- * There is exactly one error shape on the wire. Clients parse one thing; support reads one
- * thing; the SDK maps one thing. An unexpected error is logged in full and returned as an opaque
- * INTERNAL_ERROR — internals never leak to a caller.
+ * Turns every thrown value into RFC 9457 problem+json — the only error shape on the wire.
+ * An unexpected error is logged in full and returned as an opaque INTERNAL_ERROR: internals
+ * never leak to a caller.
  */
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {

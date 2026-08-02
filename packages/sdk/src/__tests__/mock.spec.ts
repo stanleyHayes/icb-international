@@ -57,12 +57,13 @@ describe('@icb/sdk/mock smoke', () => {
     const call = buildRequester();
     const faker = createMockFaker(1234);
     const labels: string[] = [];
-    for (const [namespace, endpoints] of Object.entries(endpointRegistry)) {
+    const namespaces = Object.entries(endpointRegistry) as [string, Record<string, EndpointDef>][];
+    for (const [namespace, endpoints] of namespaces) {
       for (const [name, def] of Object.entries(endpoints)) {
         const genericDef: EndpointDef = def;
         const args: CallArgs<EndpointDef> = {
           params: paramsFor(def.path),
-          body: def.body === undefined ? undefined : (fabricate(def.body, faker) as never),
+          body: def.body === undefined ? undefined : (fabricate(def.body, faker)),
         };
         // The client parses every response against the endpoint's contract schema, so a
         // successful resolve here *is* the schema-satisfaction assertion for the mock.

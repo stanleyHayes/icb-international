@@ -1,7 +1,7 @@
 'use client';
 
 import { IcbMark, cn, initialsOf } from '@icb/ui';
-import { Activity, BookOpen, LayoutDashboard, LogOut, Users } from 'lucide-react';
+import { Activity, BookOpen, LayoutDashboard, LogOut, ShieldCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -13,6 +13,7 @@ const NAV = [
   { href: '/ledger', label: 'Trial balance', icon: BookOpen },
   { href: '/monitor', label: 'Monitor', icon: Activity },
   { href: '/customers', label: 'Customers', icon: Users },
+  { href: '/kyc', label: 'KYC queue', icon: ShieldCheck },
 ] as const;
 
 interface ShellUser {

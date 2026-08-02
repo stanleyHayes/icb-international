@@ -16,7 +16,9 @@ import { get, patch, post, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
 
 export const savingsEndpoints = {
-  listGoals: get('/savings/goals', cursorPageSchema(savingsGoalSchema)),
+  listGoals: get('/savings/goals', cursorPageSchema(savingsGoalSchema), {
+    query: savingsQuerySchema,
+  }),
   createGoal: post('/savings/goals', savingsGoalSchema, {
     body: createSavingsGoalRequestSchema,
     idempotent: true,

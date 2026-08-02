@@ -35,6 +35,7 @@ interface Settlement {
 }
 
 const NO_EMAIL = 'No email address is on file for this customer';
+const NO_PHONE = 'No phone number is on file for this customer';
 
 /**
  * One channel, one row, one outcome.
@@ -74,7 +75,10 @@ export class NotificationDeliveryService {
       case 'email':
         return this.sendEmail(queued, input);
       case 'sms':
-        return this.simulate(queued, 'sms', input.recipientPhone);
+        // A text with nowhere to go is a failure, not a delivery — same rule as email.
+        return input.recipientPhone === null
+          ? this.settle(queued._id, { state: 'failed', failureReason: NO_PHONE })
+          : this.simulate(queued, 'sms', input.recipientPhone);
       case 'push':
         return this.simulate(queued, 'push', input.customerId);
     }

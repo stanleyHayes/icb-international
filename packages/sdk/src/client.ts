@@ -22,7 +22,9 @@ import { createSupportApi, type SupportApi } from './endpoints/support.js';
 import { createTransactionsApi, type TransactionsApi } from './endpoints/transactions.js';
 import { createTransfersApi, type TransfersApi } from './endpoints/transfers.js';
 import { type CredentialsMode } from './http.js';
+import { type Requester } from './endpoint.js';
 import { createRefresher } from './refresh.js';
+import { stripTrailingSlashes } from './query.js';
 import { createRequester, type AccessTokenProvider } from './transport.js';
 
 export interface IcbClientOptions {
@@ -62,14 +64,12 @@ export interface IcbClient {
   simulation: SimulationApi;
 }
 
-const TRAILING_SLASHES = /\/+$/;
-
 /**
  * Creates the typed ICB API client. Works in the browser and in Node (Next.js RSC and server
  * actions) — the only environment dependency is `fetch`.
  */
 export function createIcbClient(options: IcbClientOptions = {}): IcbClient {
-  const baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(TRAILING_SLASHES, '');
+  const baseUrl = stripTrailingSlashes(options.baseUrl ?? DEFAULT_BASE_URL);
   const fetchFn = options.fetchFn ?? globalThis.fetch.bind(globalThis);
   const credentials = options.credentials ?? 'include';
   const refresher = createRefresher({
@@ -85,6 +85,10 @@ export function createIcbClient(options: IcbClientOptions = {}): IcbClient {
     getAccessToken: options.getAccessToken,
     refresher,
   });
+  return buildNamespaces(call);
+}
+
+function buildNamespaces(call: Requester): IcbClient {
   return {
     auth: createAuthApi(call),
     customers: createCustomersApi(call),

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { type z } from 'zod';
 import {
   beneficiaryQuerySchema,
   beneficiarySchema,
@@ -13,7 +13,9 @@ import { del, get, patch, post, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
 
 export const beneficiariesEndpoints = {
-  list: get('/beneficiaries', cursorPageSchema(beneficiarySchema)),
+  list: get('/beneficiaries', cursorPageSchema(beneficiarySchema), {
+    query: beneficiaryQuerySchema,
+  }),
   create: post('/beneficiaries', beneficiarySchema, {
     body: createBeneficiaryRequestSchema,
     idempotent: true,

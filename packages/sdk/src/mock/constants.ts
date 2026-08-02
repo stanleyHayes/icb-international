@@ -14,3 +14,6 @@ export const FLOAT_FRACTION_DIGITS = 2;
 export const ISO_DATE_LENGTH = 10;
 export const ULID_LENGTH = 26;
 export const CROCKFORD_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+/** Fixed reference instant so relative faker dates (`recent`, `soon`) stay deterministic. */
+export const MOCK_REFERENCE_DATE = new Date('2026-01-15T12:00:00.000Z');

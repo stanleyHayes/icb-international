@@ -38,6 +38,6 @@ export const REGEX_SAMPLES: Readonly<Record<string, SampleGenerator>> = {
 const FALLBACK_LENGTH = 12;
 
 export function regexSample(pattern: RegExp, faker: Faker): string {
-  const generator = REGEX_SAMPLES[pattern.source];
+  const generator = REGEX_SAMPLES[pattern.source.replaceAll('\\/', '/')];
   return generator ? generator(faker) : faker.string.alphanumeric(FALLBACK_LENGTH);
 }

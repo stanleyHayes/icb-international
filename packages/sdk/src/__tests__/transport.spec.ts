@@ -125,10 +125,8 @@ describe('transport — refresh on 401', () => {
   });
 
   it('surfaces the refresh failure as a typed api error', async () => {
-    const { call } = harness((url) =>
-      url.endsWith('/v1/auth/refresh')
-        ? Promise.resolve(jsonResponse(401, problem(401, 'SESSION_EXPIRED')))
-        : Promise.resolve(jsonResponse(401, problem(401, 'SESSION_EXPIRED'))),
+    const { call } = harness(() =>
+      Promise.resolve(jsonResponse(401, problem(401, 'SESSION_EXPIRED'))),
     );
     const error = await call(listEndpoint).catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(IcbApiError);

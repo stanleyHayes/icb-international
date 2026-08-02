@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { type z } from 'zod';
 import {
   cardAuthorisationSchema,
   cardDetailSchema,
@@ -20,7 +20,7 @@ import { get, patch, post, postVoid, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
 
 export const cardsEndpoints = {
-  list: get('/cards', cursorPageSchema(cardSummarySchema)),
+  list: get('/cards', cursorPageSchema(cardSummarySchema), { query: cardQuerySchema }),
   issue: post('/cards', cardDetailSchema, { body: issueCardRequestSchema, idempotent: true }),
   get: get('/cards/:cardId', cardDetailSchema),
   update: patch('/cards/:cardId', cardDetailSchema, { body: updateCardRequestSchema }),
@@ -39,7 +39,9 @@ export const cardsEndpoints = {
   setTravelNotice: post('/cards/:cardId/travel-notice', cardDetailSchema, {
     body: travelNoticeRequestSchema,
   }),
-  listAuthorisations: get('/cards/:cardId/authorisations', cursorPageSchema(cardAuthorisationSchema)),
+  listAuthorisations: get('/cards/:cardId/authorisations', cursorPageSchema(cardAuthorisationSchema), {
+    query: cursorQuerySchema,
+  }),
 };
 
 export function createCardsApi(call: Requester) {

@@ -111,6 +111,9 @@ importers:
       '@icb/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@icb/media':
+        specifier: workspace:*
+        version: link:../../packages/media
       '@icb/money':
         specifier: workspace:*
         version: link:../../packages/money
@@ -399,6 +402,9 @@ importers:
       eslint:
         specifier: 10.8.0
         version: 10.8.0(jiti@2.7.0)
+      prettier:
+        specifier: 3.9.6
+        version: 3.9.6
       tsx:
         specifier: 4.19.2
         version: 4.19.2

@@ -1,6 +1,5 @@
 import { fromMinorUnits } from '@icb/money';
-import { Test } from '@nestjs/testing';
-import type { INestApplication } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../../../app.module.js';
@@ -23,7 +22,7 @@ import { LedgerService } from '../ledger.service.js';
  * cannot reproduce.
  */
 describe('ledger under concurrency', () => {
-  let app: INestApplication;
+  let moduleRef: TestingModule;
   let ledger: LedgerService;
   let accounts: AccountsService;
   let integrity: LedgerIntegrityService;
@@ -35,13 +34,13 @@ describe('ledger under concurrency', () => {
   const POSTING_MINOR_UNITS = 250; // 2.50 each
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = moduleRef.createNestApplication();
-    await app.init();
+    // The DI container is all this needs — no HTTP server, so no adapter to load.
+    moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    await moduleRef.init();
 
-    ledger = app.get(LedgerService);
-    accounts = app.get(AccountsService);
-    integrity = app.get(LedgerIntegrityService);
+    ledger = moduleRef.get(LedgerService);
+    accounts = moduleRef.get(AccountsService);
+    integrity = moduleRef.get(LedgerIntegrityService);
 
     const account = await accounts.open({
       customerId: newId(),
@@ -69,10 +68,11 @@ describe('ledger under concurrency', () => {
         },
       ],
     });
-  }, 60_000);
+    // Generous: booting the full application module against a real replica set is not fast.
+  }, 240_000);
 
   afterAll(async () => {
-    await app?.close();
+    await moduleRef?.close();
   });
 
   it(`keeps the ledger exact across ${CONCURRENT_POSTINGS} simultaneous postings`, async () => {

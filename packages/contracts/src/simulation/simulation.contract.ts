@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { transferRailSchema } from '../common/enums.js';
+import { TRANSFER_RAILS } from '../common/enums.js';
 import { idSchema, isoDateTimeSchema, moneySchema } from '../common/primitives.js';
 
 /**
@@ -46,9 +46,20 @@ export const setClockRequestSchema = z.object({
   frozen: z.boolean().optional(),
 });
 
+/**
+ * Every rail the simulator models.
+ *
+ * A superset of `TRANSFER_RAILS`: the card network carries authorisations rather than customer
+ * transfers, so no customer can pick it as a transfer destination, but it has exactly the same
+ * tunable runtime profile — latency, failure rate, weighted decline codes — and an operator needs
+ * to reach it from the same control surface.
+ */
+export const SIMULATION_RAILS = [...TRANSFER_RAILS, 'card'] as const;
+export const simulationRailSchema = z.enum(SIMULATION_RAILS);
+
 /** How a simulated rail behaves. Tunable at runtime so failure paths can be demonstrated. */
 export const railProfileSchema = z.object({
-  rail: transferRailSchema,
+  rail: simulationRailSchema,
   enabled: z.boolean(),
   minLatencyMs: z.int().nonnegative(),
   maxLatencyMs: z.int().nonnegative(),
@@ -164,6 +175,7 @@ export const updateFeatureFlagRequestSchema = z.object({
   audience: z.enum(['all', 'staff', 'beta', 'tier_premier_plus']).optional(),
 });
 
+export type SimulationRail = (typeof SIMULATION_RAILS)[number];
 export type ClockState = z.infer<typeof clockStateSchema>;
 export type AdvanceClockRequest = z.infer<typeof advanceClockRequestSchema>;
 export type RailProfile = z.infer<typeof railProfileSchema>;

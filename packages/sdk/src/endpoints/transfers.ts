@@ -31,7 +31,7 @@ export const transfersEndpoints = {
     body: bulkTransferRequestSchema,
     idempotent: true,
   }),
-  list: get('/transfers', cursorPageSchema(transferSummarySchema)),
+  list: get('/transfers', cursorPageSchema(transferSummarySchema), { query: transferQuerySchema }),
   get: get('/transfers/:transferId', transferDetailSchema),
   cancel: post('/transfers/:transferId/cancel', transferDetailSchema, {
     body: cancelTransferRequestSchema,

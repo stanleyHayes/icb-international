@@ -91,9 +91,7 @@ const CONTRACT_MODULES: readonly Record<string, unknown>[] = [
  * would break that expansion.
  */
 function isComponentCandidate(name: string, value: unknown): value is z.ZodType {
-  return (
-    name.endsWith(SCHEMA_SUFFIX) && !name.endsWith(QUERY_SUFFIX) && value instanceof z.ZodType
-  );
+  return name.endsWith(SCHEMA_SUFFIX) && !name.endsWith(QUERY_SUFFIX) && value instanceof z.ZodType;
 }
 
 /** `registerRequestSchema` → `RegisterRequest`. */
@@ -104,11 +102,22 @@ export function toComponentName(exportName: string): string {
   return stripped.replace(UPPERCASE_INITIAL, (initial) => initial.toUpperCase());
 }
 
+/** Code-unit comparison — deterministic across runtimes and locales, unlike a bare `.sort()`. */
+function compareNames([left]: [string, z.ZodType], [right]: [string, z.ZodType]): number {
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
+}
+
 /**
  * Builds the `components.schemas` map from the contract modules themselves, so a schema added
  * to `@icb/contracts` is registered here automatically. zod-openapi replaces a schema with a
  * `$ref` wherever the identical object appears, giving PascalCase component names to the
  * generated SDK without touching SDK-01's sources.
+ *
+ * Entries are sorted by component name: ESM namespace key order is alphabetical while some
+ * transpilers preserve source order, and the committed artifact must be byte-identical
+ * regardless of which runtime generated it.
  */
 export function buildComponentSchemas(): NamedSchemas {
   const entries: [string, z.ZodType][] = [];
@@ -117,6 +126,7 @@ export function buildComponentSchemas(): NamedSchemas {
       if (isComponentCandidate(name, value)) entries.push([toComponentName(name), value]);
     }
   }
+  entries.sort(compareNames);
   return Object.fromEntries(entries);
 }
 

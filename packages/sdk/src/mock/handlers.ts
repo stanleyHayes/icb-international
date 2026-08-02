@@ -7,6 +7,7 @@ import { endpointRegistry } from '../endpoints/index.js';
 import { type HttpMethod } from '../http.js';
 import { fabricate } from './fabricate.js';
 import { createMockFaker } from './faker.js';
+import { stripTrailingSlashes } from '../query.js';
 
 export interface MockOptions {
   /** API origin the handlers intercept; must match the client's `baseUrl`. */
@@ -25,8 +26,7 @@ const HTTP_FACTORIES: Readonly<Record<HttpMethod, HttpFactory>> = {
   DELETE: http.delete,
 };
 
-const TRAILING_SLASHES = /\/+$/;
-const PATH_PARAM_PATTERN = /:[A-Za-z]+/g;
+const TRAILING_SLASH = '/';
 
 /**
  * MSW v2 handlers covering the entire API surface, generated from the same endpoint registry
@@ -34,19 +34,20 @@ const PATH_PARAM_PATTERN = /:[A-Za-z]+/g;
  * (browser) — the handlers themselves are environment-agnostic.
  */
 export function createMockHandlers(options: MockOptions = {}): RequestHandler[] {
-  const baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(TRAILING_SLASHES, '');
+  const baseUrl = stripTrailingSlashes(options.baseUrl ?? DEFAULT_BASE_URL);
   const faker = createMockFaker(options.seed);
   return sortedEndpoints().map((def) => buildHandler(baseUrl, def, faker));
 }
 
 /** Static paths register before parameterised ones so `/products/rates` beats `/products/:code`. */
 function sortedEndpoints(): EndpointDef[] {
-  const defs = Object.values(endpointRegistry).flatMap((endpoints) => Object.values(endpoints));
+  const namespaces = Object.values(endpointRegistry) as Record<string, EndpointDef>[];
+  const defs = namespaces.flatMap((endpoints) => Object.values(endpoints));
   return defs.sort((a, b) => paramCount(a.path) - paramCount(b.path));
 }
 
 function paramCount(path: string): number {
-  return path.match(PATH_PARAM_PATTERN)?.length ?? 0;
+  return path.split(TRAILING_SLASH).filter((segment) => segment.startsWith(':')).length;
 }
 
 function buildHandler(baseUrl: string, def: EndpointDef, faker: Faker): RequestHandler {

@@ -13,7 +13,7 @@ import {
 } from './constants.js';
 import { type CallArgs, type EndpointDef, type Requester, type ResponseOf } from './endpoint.js';
 import { IcbNetworkError, IcbProtocolError, toApiError } from './errors.js';
-import { type CredentialsMode } from './http.js';
+import { type CredentialsMode, type RequestOptions } from './http.js';
 import { resolveIdempotencyKey } from './idempotency.js';
 import { interpolatePath, serializeQuery } from './query.js';
 import { type Refresher } from './refresh.js';
@@ -61,27 +61,38 @@ async function buildInit(
   def: EndpointDef,
   args: CallArgs<EndpointDef> | undefined,
 ): Promise<RequestInit> {
-  const options = args?.options;
-  const headers: Record<string, string> = { [HEADER_ACCEPT]: MIME_JSON };
-  if (def.auth !== false) await appendAuthHeader(deps, headers);
-  if (def.idempotent === true) {
-    headers[HEADER_IDEMPOTENCY_KEY] = resolveIdempotencyKey(options?.idempotencyKey);
-  }
-  const hasBody = args?.body !== undefined;
-  if (hasBody) headers[HEADER_CONTENT_TYPE] = MIME_JSON;
-  Object.assign(headers, options?.headers);
+  const headers = await buildHeaders(deps, def, args);
   return {
     method: def.method,
     headers,
     credentials: deps.credentials,
-    signal: options?.signal ?? null,
-    body: hasBody ? JSON.stringify(args.body) : null,
+    signal: args?.options?.signal ?? null,
+    body: args?.body === undefined ? null : JSON.stringify(args.body),
   };
 }
 
-async function appendAuthHeader(deps: TransportDeps, headers: Record<string, string>): Promise<void> {
+async function buildHeaders(
+  deps: TransportDeps,
+  def: EndpointDef,
+  args: CallArgs<EndpointDef> | undefined,
+): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { [HEADER_ACCEPT]: MIME_JSON };
+  Object.assign(headers, await authHeader(deps, def));
+  Object.assign(headers, idempotencyHeader(def, args?.options));
+  if (args?.body !== undefined) headers[HEADER_CONTENT_TYPE] = MIME_JSON;
+  Object.assign(headers, args?.options?.headers);
+  return headers;
+}
+
+async function authHeader(deps: TransportDeps, def: EndpointDef): Promise<Record<string, string>> {
+  if (def.auth === false) return {};
   const token = await deps.getAccessToken?.();
-  if (token) headers[HEADER_AUTHORIZATION] = `${BEARER_SCHEME} ${token}`;
+  return token ? { [HEADER_AUTHORIZATION]: `${BEARER_SCHEME} ${token}` } : {};
+}
+
+function idempotencyHeader(def: EndpointDef, options: RequestOptions | undefined): Record<string, string> {
+  if (def.idempotent !== true) return {};
+  return { [HEADER_IDEMPOTENCY_KEY]: resolveIdempotencyKey(options?.idempotencyKey) };
 }
 
 /** Sends one attempt; on a 401 refreshes the token (single-flight) and retries exactly once. */

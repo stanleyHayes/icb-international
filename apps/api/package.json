@@ -21,6 +21,7 @@
     "@fastify/helmet": "13.1.0",
     "@fastify/multipart": "10.1.0",
     "@icb/contracts": "workspace:*",
+    "@icb/media": "workspace:*",
     "@icb/money": "workspace:*",
     "@nestjs/bullmq": "11.0.4",
     "@nestjs/common": "11.1.28",

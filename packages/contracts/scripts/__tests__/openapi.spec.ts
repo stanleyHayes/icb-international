@@ -1,16 +1,13 @@
 import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
 import { toComponentName } from '../openapi/components.js';
-import { TAG } from '../openapi/constants.js';
+import { OPENAPI_OUTPUT_FILE, TAG } from '../openapi/constants.js';
 import { buildOpenApiDocument, renderOpenApiJson } from '../openapi/document.js';
 import { ALL_OPERATIONS } from '../openapi/routes/index.js';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
-const COMMITTED_FILE = path.join(REPO_ROOT, 'docs', 'api', 'openapi.json');
+const COMMITTED_FILE = OPENAPI_OUTPUT_FILE;
 
 /** Minimal structural view of the generated document — enough to assert against. */
 interface TestParameter {
@@ -60,9 +57,11 @@ const { paths } = document;
 
 function allOperations(): [string, string, TestOperation][] {
   return Object.entries(paths).flatMap(([pathTemplate, item]) =>
-    Object.entries(item).map(
-      ([method, operation]): [string, string, TestOperation] => [pathTemplate, method, operation],
-    ),
+    Object.entries(item).map(([method, operation]): [string, string, TestOperation] => [
+      pathTemplate,
+      method,
+      operation,
+    ]),
   );
 }
 
@@ -108,11 +107,11 @@ describe('document envelope', () => {
     expect(document.security).toEqual([{ bearerAuth: [] }]);
   });
 
-  it('serialises deterministically as parseable JSON with a trailing newline', () => {
-    const rendered = renderOpenApiJson();
+  it('serialises deterministically as parseable JSON with a trailing newline', async () => {
+    const rendered = await renderOpenApiJson();
     expect(rendered.endsWith('}\n')).toBe(true);
     expect(() => JSON.parse(rendered) as unknown).not.toThrow();
-    expect(renderOpenApiJson()).toBe(rendered);
+    expect(await renderOpenApiJson()).toBe(rendered);
   });
 });
 
@@ -151,8 +150,8 @@ describe('operations', () => {
       ['/transfers/bulk', 'post'],
       ['/payments', 'post'],
       ['/accounts/{accountId}/close', 'post'],
-      ['/loans/applications', 'post'],
-      ['/loans/applications/{applicationId}/accept', 'post'],
+      ['/loan-applications', 'post'],
+      ['/loan-applications/{applicationId}/accept', 'post'],
       ['/loans/{loanId}/repayments', 'post'],
       ['/savings/goals/{goalId}/contributions', 'post'],
       ['/savings/deposits', 'post'],
@@ -221,8 +220,8 @@ describe('components', () => {
 });
 
 describe('committed artifact', () => {
-  it('docs/api/openapi.json matches a fresh generation (the --check contract)', () => {
+  it('docs/api/openapi.json matches a fresh generation (the --check contract)', async () => {
     const committed = readFileSync(COMMITTED_FILE, 'utf8');
-    expect(committed).toBe(renderOpenApiJson());
+    expect(committed).toBe(await renderOpenApiJson());
   });
 });

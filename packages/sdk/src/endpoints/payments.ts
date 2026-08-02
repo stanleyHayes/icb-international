@@ -15,7 +15,9 @@ import { del, get, post, put, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
 
 export const paymentsEndpoints = {
-  listBillers: get('/payments/billers', cursorPageSchema(billerSchema)),
+  listBillers: get('/payments/billers', cursorPageSchema(billerSchema), {
+    query: billerQuerySchema,
+  }),
   listBills: get('/payments/bills', z.array(linkedBillSchema)),
   linkBill: post('/payments/bills', linkedBillSchema, { body: linkBillRequestSchema }),
   unlinkBill: del('/payments/bills/:billId'),
@@ -24,7 +26,9 @@ export const paymentsEndpoints = {
   }),
   enquireBalance: post('/payments/bills/:billId/balance-enquiry', linkedBillSchema, {}),
   pay: post('/payments', billPaymentSchema, { body: payBillRequestSchema, idempotent: true }),
-  listPayments: get('/payments', cursorPageSchema(billPaymentSchema)),
+  listPayments: get('/payments', cursorPageSchema(billPaymentSchema), {
+    query: billPaymentQuerySchema,
+  }),
 };
 
 export function createPaymentsApi(call: Requester) {

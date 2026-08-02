@@ -12,6 +12,13 @@ export function interpolatePath(path: string, params: PathParams | undefined): s
   });
 }
 
+/** Removes trailing slashes without a regex (linters flag them as super-linear). */
+export function stripTrailingSlashes(url: string): string {
+  let result = url;
+  while (result.endsWith('/')) result = result.slice(0, -1);
+  return result;
+}
+
 /** Serialises a query object: arrays repeat the key, null/undefined are dropped. */
 export function serializeQuery(query: QueryParams | undefined): string {
   if (!query) return '';

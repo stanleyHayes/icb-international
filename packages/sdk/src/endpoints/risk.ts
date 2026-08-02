@@ -17,7 +17,9 @@ export const riskEndpoints = {
   updateRule: patch('/admin/risk/rules/:ruleId', riskRuleSchema, {
     body: updateRiskRuleRequestSchema,
   }),
-  listCases: get('/admin/risk/cases', offsetPageSchema(riskCaseSchema)),
+  listCases: get('/admin/risk/cases', offsetPageSchema(riskCaseSchema), {
+    query: riskCaseQuerySchema,
+  }),
   getCase: get('/admin/risk/cases/:caseId', riskCaseSchema),
   resolveCase: post('/admin/risk/cases/:caseId/resolution', riskCaseSchema, {
     body: resolveRiskCaseRequestSchema,

@@ -5,11 +5,21 @@ import { describe, expect, it } from 'vitest';
 import { AUDIT_ACTION_KEY, AuditAction } from './audit-action.decorator.js';
 import { IDEMPOTENT_KEY, Idempotent } from './idempotent.decorator.js';
 import { PERMISSIONS_KEY, Permissions } from './permissions.decorator.js';
+import { IS_PUBLIC_KEY, Public } from './public.decorator.js';
 import {
   STEP_UP_KEY,
   STEP_UP_TOKEN_HEADER,
   RequireStepUp,
 } from './require-step-up.decorator.js';
+import { ROLES_KEY, Roles } from './roles.decorator.js';
+
+@Public()
+class PublicController {
+  @Roles('operations', 'compliance')
+  list(): void {
+    // Decorator target; metadata assertions below are the test.
+  }
+}
 
 class Sample {
   @Permissions('transactions:reverse', 'accounts:freeze')
@@ -45,5 +55,17 @@ describe('cross-cutting decorators', () => {
 
   it('names the step-up header the guard reads', () => {
     expect(STEP_UP_TOKEN_HEADER).toBe('x-step-up-token');
+  });
+
+  it('marks a controller public', () => {
+    expect(Reflect.getMetadata(IS_PUBLIC_KEY, PublicController)).toBe(true);
+  });
+
+  it('stores the required roles on the handler', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(PublicController.prototype, 'list');
+    expect(Reflect.getMetadata(ROLES_KEY, descriptor?.value as object)).toEqual([
+      'operations',
+      'compliance',
+    ]);
   });
 });

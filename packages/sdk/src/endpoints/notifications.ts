@@ -19,7 +19,9 @@ const preferencesViewSchema = z.object({
 });
 
 export const notificationsEndpoints = {
-  list: get('/notifications', cursorPageSchema(notificationSchema)),
+  list: get('/notifications', cursorPageSchema(notificationSchema), {
+    query: notificationQuerySchema,
+  }),
   markRead: post('/notifications/:notificationId/read', notificationSchema, {}),
   markAllRead: postVoid('/notifications/read-all'),
   getPreferences: get('/notifications/preferences', preferencesViewSchema),

@@ -29,7 +29,9 @@ export const accountsEndpoints = {
     idempotent: true,
   }),
   balances: get('/accounts/:accountId/balances', accountBalancesSchema),
-  balanceHistory: get('/accounts/:accountId/balance-history', balanceHistorySchema),
+  balanceHistory: get('/accounts/:accountId/balance-history', balanceHistorySchema, {
+    query: balanceHistoryQuerySchema,
+  }),
   holds: get('/accounts/:accountId/holds', z.array(holdSchema)),
   adminSetStatus: post('/admin/accounts/:accountId/status', accountDetailSchema, {
     body: setAccountStatusRequestSchema,

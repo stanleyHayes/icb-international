@@ -10,15 +10,20 @@ import { CONFIG, type AppConfiguration } from './config/configuration.js';
 import { DatabaseModule } from './infrastructure/database/database.module.js';
 import { ClockModule } from './simulation/clock/clock.module.js';
 
-// ─── DOMAIN MODULES ─── agents append one import + one module ref, alphabetically ───
+// ─── DOMAIN MODULES ─── kept alphabetical so appends never conflict ───
 import { AccountsModule } from './modules/accounts/accounts.module.js';
 import { AdminModule } from './modules/admin/admin.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
-import { CacheModule } from './infrastructure/cache/cache.module.js';
+import { BeneficiariesModule } from './modules/beneficiaries/beneficiaries.module.js';
+import { BillingModule } from './modules/billing/billing.module.js';
+import { CardsModule } from './modules/cards/cards.module.js';
+import { FxModule } from './modules/fx/fx.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { KycModule } from './modules/kyc/kyc.module.js';
 import { LedgerModule } from './modules/ledger/ledger.module.js';
-import { OutboxModule } from './infrastructure/outbox/outbox.module.js';
-import { QueueModule } from './infrastructure/queue/queue.module.js';
+import { LoansModule } from './modules/loans/loans.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { SavingsModule } from './modules/savings/savings.module.js';
 import { SeedModule } from './simulation/seed/seed.module.js';
 import { TransactionsModule } from './modules/transactions/transactions.module.js';
 import { TransfersModule } from './modules/transfers/transfers.module.js';
@@ -45,11 +50,18 @@ import { TransfersModule } from './modules/transfers/transfers.module.js';
     AccountsModule,
     AdminModule,
     AuthModule,
-    CacheModule,
+    BeneficiariesModule,
+    BillingModule,
+    CardsModule,
+    DocumentsModule,
+    FxModule,
     HealthModule,
+    KycModule,
     LedgerModule,
-    OutboxModule,
-    QueueModule,
+    LoansModule,
+    NotificationsModule,
+    RiskModule,
+    SavingsModule,
     SeedModule,
     TransactionsModule,
     TransfersModule,

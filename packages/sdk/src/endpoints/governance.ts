@@ -16,7 +16,9 @@ import { type RequestOptions } from '../http.js';
 export const governanceEndpoints = {
   listStaff: get('/admin/staff', z.array(staffUserSchema)),
   createStaff: post('/admin/staff', staffUserSchema, { body: createStaffUserRequestSchema }),
-  listAuditEvents: get('/admin/audit/events', offsetPageSchema(auditEventSchema)),
+  listAuditEvents: get('/admin/audit/events', offsetPageSchema(auditEventSchema), {
+    query: auditQuerySchema,
+  }),
   verifyAuditIntegrity: get('/admin/audit/integrity', auditIntegritySchema),
   listApprovals: get('/admin/approvals', z.array(approvalRequestSchema)),
   decideApproval: post('/admin/approvals/:approvalId/decision', approvalRequestSchema, {

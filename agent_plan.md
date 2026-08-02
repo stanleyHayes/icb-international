@@ -41,8 +41,8 @@ These are invariants. A PR that breaks one is rejected regardless of how well it
 
 | # | Rule |
 | --- | --- |
-| **N1** | **The product presents as a real bank.** No simulation banner, watermark, or "demo" chrome on any surface. The boundary is enforced in the backend, not advertised in the UI; the only marker is the `X-ICB-Environment: simulation` response header, which no customer sees. |
-| **N2** | **No real rails.** No HTTP call may leave the process to a payment, card, bank, or KYC vendor. Adapters live in `apps/api/src/simulation/rails/` and are the only place a "rail" exists. The single permitted egresses are **Resend** (transactional email) and **Cloudinary** (document/media storage) — neither of which moves money. |
+| **N1** | **The product presents as a bank, everywhere.** No banner, watermark, or "demo" chrome, and **no copy anywhere in the product** — marketing, dashboard, console, email, or legal — describing it as anything other than a bank. The boundary is enforced in the backend and is never surfaced in the interface. `X-ICB-Environment` names the deployment (`development`/`production`), nothing more. |
+| **N2** | **No real rails.** No HTTP call may leave the process to a payment, card, bank, or KYC vendor. Adapters live in `apps/api/src/simulation/rails/` and are the only place a "rail" exists. The single permitted egresses are **Resend** (transactional email) and **Cloudinary** (document/media storage) — neither of which moves money. Both bind a recording/local fallback when their keys are absent, so the system runs fully offline. |
 | **N3** | **Money is an integer.** Minor units (cents/pesewas), `number` never used for a balance. `Money = { amount: bigint-safe string \| number of minor units, currency: CurrencyCode }`. Serialised over the wire as `{ minorUnits: number, currency: string, scale: number }`. |
 | **N4** | **Double entry or it didn't happen.** No balance field is ever written directly. Balances are derived from `ledger_entries` and cached in `account_balances` by the ledger service only. Every `LedgerTransaction` must sum to zero per currency. |
 | **N5** | **Postings are immutable.** No update, no delete on `ledger_entries`. Corrections are new reversing transactions linked by `reversesTransactionId`. |
@@ -120,7 +120,7 @@ tree matches CI's; bumps are a deliberate PR, not a side effect of installing.
 | Forms | `react-hook-form` · `@hookform/resolvers` | 7 · 5 |
 | Queue / cache | `bullmq` · `ioredis` | 6 · 6 |
 | Email | `resend` · `@react-email/components` | 6 · 1 |
-| Media | `cloudinary` | 2 |
+| Media | `cloudinary` (via `@icb/media`) | 2 |
 | Auth | `argon2` · `@nestjs/jwt` | 0.45 · 11 |
 | Logging | `pino` · `nestjs-pino` | 10 · 4 |
 | Test | `vitest` · `@playwright/test` · `fast-check` · `msw` | 4 · 1 · 4 · 2 |

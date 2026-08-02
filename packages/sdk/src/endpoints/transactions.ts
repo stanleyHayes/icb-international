@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { type z } from 'zod';
 import {
   annotateTransactionRequestSchema,
   cashflowSchema,
@@ -23,7 +23,9 @@ const spendQuerySchema = spendByCategorySchema.pick({ currency: true }).extend({
 const cashflowQuerySchema = cashflowSchema.pick({ currency: true, granularity: true });
 
 export const transactionsEndpoints = {
-  list: get('/transactions', cursorPageSchema(transactionSummarySchema)),
+  list: get('/transactions', cursorPageSchema(transactionSummarySchema), {
+    query: transactionQuerySchema,
+  }),
   get: get('/transactions/:transactionId', transactionDetailSchema),
   annotate: patch('/transactions/:transactionId', transactionDetailSchema, {
     body: annotateTransactionRequestSchema,
@@ -32,8 +34,10 @@ export const transactionsEndpoints = {
     body: exportTransactionsRequestSchema,
     idempotent: true,
   }),
-  spendByCategory: get('/transactions/analytics/spend-by-category', spendByCategorySchema),
-  cashflow: get('/transactions/analytics/cashflow', cashflowSchema),
+  spendByCategory: get('/transactions/analytics/spend-by-category', spendByCategorySchema, {
+    query: spendQuerySchema,
+  }),
+  cashflow: get('/transactions/analytics/cashflow', cashflowSchema, { query: cashflowQuerySchema }),
 };
 
 export function createTransactionsApi(call: Requester) {

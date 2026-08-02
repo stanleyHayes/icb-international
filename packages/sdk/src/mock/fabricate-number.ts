@@ -38,10 +38,20 @@ function applyBound(check: Check, isInt: boolean, min: number, max: number): [nu
   if (value === undefined) return [min, max];
   const inclusive = check.inclusive !== false;
   if (check.check === 'greater_than') {
-    return [Math.max(min, inclusive ? value : value + (isInt ? 1 : Number.EPSILON)), max];
+    return [Math.max(min, lowerBound(value, inclusive, isInt)), max];
   }
   if (check.check === 'less_than') {
-    return [min, Math.min(max, inclusive ? value : value - (isInt ? 1 : Number.EPSILON))];
+    return [min, Math.min(max, upperBound(value, inclusive, isInt))];
   }
   return [min, max];
+}
+
+function lowerBound(value: number, inclusive: boolean, isInt: boolean): number {
+  if (inclusive) return value;
+  return isInt ? value + 1 : value + Number.EPSILON;
+}
+
+function upperBound(value: number, inclusive: boolean, isInt: boolean): number {
+  if (inclusive) return value;
+  return isInt ? value - 1 : value - Number.EPSILON;
 }

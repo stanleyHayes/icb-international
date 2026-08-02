@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { type z } from 'zod';
 import {
   amlAlertQuerySchema,
   amlAlertSchema,
@@ -11,7 +11,9 @@ import { get, patch, post, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
 
 export const amlEndpoints = {
-  listAlerts: get('/admin/aml/alerts', offsetPageSchema(amlAlertSchema)),
+  listAlerts: get('/admin/aml/alerts', offsetPageSchema(amlAlertSchema), {
+    query: amlAlertQuerySchema,
+  }),
   getAlert: get('/admin/aml/alerts/:alertId', amlAlertSchema),
   updateAlert: patch('/admin/aml/alerts/:alertId', amlAlertSchema, {
     body: updateAmlAlertRequestSchema,

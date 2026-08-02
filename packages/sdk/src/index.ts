@@ -10,7 +10,7 @@
 
 export { createIcbClient, type IcbClient, type IcbClientOptions } from './client.js';
 export { type AccessTokenProvider } from './transport.js';
-export { type RequestOptions } from './http.js';
+export { type CredentialsMode, type RequestOptions } from './http.js';
 export {
   IcbApiError,
   IcbError,

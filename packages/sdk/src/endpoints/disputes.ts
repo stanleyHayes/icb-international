@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { type z } from 'zod';
 import {
   advanceDisputeRequestSchema,
   createDisputeRequestSchema,
@@ -11,7 +11,7 @@ import { get, post, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
 
 export const disputesEndpoints = {
-  list: get('/disputes', cursorPageSchema(disputeSchema)),
+  list: get('/disputes', cursorPageSchema(disputeSchema), { query: disputeQuerySchema }),
   create: post('/disputes', disputeSchema, {
     body: createDisputeRequestSchema,
     idempotent: true,

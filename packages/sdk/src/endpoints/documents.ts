@@ -13,7 +13,9 @@ import { type RequestOptions } from '../http.js';
 const statementQuerySchema = z.object({ accountId: idSchema.optional() });
 
 export const documentsEndpoints = {
-  listStatements: get('/documents/statements', z.array(statementSchema)),
+  listStatements: get('/documents/statements', z.array(statementSchema), {
+    query: statementQuerySchema,
+  }),
   generateStatement: post('/documents/statements', statementSchema, {
     body: generateStatementRequestSchema,
     idempotent: true,

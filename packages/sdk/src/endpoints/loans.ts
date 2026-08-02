@@ -24,12 +24,14 @@ export const loansEndpoints = {
     body: loanApplicationRequestSchema,
     idempotent: true,
   }),
-  listApplications: get('/loans/applications', cursorPageSchema(loanApplicationSchema)),
+  listApplications: get('/loans/applications', cursorPageSchema(loanApplicationSchema), {
+    query: cursorQuerySchema,
+  }),
   getApplication: get('/loans/applications/:applicationId', loanApplicationSchema),
   acceptOffer: post('/loans/applications/:applicationId/accept', loanApplicationSchema, {
     idempotent: true,
   }),
-  list: get('/loans', cursorPageSchema(loanSchema)),
+  list: get('/loans', cursorPageSchema(loanSchema), { query: loanQuerySchema }),
   get: get('/loans/:loanId', loanDetailSchema),
   payoffQuote: get('/loans/:loanId/payoff-quote', payoffQuoteSchema),
   repay: post('/loans/:loanId/repayments', loanDetailSchema, {
