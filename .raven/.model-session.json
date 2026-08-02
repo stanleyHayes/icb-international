@@ -1,0 +1,40 @@
+{
+  "session_started_at": "2026-08-02T13:36:46.719503Z",
+  "raven_overhead": {
+    "tokens": 227,
+    "cost_usd": 5.6e-05,
+    "calls": 4,
+    "by_source": {
+      "architect-router": {
+        "tokens": 80,
+        "calls": 1,
+        "cost_usd": 2e-05
+      },
+      "triage-router": {
+        "tokens": 147,
+        "calls": 3,
+        "cost_usd": 3.6e-05
+      }
+    }
+  },
+  "user_work": {
+    "tokens": 0,
+    "cost_usd": 0.0,
+    "calls": 5,
+    "tier_counts": {
+      "SIMPLE": 5,
+      "MEDIUM": 0,
+      "COMPLEX": 0,
+      "LOCAL_ONLY": 0
+    },
+    "last_classification": {
+      "timestamp": "2026-08-02T17:03:23.320979Z",
+      "user_query_hash": "e3b0c44298fc1c14",
+      "tier": "SIMPLE",
+      "score": 0,
+      "reasons": [],
+      "model_for_tier": "anthropic/claude-haiku-4-5"
+    }
+  },
+  "providers": {}
+}

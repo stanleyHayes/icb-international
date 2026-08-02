@@ -1,0 +1,10 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'tools/*'
+
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - argon2
+  - esbuild
+  - sharp

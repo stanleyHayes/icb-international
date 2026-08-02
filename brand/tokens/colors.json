@@ -1,0 +1,71 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "meta": {
+    "brand": "ICB — International Commercial Bank",
+    "version": "1.0.0",
+    "note": "Single source of truth for colour. tokens.css and packages/ui/src/tokens are generated from this file."
+  },
+  "color": {
+    "navy": {
+      "50": "#EDF3F9",
+      "100": "#D3E2F0",
+      "200": "#A7C3DF",
+      "300": "#6E99C2",
+      "400": "#3F71A0",
+      "500": "#1A6DB0",
+      "600": "#0F4C81",
+      "700": "#0B2C4D",
+      "800": "#08213A",
+      "900": "#06182B",
+      "950": "#040F1C"
+    },
+    "gold": {
+      "50": "#FBF7E9",
+      "100": "#F5EBC5",
+      "200": "#EDD98D",
+      "300": "#E0BC4B",
+      "400": "#D4AE33",
+      "500": "#C9A227",
+      "600": "#A5831C",
+      "700": "#7D6316",
+      "800": "#584611",
+      "900": "#3A2E0B"
+    },
+    "slate": {
+      "50": "#F7F9FB",
+      "100": "#EFF3F7",
+      "200": "#DFE6ED",
+      "300": "#C6D1DC",
+      "400": "#93A4B5",
+      "500": "#697D91",
+      "600": "#5A6B7D",
+      "700": "#41505E",
+      "800": "#2C3742",
+      "900": "#1A222A",
+      "950": "#0E141A"
+    },
+    "semantic": {
+      "success": { "fg": "#046C4E", "bg": "#DEF7EC", "solid": "#0E9F6E", "border": "#84E1BC" },
+      "warning": { "fg": "#8E4B10", "bg": "#FDF6B2", "solid": "#F59E0B", "border": "#FACA15" },
+      "danger":  { "fg": "#9B1C1C", "bg": "#FDE8E8", "solid": "#E02424", "border": "#F8B4B4" },
+      "info":    { "fg": "#0F4C81", "bg": "#E1EFFE", "solid": "#1A6DB0", "border": "#A4CAFE" },
+      "neutral": { "fg": "#41505E", "bg": "#EFF3F7", "solid": "#697D91", "border": "#C6D1DC" }
+    },
+    "money": {
+      "credit": "#0E9F6E",
+      "debit": "#41505E",
+      "pending": "#A5831C",
+      "reversed": "#93A4B5"
+    },
+    "chart": {
+      "categorical": ["#0F4C81", "#C9A227", "#0E9F6E", "#1A6DB0", "#A5831C", "#6E99C2", "#84E1BC", "#E0BC4B"],
+      "sequential": ["#EDF3F9", "#D3E2F0", "#A7C3DF", "#6E99C2", "#3F71A0", "#0F4C81", "#0B2C4D"],
+      "diverging": ["#9B1C1C", "#E02424", "#F8B4B4", "#EFF3F7", "#84E1BC", "#0E9F6E", "#046C4E"]
+    }
+  },
+  "gradient": {
+    "brand": "linear-gradient(135deg, #1A6DB0 0%, #0B2C4D 100%)",
+    "tile": "linear-gradient(135deg, #0F3B63 0%, #0B2C4D 55%, #06182B 100%)",
+    "gold": "linear-gradient(180deg, #E0BC4B 0%, #C9A227 100%)"
+  }
+}

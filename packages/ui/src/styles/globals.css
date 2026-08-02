@@ -1,0 +1,177 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/*
+ * Tailwind v4 theme, bound to the ICB brand tokens.
+ *
+ * Utilities resolve to the same custom properties the brand sheet uses, so a token change in
+ * brand/tokens/colors.json propagates to every app without a second definition anywhere.
+ */
+@theme inline {
+  --color-navy-50: var(--icb-navy-50);
+  --color-navy-100: var(--icb-navy-100);
+  --color-navy-200: var(--icb-navy-200);
+  --color-navy-300: var(--icb-navy-300);
+  --color-navy-400: var(--icb-navy-400);
+  --color-navy-500: var(--icb-navy-500);
+  --color-navy-600: var(--icb-navy-600);
+  --color-navy-700: var(--icb-navy-700);
+  --color-navy-800: var(--icb-navy-800);
+  --color-navy-900: var(--icb-navy-900);
+  --color-navy-950: var(--icb-navy-950);
+
+  --color-gold-50: var(--icb-gold-50);
+  --color-gold-100: var(--icb-gold-100);
+  --color-gold-200: var(--icb-gold-200);
+  --color-gold-300: var(--icb-gold-300);
+  --color-gold-400: var(--icb-gold-400);
+  --color-gold-500: var(--icb-gold-500);
+  --color-gold-600: var(--icb-gold-600);
+
+  --color-slate-50: var(--icb-slate-50);
+  --color-slate-100: var(--icb-slate-100);
+  --color-slate-200: var(--icb-slate-200);
+  --color-slate-300: var(--icb-slate-300);
+  --color-slate-400: var(--icb-slate-400);
+  --color-slate-500: var(--icb-slate-500);
+  --color-slate-600: var(--icb-slate-600);
+  --color-slate-700: var(--icb-slate-700);
+  --color-slate-800: var(--icb-slate-800);
+  --color-slate-900: var(--icb-slate-900);
+  --color-slate-950: var(--icb-slate-950);
+
+  --color-bg: var(--icb-bg);
+  --color-bg-subtle: var(--icb-bg-subtle);
+  --color-bg-muted: var(--icb-bg-muted);
+  --color-surface: var(--icb-surface);
+  --color-border: var(--icb-border);
+  --color-border-strong: var(--icb-border-strong);
+  --color-fg: var(--icb-text);
+  --color-fg-muted: var(--icb-text-muted);
+  --color-fg-subtle: var(--icb-text-subtle);
+  --color-primary: var(--icb-primary);
+  --color-primary-hover: var(--icb-primary-hover);
+  --color-accent: var(--icb-accent);
+  --color-credit: var(--icb-credit);
+  --color-debit: var(--icb-debit);
+  --color-pending: var(--icb-pending);
+  --color-success: var(--icb-success);
+  --color-warning: var(--icb-warning);
+  --color-danger: var(--icb-danger);
+  --color-info: var(--icb-info);
+
+  --font-sans: var(--icb-font-sans);
+  --font-display: var(--icb-font-display);
+  --font-mono: var(--icb-font-mono);
+
+  --radius-xs: var(--icb-radius-xs);
+  --radius-sm: var(--icb-radius-sm);
+  --radius-md: var(--icb-radius-md);
+  --radius-lg: var(--icb-radius-lg);
+  --radius-xl: var(--icb-radius-xl);
+  --radius-2xl: var(--icb-radius-2xl);
+
+  --shadow-xs: var(--icb-shadow-xs);
+  --shadow-sm: var(--icb-shadow-sm);
+  --shadow-md: var(--icb-shadow-md);
+  --shadow-lg: var(--icb-shadow-lg);
+  --shadow-xl: var(--icb-shadow-xl);
+
+  --ease-out: var(--icb-ease-out);
+  --ease-emphasized: var(--icb-ease-emphasized);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    margin: 0;
+    background: var(--icb-bg);
+    color: var(--icb-text);
+    font-family: var(--icb-font-sans);
+    font-size: var(--icb-text-base);
+    line-height: var(--icb-leading-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--icb-font-display);
+    font-weight: 700;
+    letter-spacing: var(--icb-tracking-tight);
+    line-height: var(--icb-leading-tight);
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  p {
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  /* A visible, consistent focus ring everywhere. Money interfaces must be keyboard-complete. */
+  :focus-visible {
+    outline: 2px solid var(--icb-focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--icb-radius-xs);
+  }
+
+  ::selection {
+    background: var(--icb-navy-600);
+    color: #fff;
+  }
+}
+
+@layer utilities {
+  /*
+   * Gradient surfaces.
+   *
+   * An arbitrary-value background utility cannot carry a gradient: Tailwind emits it as
+   * `background-color`, and a gradient is a `background-image`. These utilities set the right property, so the brand
+   * gradient stays a single token rather than being re-declared per component.
+   */
+  .bg-brand-tile {
+    background-image: var(--icb-gradient-tile);
+  }
+
+  .bg-brand-gradient {
+    background-image: var(--icb-gradient-brand);
+  }
+
+  .bg-brand-gold {
+    background-image: var(--icb-gradient-gold);
+  }
+
+  /* Figures in tables must never shift width as digits change. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--icb-slate-300) transparent;
+  }
+}

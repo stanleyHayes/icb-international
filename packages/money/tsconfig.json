@@ -1,0 +1,8 @@
+{
+  "extends": "@icb/config-ts/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*", "vitest.config.ts", "eslint.config.js"]
+}

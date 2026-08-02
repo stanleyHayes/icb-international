@@ -1,0 +1,53 @@
+{
+  "name": "icb",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ICB — International Commercial Bank. A full-fidelity banking simulation.",
+  "packageManager": "pnpm@10.27.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "verify": "turbo run lint typecheck test build",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,css,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,css,yml,yaml}\"",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:reset": "docker compose down -v && docker compose up -d",
+    "verify:infra": "node tools/scripts/verify-infra.mjs",
+    "seed": "pnpm --filter @icb/api seed",
+    "verify:ledger": "pnpm --filter @icb/api verify:ledger",
+    "db:reset": "pnpm --filter @icb/api db:reset",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@icb/config-eslint": "workspace:*",
+    "@icb/config-ts": "workspace:*",
+    "@types/node": "^26.1.2",
+    "mongodb": "^7.5.0",
+    "playwright": "1.62.1",
+    "prettier": "3.9.6",
+    "redis": "^6.2.0",
+    "turbo": "2.10.8",
+    "typescript": "6.0.3"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "semi": true,
+    "arrowParens": "always"
+  },
+  "pnpm": {
+    "overrides": {
+      "fastify": "5.11.0"
+    }
+  }
+}

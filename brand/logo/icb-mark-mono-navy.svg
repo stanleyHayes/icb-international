@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="ICB mark">
+  <title>ICB — International Commercial Bank (mono navy)</title>
+  <defs>
+    <mask id="icbInterlockMonoNavy" maskUnits="userSpaceOnUse" x="-20" y="-20" width="136" height="136">
+      <rect x="-20" y="-20" width="136" height="136" fill="#fff"/>
+      <path d="M16.5 22.5V73.5" stroke="#000" stroke-width="20" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <path d="M72.42 29.24A27 27 0 1 0 72.42 66.76" fill="none" stroke="#0B2C4D" stroke-width="13" mask="url(#icbInterlockMonoNavy)"/>
+  <path d="M16.5 22.5V73.5" fill="none" stroke="#0B2C4D" stroke-width="13" stroke-linecap="round"/>
+</svg>

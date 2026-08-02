@@ -1,0 +1,235 @@
+/**
+ * ICB Design Tokens
+ * Generated from brand/tokens/colors.json — do not hand-edit values, edit the JSON.
+ * Consumed by packages/ui and every app via `@import`.
+ */
+
+:root {
+  /* ---- Brand scales ---------------------------------------------------- */
+  --icb-navy-50: #edf3f9;
+  --icb-navy-100: #d3e2f0;
+  --icb-navy-200: #a7c3df;
+  --icb-navy-300: #6e99c2;
+  --icb-navy-400: #3f71a0;
+  --icb-navy-500: #1a6db0;
+  --icb-navy-600: #0f4c81;
+  --icb-navy-700: #0b2c4d;
+  --icb-navy-800: #08213a;
+  --icb-navy-900: #06182b;
+  --icb-navy-950: #040f1c;
+
+  --icb-gold-50: #fbf7e9;
+  --icb-gold-100: #f5ebc5;
+  --icb-gold-200: #edd98d;
+  --icb-gold-300: #e0bc4b;
+  --icb-gold-400: #d4ae33;
+  --icb-gold-500: #c9a227;
+  --icb-gold-600: #a5831c;
+  --icb-gold-700: #7d6316;
+  --icb-gold-800: #584611;
+  --icb-gold-900: #3a2e0b;
+
+  --icb-slate-50: #f7f9fb;
+  --icb-slate-100: #eff3f7;
+  --icb-slate-200: #dfe6ed;
+  --icb-slate-300: #c6d1dc;
+  --icb-slate-400: #93a4b5;
+  --icb-slate-500: #697d91;
+  --icb-slate-600: #5a6b7d;
+  --icb-slate-700: #41505e;
+  --icb-slate-800: #2c3742;
+  --icb-slate-900: #1a222a;
+  --icb-slate-950: #0e141a;
+
+  /* ---- Semantic surface / text (light) --------------------------------- */
+  --icb-bg: #ffffff;
+  --icb-bg-subtle: var(--icb-slate-50);
+  --icb-bg-muted: var(--icb-slate-100);
+  --icb-bg-inverse: var(--icb-navy-900);
+  --icb-surface: #ffffff;
+  --icb-surface-raised: #ffffff;
+  --icb-border: var(--icb-slate-200);
+  --icb-border-strong: var(--icb-slate-300);
+
+  --icb-text: var(--icb-slate-900);
+  --icb-text-muted: var(--icb-slate-600);
+  --icb-text-subtle: var(--icb-slate-500);
+  --icb-text-inverse: #ffffff;
+  --icb-text-on-brand: #ffffff;
+
+  --icb-primary: var(--icb-navy-600);
+  --icb-primary-hover: var(--icb-navy-700);
+  --icb-primary-active: var(--icb-navy-800);
+  --icb-primary-subtle: var(--icb-navy-50);
+  --icb-accent: var(--icb-gold-500);
+  --icb-accent-hover: var(--icb-gold-600);
+  --icb-accent-subtle: var(--icb-gold-50);
+
+  --icb-focus-ring: var(--icb-navy-500);
+
+  /* ---- Status ---------------------------------------------------------- */
+  --icb-success: #0e9f6e;
+  --icb-success-fg: #046c4e;
+  --icb-success-bg: #def7ec;
+  --icb-success-border: #84e1bc;
+
+  --icb-warning: #f59e0b;
+  --icb-warning-fg: #8e4b10;
+  --icb-warning-bg: #fdf6b2;
+  --icb-warning-border: #faca15;
+
+  --icb-danger: #e02424;
+  --icb-danger-fg: #9b1c1c;
+  --icb-danger-bg: #fde8e8;
+  --icb-danger-border: #f8b4b4;
+
+  --icb-info: #1a6db0;
+  --icb-info-fg: #0f4c81;
+  --icb-info-bg: #e1effe;
+  --icb-info-border: #a4cafe;
+
+  /* ---- Money semantics -------------------------------------------------- */
+  --icb-credit: #0e9f6e;
+  --icb-debit: var(--icb-slate-700);
+  --icb-pending: var(--icb-gold-600);
+  --icb-reversed: var(--icb-slate-400);
+
+  /* ---- Gradients -------------------------------------------------------- */
+  --icb-gradient-brand: linear-gradient(135deg, #1a6db0 0%, #0b2c4d 100%);
+  --icb-gradient-tile: linear-gradient(135deg, #0f3b63 0%, #0b2c4d 55%, #06182b 100%);
+  --icb-gradient-gold: linear-gradient(180deg, #e0bc4b 0%, #c9a227 100%);
+
+  /* ---- Typography ------------------------------------------------------- */
+  --icb-font-display: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --icb-font-sans: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --icb-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --icb-font-numeric: var(--icb-font-display);
+
+  --icb-text-2xs: 0.6875rem;
+  --icb-text-xs: 0.75rem;
+  --icb-text-sm: 0.875rem;
+  --icb-text-base: 1rem;
+  --icb-text-lg: 1.125rem;
+  --icb-text-xl: 1.375rem;
+  --icb-text-2xl: 1.75rem;
+  --icb-text-3xl: 2.25rem;
+  --icb-text-4xl: 3rem;
+  --icb-text-5xl: 3.75rem;
+  --icb-text-6xl: 4.5rem;
+
+  --icb-leading-tight: 1.15;
+  --icb-leading-snug: 1.3;
+  --icb-leading-normal: 1.55;
+  --icb-leading-relaxed: 1.7;
+
+  --icb-tracking-tight: -0.02em;
+  --icb-tracking-normal: 0;
+  --icb-tracking-wide: 0.04em;
+  --icb-tracking-caps: 0.14em;
+
+  /* ---- Space (4pt base) -------------------------------------------------- */
+  --icb-space-0: 0;
+  --icb-space-1: 0.25rem;
+  --icb-space-2: 0.5rem;
+  --icb-space-3: 0.75rem;
+  --icb-space-4: 1rem;
+  --icb-space-5: 1.25rem;
+  --icb-space-6: 1.5rem;
+  --icb-space-8: 2rem;
+  --icb-space-10: 2.5rem;
+  --icb-space-12: 3rem;
+  --icb-space-16: 4rem;
+  --icb-space-20: 5rem;
+  --icb-space-24: 6rem;
+  --icb-space-32: 8rem;
+
+  /* ---- Radii ------------------------------------------------------------- */
+  --icb-radius-xs: 4px;
+  --icb-radius-sm: 6px;
+  --icb-radius-md: 10px;
+  --icb-radius-lg: 14px;
+  --icb-radius-xl: 20px;
+  --icb-radius-2xl: 28px;
+  --icb-radius-full: 9999px;
+
+  /* ---- Elevation --------------------------------------------------------- */
+  --icb-shadow-xs: 0 1px 2px rgba(6, 24, 43, 0.06);
+  --icb-shadow-sm: 0 1px 3px rgba(6, 24, 43, 0.08), 0 1px 2px rgba(6, 24, 43, 0.04);
+  --icb-shadow-md: 0 4px 12px rgba(6, 24, 43, 0.08), 0 2px 4px rgba(6, 24, 43, 0.04);
+  --icb-shadow-lg: 0 12px 32px rgba(6, 24, 43, 0.10), 0 4px 8px rgba(6, 24, 43, 0.04);
+  --icb-shadow-xl: 0 24px 64px rgba(6, 24, 43, 0.14), 0 8px 16px rgba(6, 24, 43, 0.06);
+
+  /* ---- Motion ------------------------------------------------------------ */
+  --icb-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --icb-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --icb-ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --icb-duration-instant: 90ms;
+  --icb-duration-fast: 160ms;
+  --icb-duration-normal: 240ms;
+  --icb-duration-slow: 400ms;
+
+  /* ---- Layout ------------------------------------------------------------ */
+  --icb-container: 1200px;
+  --icb-container-wide: 1440px;
+  --icb-header-height: 72px;
+  --icb-sidebar-width: 264px;
+  --icb-sidebar-width-collapsed: 72px;
+}
+
+[data-theme="dark"] {
+  --icb-bg: var(--icb-navy-950);
+  --icb-bg-subtle: var(--icb-navy-900);
+  --icb-bg-muted: var(--icb-navy-800);
+  --icb-bg-inverse: #ffffff;
+  --icb-surface: #0a1929;
+  --icb-surface-raised: #0f2337;
+  --icb-border: rgba(167, 195, 223, 0.14);
+  --icb-border-strong: rgba(167, 195, 223, 0.26);
+
+  --icb-text: #eef4fa;
+  --icb-text-muted: #9ab0c4;
+  --icb-text-subtle: #7089a1;
+  --icb-text-inverse: var(--icb-navy-900);
+  --icb-text-on-brand: #ffffff;
+
+  --icb-primary: var(--icb-navy-500);
+  --icb-primary-hover: #2a80c6;
+  --icb-primary-active: #3a92d8;
+  --icb-primary-subtle: rgba(26, 109, 176, 0.16);
+  --icb-accent: var(--icb-gold-300);
+  --icb-accent-hover: var(--icb-gold-200);
+  --icb-accent-subtle: rgba(201, 162, 39, 0.16);
+
+  --icb-success-fg: #6ee7b7;
+  --icb-success-bg: rgba(14, 159, 110, 0.16);
+  --icb-success-border: rgba(14, 159, 110, 0.36);
+  --icb-warning-fg: #fcd34d;
+  --icb-warning-bg: rgba(245, 158, 11, 0.16);
+  --icb-warning-border: rgba(245, 158, 11, 0.36);
+  --icb-danger-fg: #fca5a5;
+  --icb-danger-bg: rgba(224, 36, 36, 0.16);
+  --icb-danger-border: rgba(224, 36, 36, 0.36);
+  --icb-info-fg: #93c5fd;
+  --icb-info-bg: rgba(26, 109, 176, 0.16);
+  --icb-info-border: rgba(26, 109, 176, 0.36);
+
+  --icb-credit: #34d399;
+  --icb-debit: #c6d1dc;
+  --icb-pending: var(--icb-gold-300);
+  --icb-reversed: #5a6b7d;
+
+  --icb-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --icb-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --icb-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --icb-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --icb-shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --icb-duration-instant: 1ms;
+    --icb-duration-fast: 1ms;
+    --icb-duration-normal: 1ms;
+    --icb-duration-slow: 1ms;
+  }
+}

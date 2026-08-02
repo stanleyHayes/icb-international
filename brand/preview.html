@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ICB — Brand Sheet</title>
+  <link rel="icon" href="./logo/favicon.svg" />
+  <link rel="stylesheet" href="./tokens/tokens.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--icb-font-sans);
+      background: var(--icb-bg-subtle);
+      color: var(--icb-text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: var(--icb-space-16) var(--icb-space-6) var(--icb-space-24); }
+    header.sheet { display: flex; align-items: center; justify-content: space-between; gap: var(--icb-space-6); flex-wrap: wrap; margin-bottom: var(--icb-space-12); }
+    header.sheet img { width: 320px; max-width: 100%; }
+    .eyebrow { font-size: var(--icb-text-2xs); text-transform: uppercase; letter-spacing: var(--icb-tracking-caps); color: var(--icb-text-subtle); font-weight: 600; }
+    h2 { font-size: var(--icb-text-xl); font-weight: 700; letter-spacing: var(--icb-tracking-tight); margin: var(--icb-space-12) 0 var(--icb-space-5); }
+    .grid { display: grid; gap: var(--icb-space-4); }
+    .cards { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .card { background: var(--icb-surface); border: 1px solid var(--icb-border); border-radius: var(--icb-radius-lg); padding: var(--icb-space-6); box-shadow: var(--icb-shadow-xs); display: grid; place-items: center; gap: var(--icb-space-4); min-height: 168px; }
+    .card.dark { background: var(--icb-navy-900); border-color: transparent; }
+    .card img { max-width: 100%; max-height: 92px; }
+    .card .label { font-size: var(--icb-text-xs); color: var(--icb-text-subtle); font-family: var(--icb-font-mono); }
+    .card.dark .label { color: var(--icb-navy-200); }
+    .swatches { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+    .sw { border-radius: var(--icb-radius-md); overflow: hidden; border: 1px solid var(--icb-border); background: var(--icb-surface); }
+    .sw .chip { height: 64px; }
+    .sw .meta { padding: var(--icb-space-2) var(--icb-space-3); font-size: var(--icb-text-2xs); font-family: var(--icb-font-mono); color: var(--icb-text-muted); }
+    .type-row { display: flex; align-items: baseline; gap: var(--icb-space-5); padding: var(--icb-space-3) 0; border-bottom: 1px solid var(--icb-border); }
+    .type-row .spec { font-family: var(--icb-font-mono); font-size: var(--icb-text-2xs); color: var(--icb-text-subtle); min-width: 120px; }
+    .money { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .credit { color: var(--icb-credit); }
+    .debit { color: var(--icb-debit); }
+    button.theme { font: inherit; font-size: var(--icb-text-sm); font-weight: 600; padding: var(--icb-space-2) var(--icb-space-4); border-radius: var(--icb-radius-full); border: 1px solid var(--icb-border-strong); background: var(--icb-surface); color: var(--icb-text); cursor: pointer; transition: background var(--icb-duration-fast) var(--icb-ease-out); }
+    button.theme:hover { background: var(--icb-bg-muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="sheet">
+      <img src="./logo/icb-logo-horizontal.svg" alt="ICB — International Commercial Bank" />
+      <button class="theme" type="button" data-toggle-theme>Toggle theme</button>
+    </header>
+
+    <p class="eyebrow">Logo family</p>
+    <div class="grid cards">
+      <div class="card"><img src="./logo/icb-mark.svg" alt="Mark" /><span class="label">icb-mark</span></div>
+      <div class="card"><img src="./logo/icb-mark-mono-navy.svg" alt="Mark mono navy" /><span class="label">mono-navy</span></div>
+      <div class="card dark"><img src="./logo/icb-mark-mono-white.svg" alt="Mark mono white" /><span class="label">mono-white</span></div>
+      <div class="card"><img src="./logo/icb-app-icon.svg" alt="App icon" /><span class="label">app-icon</span></div>
+      <div class="card"><img src="./logo/icb-logo-stacked.svg" alt="Stacked lockup" /><span class="label">stacked</span></div>
+      <div class="card dark"><img src="./logo/icb-logo-horizontal-dark.svg" alt="Horizontal dark" /><span class="label">horizontal-dark</span></div>
+    </div>
+
+    <h2>Colour</h2>
+    <div class="grid swatches" id="swatches"></div>
+
+    <h2>Type &amp; figures</h2>
+    <div>
+      <div class="type-row"><span class="spec">4xl / 800 / -0.02em</span><span style="font-size:var(--icb-text-4xl);font-weight:800;letter-spacing:var(--icb-tracking-tight)">Banking, exactly</span></div>
+      <div class="type-row"><span class="spec">xl / 700</span><span style="font-size:var(--icb-text-xl);font-weight:700">Account overview</span></div>
+      <div class="type-row"><span class="spec">base / 400</span><span style="font-size:var(--icb-text-base);color:var(--icb-text-muted)">Every posting is double-entry and immutable.</span></div>
+      <div class="type-row"><span class="spec">tabular / credit</span><span class="money credit" style="font-size:var(--icb-text-2xl)">+ 12,480.00 <small style="font-weight:600;letter-spacing:var(--icb-tracking-wide);font-size:var(--icb-text-sm)">USD</small></span></div>
+      <div class="type-row"><span class="spec">tabular / debit</span><span class="money debit" style="font-size:var(--icb-text-2xl)">− 1,209.55 <small style="font-weight:600;letter-spacing:var(--icb-tracking-wide);font-size:var(--icb-text-sm)">USD</small></span></div>
+      <div class="type-row"><span class="spec">mono / identifier</span><span style="font-family:var(--icb-font-mono);font-size:var(--icb-text-sm)">GB29 ICBK 6016 1331 9268 19</span></div>
+    </div>
+  </div>
+
+  <script>
+    const SWATCHES = [
+      ['--icb-navy-900', 'navy-900'], ['--icb-navy-700', 'navy-700'], ['--icb-navy-600', 'navy-600'],
+      ['--icb-navy-500', 'navy-500'], ['--icb-navy-200', 'navy-200'], ['--icb-navy-50', 'navy-50'],
+      ['--icb-gold-500', 'gold-500'], ['--icb-gold-300', 'gold-300'], ['--icb-gold-50', 'gold-50'],
+      ['--icb-slate-900', 'slate-900'], ['--icb-slate-600', 'slate-600'], ['--icb-slate-200', 'slate-200'],
+      ['--icb-success', 'success'], ['--icb-warning', 'warning'], ['--icb-danger', 'danger'], ['--icb-info', 'info'],
+    ];
+    document.getElementById('swatches').innerHTML = SWATCHES.map(
+      ([token, name]) =>
+        `<div class="sw"><div class="chip" style="background:var(${token})"></div><div class="meta">${name}</div></div>`,
+    ).join('');
+
+    document.querySelector('[data-toggle-theme]').addEventListener('click', () => {
+      const root = document.documentElement;
+      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    });
+  </script>
+</body>
+</html>

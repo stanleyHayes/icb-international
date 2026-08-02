@@ -1,0 +1,9 @@
+@import '@icb/ui/styles.css';
+@source '../../../../packages/ui/src/**/*.{ts,tsx}';
+
+/* Bind the brand tokens to the fonts next/font self-hosts for this app. */
+:root {
+  --icb-font-sans: var(--font-outfit), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --icb-font-display: var(--font-outfit), -apple-system, BlinkMacSystemFont, sans-serif;
+  --icb-font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
