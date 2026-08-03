@@ -1,6 +1,7 @@
 import type { Model } from 'mongoose';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { AppConfiguration } from '../../../config/configuration.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import type { OutboxConsumerService } from '../outbox-consumer.service.js';
 import { OutboxDrainProcessor } from '../outbox-drain.processor.js';
@@ -42,7 +43,8 @@ function setup() {
   const clock = new ClockService();
   clock.freeze(NOW);
   const processor = new OutboxDrainProcessor(
-    events as unknown as Model<OutboxEventDoc>,
+{ backgroundJobs: { enabled: true } } as AppConfiguration,
+events as unknown as Model<OutboxEventDoc>,
     consumers as unknown as OutboxConsumerService,
     clock,
   );

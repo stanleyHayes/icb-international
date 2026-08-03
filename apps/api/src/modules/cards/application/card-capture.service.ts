@@ -8,6 +8,7 @@ import { ConflictError, DomainError, NotFoundError } from '../../../common/error
 import { TransactionManager } from '../../../infrastructure/database/transaction.manager.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { customerRef, glRef } from '../../ledger/domain/account-ref.js';
+import { balanceKey } from '../../ledger/domain/balance-key.js';
 import { GL_CARD_SETTLEMENT } from '../../ledger/domain/chart-of-accounts.js';
 import type { PostingLine } from '../../ledger/domain/posting.types.js';
 import { HoldService } from '../../ledger/hold.service.js';
@@ -55,27 +56,30 @@ export class CardCaptureService {
     const amount = fromMinorUnits(captured, currency);
     const capturedAt = this.clock.now();
 
-    await this.transactionManager.withTransaction(async (session) => {
-      await this.releaseHold(authorisation, 'Card authorisation captured', session);
-      const posted = await this.post(authorisation, amount, session);
+    await this.transactionManager.withTransaction(
+      async (session) => {
+        await this.releaseHold(authorisation, 'Card authorisation captured', session);
+        const posted = await this.post(authorisation, amount, session);
 
-      // Filtering on `approved` is what makes a concurrent second capture lose: it matches
-      // nothing, the guard below aborts, and the posting it made rolls back with the transaction.
-      const result = await this.authorisations.updateOne(
-        { _id: authorisationId, status: APPROVED },
-        {
-          $set: {
-            status: 'captured',
-            capturedMinorUnits: captured,
-            billingMinorUnits: captured,
-            capturedAt,
-            transactionId: posted.id,
+        // Filtering on `approved` is what makes a concurrent second capture lose: it matches
+        // nothing, the guard below aborts, and the posting it made rolls back with the transaction.
+        const result = await this.authorisations.updateOne(
+          { _id: authorisationId, status: APPROVED },
+          {
+            $set: {
+              status: 'captured',
+              capturedMinorUnits: captured,
+              billingMinorUnits: captured,
+              capturedAt,
+              transactionId: posted.id,
+            },
           },
-        },
-        { session },
-      );
-      assertClaimed(result.matchedCount, authorisationId);
-    });
+          { session },
+        );
+        assertClaimed(result.matchedCount, authorisationId);
+      },
+      { lockKeys: [balanceKey(customerRef(authorisation.accountId), currency)] },
+    );
 
     this.logger.log({ authorisationId, capturedMinorUnits: captured }, 'Card authorisation captured');
     return this.reload(authorisationId);
@@ -90,15 +94,26 @@ export class CardCaptureService {
     const authorisation = await this.loadApproved(authorisationId);
     const reversedAt = this.clock.now();
 
-    await this.transactionManager.withTransaction(async (session) => {
-      await this.releaseHold(authorisation, 'Card authorisation reversed', session);
-      const result = await this.authorisations.updateOne(
-        { _id: authorisationId, status: APPROVED },
-        { $set: { status: 'reversed', reversedAt } },
-        { session },
-      );
-      assertClaimed(result.matchedCount, authorisationId);
-    });
+    await this.transactionManager.withTransaction(
+      async (session) => {
+        await this.releaseHold(authorisation, 'Card authorisation reversed', session);
+        const result = await this.authorisations.updateOne(
+          { _id: authorisationId, status: APPROVED },
+          { $set: { status: 'reversed', reversedAt } },
+          { session },
+        );
+        assertClaimed(result.matchedCount, authorisationId);
+      },
+      // Releasing the hold writes the same balance document a capture does.
+      {
+        lockKeys: [
+          balanceKey(
+            customerRef(authorisation.accountId),
+            authorisation.currency as CurrencyCode,
+          ),
+        ],
+      },
+    );
 
     this.logger.log({ authorisationId }, 'Card authorisation reversed');
     return this.reload(authorisationId);

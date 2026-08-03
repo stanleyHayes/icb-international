@@ -5,7 +5,7 @@ import type { Model } from 'mongoose';
 import { newId } from '../../../infrastructure/database/identifier.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { SessionDoc } from '../../customers/infrastructure/customer.schemas.js';
-import type { DeviceContext } from '../auth.service.js';
+import type { DeviceContext } from './auth.types.js';
 import { describeDevice } from '../domain/device-label.js';
 
 export interface RecordSessionInput {
@@ -15,6 +15,8 @@ export interface RecordSessionInput {
   device: DeviceContext;
   /** Present when rotating: the new session joins the existing token family. */
   familyId: string | undefined;
+  /** True when the login satisfied MFA or came from a trusted device. */
+  trusted: boolean;
 }
 
 /**
@@ -47,7 +49,7 @@ export class SessionWriter {
         },
         ipAddress: input.device.ipAddress,
         location: null,
-        trusted: false,
+        trusted: input.trusted,
         lastSeenAt: now,
         expiresAt: new Date(now.getTime() + input.refresh.ttlMs),
         revokedAt: null,

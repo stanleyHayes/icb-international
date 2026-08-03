@@ -1,5 +1,6 @@
 import { fromDecimalNumber, type CurrencyCode } from '@icb/money';
 import { Injectable, Logger } from '@nestjs/common';
+import { ConflictError } from '../../common/errors/index.js';
 import { newId } from '../../infrastructure/database/identifier.js';
 import { AccountsService } from '../../modules/accounts/accounts.service.js';
 import { customerRef, glRef } from '../../modules/ledger/domain/account-ref.js';
@@ -49,6 +50,8 @@ export class SeedService {
   async run(options: { reset: boolean; seed: string }): Promise<SeedResult> {
     if (options.reset) {
       await this.reset();
+    } else {
+      await this.assertEmpty();
     }
 
     const random = createHelpers(options.seed);
@@ -77,6 +80,25 @@ export class SeedService {
 
   async reset(): Promise<void> {
     await this.databaseReset.clearSeededCollections();
+  }
+
+  /**
+   * Refuse to seed on top of an existing bank.
+   *
+   * Without this the run dies partway through on a duplicate-key error, having already written
+   * some customers and none of their accounts — a database in a state no code expects. Stopping
+   * before the first write leaves what is already there untouched and says what to do instead.
+   */
+  private async assertEmpty(): Promise<void> {
+    const existing = await this.identities.countCustomers();
+    if (existing === 0) {
+      return;
+    }
+
+    throw new ConflictError(
+      `The database already holds ${existing} customers. Run \`pnpm db:reset\` to clear the seeded collections and build the bank again.`,
+      { customers: existing },
+    );
   }
 
   private async seedPersona(

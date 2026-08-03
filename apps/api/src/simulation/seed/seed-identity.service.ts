@@ -105,4 +105,9 @@ export class SeedIdentityService {
       { upsert: true },
     );
   }
+
+  /** How many customers already exist — what tells a seed run whether it would be a second one. */
+  async countCustomers(): Promise<number> {
+    return this.customers.estimatedDocumentCount();
+  }
 }

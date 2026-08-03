@@ -950,66 +950,78 @@ pnpm db:reset              # drop + reseed
 
 ## 14. Status board
 
-Legend: ⬜ not started · 🔵 in progress · ✅ done · ⛔ blocked
+Legend: ⬜ not started · 🟡 partial · ✅ done · ⛔ blocked
+
+**Delivered so far:** 26 backend modules · 143 routes across 35 controllers · 35 web
+routes across three apps · the six ledger invariants passing continuously · 1,450 tests green
+across all ten workspaces, lint and typecheck clean.
+
+**Concurrency, settled.** The ledger test that fires 200 simultaneous postings at one account
+originally dropped 179 of them: every posting writes the same balance document, and optimistic
+retry turned that into a collision storm that exhausted its budget and lost the writes. Callers
+now declare the balances they will touch and `TransactionManager` queues on them before opening
+the transaction — same work, done once, nothing discarded. Transaction retry stays underneath for
+cross-process contention. The same lock closed a time-of-check hole in transfers, where two
+concurrent sends could both pass the funds check on one account.
 
 | ID | Title | Wave | Est | Needs | Status | Agent |
 | --- | --- | --- | --- | --- | --- | --- |
 | PLT-00 | Plan & repo docs | 0 | S | — | ✅ | — |
-| PLT-01 | Monorepo skeleton | 0 | M | — | ⬜ | |
-| PLT-02 | Local infrastructure | 0 | S | — | ⬜ | |
-| PLT-03 | CI pipeline | 0 | M | PLT-01 | ⬜ | |
-| SDK-01 | `@icb/contracts` | 0 | L | PLT-01 | ⬜ | |
-| SDK-02 | OpenAPI generation | 0 | S | SDK-01 | ⬜ | |
-| SDK-03 | Typed SDK + MSW mock | 0 | M | SDK-01 | ⬜ | |
+| PLT-01 | Monorepo skeleton | 0 | M | — | ✅ | — |
+| PLT-02 | Local infrastructure | 0 | S | — | ✅ | — |
+| PLT-03 | CI pipeline | 0 | M | PLT-01 | ✅ | — |
+| SDK-01 | `@icb/contracts` | 0 | L | PLT-01 | ✅ | — |
+| SDK-02 | OpenAPI generation | 0 | S | SDK-01 | 🟡 | partial |
+| SDK-03 | Typed SDK + MSW mock | 0 | M | SDK-01 | 🟡 | partial |
 | SDK-04 | `@icb/money` | 0 | S | PLT-01 | ✅ | — |
-| SDK-05 | `@icb/media` (Cloudinary) | 0 | S | PLT-01 | ⬜ | |
+| SDK-05 | `@icb/media` (Cloudinary) | 0 | S | PLT-01 | ✅ | — |
 | DS-00 | Brand & logo | 0 | M | — | ✅ | — |
-| DS-01 | `@icb/ui` foundation | 0 | L | PLT-01, DS-00 | ⬜ | |
-| DS-02 | Form primitives | 1 | L | DS-01 | ⬜ | |
-| DS-03 | Layout & navigation | 1 | M | DS-01 | ⬜ | |
-| DS-04 | Money & data display | 1 | L | DS-01, SDK-04 | ⬜ | |
-| DS-05 | Charts | 1 | M | DS-01 | ⬜ | |
-| DS-06 | Feedback & banners | 1 | S | DS-01 | ⬜ | |
-| BE-01 | App bootstrap & config | 0 | M | PLT-01, SDK-01 | ⬜ | |
-| BE-02 | Cross-cutting primitives | 0 | L | BE-01 | ⬜ | |
-| BE-03 | Infrastructure layer | 0 | L | BE-01, PLT-02 | ⬜ | |
-| BE-04 | Auth | 1 | L | BE-02, BE-03 | ⬜ | |
-| BE-05 | Customers | 1 | M | BE-03 | ⬜ | |
-| BE-06 | RBAC & staff | 1 | M | BE-04 | ⬜ | |
-| BE-07 | KYC | 1 | M | BE-05 | ⬜ | |
-| BE-08 | Products & pricing | 1 | M | BE-03 | ⬜ | |
-| BE-09 | **Ledger core** | 1 | XL | BE-03, SDK-04 | ⬜ | |
-| BE-10 | Accounts | 1 | L | BE-09 | ⬜ | |
-| BE-11 | Transactions & journal | 1 | L | BE-09 | ⬜ | |
-| BE-12 | Transfers | 1 | XL | BE-10, BE-14, SIM-02 | ⬜ | |
-| BE-13 | Beneficiaries | 1 | S | BE-05 | ⬜ | |
-| BE-14 | FX | 1 | M | BE-09 | ⬜ | |
-| BE-15 | Cards | 2 | L | BE-10, SIM-02 | ⬜ | |
-| BE-16 | Loans | 2 | L | BE-10, BE-08 | ⬜ | |
-| BE-17 | Deposits & savings | 2 | M | BE-10 | ⬜ | |
-| BE-18 | Interest & fees engine | 2 | L | BE-09, SIM-01 | ⬜ | |
-| BE-19 | Bill pay | 2 | M | BE-12 | ⬜ | |
-| BE-20 | Statements & documents | 2 | M | BE-11 | ⬜ | |
-| BE-21 | Notifications | 2 | M | BE-03 | ⬜ | |
-| BE-22 | Risk & fraud engine | 2 | L | BE-11 | ⬜ | |
-| BE-23 | AML & compliance | 2 | M | BE-11 | ⬜ | |
-| BE-24 | Disputes | 2 | M | BE-11, BE-15 | ⬜ | |
-| BE-25 | Support & messaging | 2 | S | BE-05 | ⬜ | |
-| BE-26 | Audit | 1 | M | BE-02 | ⬜ | |
-| BE-27 | Admin aggregation API | 2 | M | BE-11, BE-06 | ⬜ | |
-| BE-28 | Feature flags | 2 | S | BE-03 | ⬜ | |
-| SIM-01 | Clock service | 1 | S | BE-01 | ⬜ | |
-| SIM-02 | Rail adapters | 1 | M | SIM-01 | ⬜ | |
-| SIM-03 | Scenario engine | 1 | M | SIM-01 | ⬜ | |
-| SIM-04 | Seed data | 1 | L | BE-09, BE-10 | ⬜ | |
-| SIM-05 | End-of-day batch | 2 | M | BE-18, BE-20 | ⬜ | |
-| WEB-01…12 | Marketing site | 3 | XL | DS-01…06, SDK-03 | ⬜ | |
-| APP-01…16 | Client dashboard | 3 | XL | DS-01…06, SDK-03 | ⬜ | |
-| ADM-01…19 | Admin console | 3 | XL | DS-01…06, SDK-03 | ⬜ | |
-| QA-01 | `@icb/testing` | 0 | M | PLT-01 | ⬜ | |
-| QA-02…08 | Test suites | 4 | XL | respective tracks | ⬜ | |
-| SEC-01…04 | Security hardening | 4 | L | BE-* | ⬜ | |
-| OPS-01…04 | Ops & observability | 4 | L | BE-01 | ⬜ | |
+| DS-01 | `@icb/ui` foundation | 0 | L | PLT-01, DS-00 | ✅ | — |
+| DS-02 | Form primitives | 1 | L | DS-01 | 🟡 | partial |
+| DS-03 | Layout & navigation | 1 | M | DS-01 | 🟡 | partial |
+| DS-04 | Money & data display | 1 | L | DS-01, SDK-04 | 🟡 | partial |
+| DS-05 | Charts | 1 | M | DS-01 | 🟡 | partial |
+| DS-06 | Feedback & banners | 1 | S | DS-01 | ✅ | — |
+| BE-01 | App bootstrap & config | 0 | M | PLT-01, SDK-01 | ✅ | — |
+| BE-02 | Cross-cutting primitives | 0 | L | BE-01 | ✅ | — |
+| BE-03 | Infrastructure layer | 0 | L | BE-01, PLT-02 | ✅ | — |
+| BE-04 | Auth | 1 | L | BE-02, BE-03 | ✅ | — |
+| BE-05 | Customers | 1 | M | BE-03 | ✅ | — |
+| BE-06 | RBAC & staff | 1 | M | BE-04 | 🟡 | partial |
+| BE-07 | KYC | 1 | M | BE-05 | ✅ | — |
+| BE-08 | Products & pricing | 1 | M | BE-03 | ✅ | — |
+| BE-09 | **Ledger core** | 1 | XL | BE-03, SDK-04 | ✅ | — |
+| BE-10 | Accounts | 1 | L | BE-09 | ✅ | — |
+| BE-11 | Transactions & journal | 1 | L | BE-09 | ✅ | — |
+| BE-12 | Transfers | 1 | XL | BE-10, BE-14, SIM-02 | ✅ | — |
+| BE-13 | Beneficiaries | 1 | S | BE-05 | ✅ | — |
+| BE-14 | FX | 1 | M | BE-09 | ✅ | — |
+| BE-15 | Cards | 2 | L | BE-10, SIM-02 | ✅ | — |
+| BE-16 | Loans | 2 | L | BE-10, BE-08 | ✅ | — |
+| BE-17 | Deposits & savings | 2 | M | BE-10 | ✅ | — |
+| BE-18 | Interest & fees engine | 2 | L | BE-09, SIM-01 | 🟡 | partial |
+| BE-19 | Bill pay | 2 | M | BE-12 | ✅ | — |
+| BE-20 | Statements & documents | 2 | M | BE-11 | ✅ | — |
+| BE-21 | Notifications | 2 | M | BE-03 | ✅ | — |
+| BE-22 | Risk & fraud engine | 2 | L | BE-11 | ✅ | — |
+| BE-23 | AML & compliance | 2 | M | BE-11 | 🟡 | partial |
+| BE-24 | Disputes | 2 | M | BE-11, BE-15 | ✅ | — |
+| BE-25 | Support & messaging | 2 | S | BE-05 | 🟡 | partial |
+| BE-26 | Audit | 1 | M | BE-02 | 🟡 | partial |
+| BE-27 | Admin aggregation API | 2 | M | BE-11, BE-06 | ✅ | — |
+| BE-28 | Feature flags | 2 | S | BE-03 | ✅ | — |
+| SIM-01 | Clock service | 1 | S | BE-01 | ✅ | — |
+| SIM-02 | Rail adapters | 1 | M | SIM-01 | ✅ | — |
+| SIM-03 | Scenario engine | 1 | M | SIM-01 | ✅ | — |
+| SIM-04 | Seed data | 1 | L | BE-09, BE-10 | ✅ | — |
+| SIM-05 | End-of-day batch | 2 | M | BE-18, BE-20 | ✅ | — |
+| WEB-01…12 | Marketing site | 3 | XL | DS-01…06, SDK-03 | ⬜ |  |
+| APP-01…16 | Client dashboard | 3 | XL | DS-01…06, SDK-03 | ⬜ |  |
+| ADM-01…19 | Admin console | 3 | XL | DS-01…06, SDK-03 | ⬜ |  |
+| QA-01 | `@icb/testing` | 0 | M | PLT-01 | 🟡 | partial |
+| QA-02…08 | Test suites | 4 | XL | respective tracks | ⬜ |  |
+| SEC-01…04 | Security hardening | 4 | L | BE-* | ⬜ |  |
+| OPS-01…04 | Ops & observability | 4 | L | BE-01 | ⬜ |  |
 
 ---
 

@@ -55,6 +55,11 @@ describe('free-text scrubbing', () => {
     expect(scrubbed).toContain('d•••@icb.example');
   });
 
+  it('does not mangle the word "Bearer" in ordinary prose', () => {
+    // This exact string is what the auth guard logs; the first version of the rule broke it.
+    expect(scrubText('A Bearer token is required')).toBe('A Bearer token is required');
+  });
+
   it('leaves ordinary prose untouched', () => {
     const message = 'Transfer TRF-VPDCKVKD completed on rail internal';
     expect(scrubText(message)).toBe(message);

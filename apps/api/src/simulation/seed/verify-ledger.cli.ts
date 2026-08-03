@@ -2,6 +2,10 @@ import 'reflect-metadata';
 
 import { NestFactory } from '@nestjs/core';
 
+// A CLI lives for one job. Periodic sweeps would fire mid-run and then race the shutdown that
+// follows, which is how this announced itself: "Dispute watch sweep failed" during a seed.
+process.env['BACKGROUND_JOBS_ENABLED'] = 'false';
+
 import { AppModule } from '../../app.module.js';
 import { LedgerIntegrityService } from '../../modules/ledger/ledger-integrity.service.js';
 

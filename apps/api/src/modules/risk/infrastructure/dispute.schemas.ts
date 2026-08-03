@@ -54,8 +54,8 @@ export class DisputeDoc {
   @Prop({ type: String, required: true, unique: true, index: true })
   reference!: string;
 
-  /** One live dispute per transaction; the unique index is what enforces it. */
-  @Prop({ type: String, required: true, index: true })
+  /** One live dispute per transaction; the unique index below is what enforces it. */
+  @Prop({ type: String, required: true })
   transactionId!: string;
 
   @Prop({ type: String, required: true, index: true })

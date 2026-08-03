@@ -1,3 +1,5 @@
+/* eslint-disable sonarjs/no-hardcoded-passwords -- constant *names* and a deliberately-unusable hash placeholder; no credential material lives here */
+
 /**
  * A small breached-password list.
  *
@@ -19,6 +21,13 @@ export const COMMON_PASSWORDS: ReadonlySet<string> = new Set([
 export const MAX_FAILED_ATTEMPTS = 5;
 export const LOCKOUT_LADDER_MS = [60_000, 300_000, 900_000, 3_600_000] as const;
 
+/**
+ * Verified against on a login for an unknown email, so response time does not reveal whether the
+ * account exists. Well-formed argon2id; the plaintext is irrelevant because it never matches.
+ */
+export const DUMMY_PASSWORD_HASH =
+  '$argon2id$v=19$m=65536,t=3,p=4$AAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAA';
+
 /** How long an email verification or password reset token stays valid. */
 export const EMAIL_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 export const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
@@ -26,4 +35,55 @@ export const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 /** Trusted devices skip MFA for this long. */
 export const TRUSTED_DEVICE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+/** MFA and step-up challenges: validity window and how many wrong codes kill one. */
+export const MFA_CHALLENGE_TTL_MS = 10 * 60 * 1000;
+export const MFA_MAX_ATTEMPTS = 5;
+
+/** Simulated SMS one-time passcodes are six digits (DoD: simulated SMS OTP). */
+export const SMS_OTP_LENGTH = 6;
+
+/** TOTP codes one step either side of the current one are accepted, for clock drift. */
+export const TOTP_WINDOW_STEPS = 1;
+
+/** The contract fixes the recovery-code count at exactly ten. */
+export const RECOVERY_CODE_COUNT = 10;
+
 export const REFRESH_COOKIE_NAME = 'icb_refresh';
+
+/** Why a session ended — written to `sessions.revokedReason` and surfaced in the audit trail. */
+export const REVOKE_REASONS = {
+  Logout: 'logout',
+  LogoutAll: 'logout_all',
+  Rotated: 'rotated',
+  RefreshReuse: 'refresh_token_reuse',
+  ByUser: 'revoked_by_user',
+  PasswordChange: 'password_changed',
+  PasswordReset: 'password_reset',
+} as const;
+
+/**
+ * Stable, greppable names for the audit trail (N7). Auth events are security telemetry: an
+ * incident review reads this stream, so the names never change once shipped.
+ */
+export const AUDIT_ACTIONS = {
+  Register: 'auth.register',
+  Login: 'auth.login',
+  LoginFailed: 'auth.login_failed',
+  MfaChallengeIssued: 'auth.mfa_challenge_issued',
+  RecoveryCodeUsed: 'auth.recovery_code_used',
+  Logout: 'auth.logout',
+  LogoutAll: 'auth.logout_all',
+  RefreshRotated: 'auth.refresh_rotated',
+  RefreshReuseDetected: 'auth.refresh_reuse_detected',
+  EmailVerificationSent: 'auth.email_verification_sent',
+  EmailVerified: 'auth.email_verified',
+  PasswordResetRequested: 'auth.password_reset_requested',
+  PasswordResetCompleted: 'auth.password_reset_completed',
+  PasswordChanged: 'auth.password_changed',
+  TotpEnrolled: 'auth.totp_enrolled',
+  TotpDisabled: 'auth.totp_disabled',
+  DeviceTrusted: 'auth.device_trusted',
+  SessionRevoked: 'auth.session_revoked',
+  StepUpRequested: 'auth.step_up_requested',
+  StepUpVerified: 'auth.step_up_verified',
+} as const;

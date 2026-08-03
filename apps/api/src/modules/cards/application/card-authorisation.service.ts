@@ -10,6 +10,7 @@ import { TransactionManager } from '../../../infrastructure/database/transaction
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { AccountsService } from '../../accounts/accounts.service.js';
 import { customerRef } from '../../ledger/domain/account-ref.js';
+import { balanceKey } from '../../ledger/domain/balance-key.js';
 import { HoldService } from '../../ledger/hold.service.js';
 import {
   evaluateAuthorisation,
@@ -188,24 +189,31 @@ export class CardAuthorisationService {
     const id = newId();
     const base = this.baseRecord(card, command, context, now, id);
 
-    const created = await this.transactionManager.withTransaction(async (session) => {
-      const hold = await this.holds.placeWithin(
-        {
-          accountRef: customerRef(card.accountId),
-          amount,
-          reason: HOLD_REASON,
-          expiresInMs: AUTHORISATION_EXPIRY_MS,
-          sourceType: AUTHORISATION_SOURCE,
-          sourceId: id,
-        },
-        session,
-      );
+    const accountRef = customerRef(card.accountId);
 
-      return this.write(
-        { ...base, status: APPROVED, declineReason: null, arn: generateArn(now), holdId: hold.id },
-        session,
-      );
-    });
+    const created = await this.transactionManager.withTransaction(
+      async (session) => {
+        const hold = await this.holds.placeWithin(
+          {
+            accountRef,
+            amount,
+            reason: HOLD_REASON,
+            expiresInMs: AUTHORISATION_EXPIRY_MS,
+            sourceType: AUTHORISATION_SOURCE,
+            sourceId: id,
+          },
+          session,
+        );
+
+        return this.write(
+          { ...base, status: APPROVED, declineReason: null, arn: generateArn(now), holdId: hold.id },
+          session,
+        );
+      },
+      // A terminal that retries and a customer paying on the same account at once both land on
+      // this balance. Queueing on it is what stops one of the two authorisations vanishing.
+      { lockKeys: [balanceKey(accountRef, amount.currency)] },
+    );
 
     this.logger.log({ cardId: card._id, authorisationId: id }, 'Card authorisation approved');
     return toCardAuthorisation(created);

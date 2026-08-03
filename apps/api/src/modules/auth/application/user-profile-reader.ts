@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 
+import { DomainError } from '../../../common/errors/domain.error.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import {
   CustomerDoc,
@@ -27,9 +28,19 @@ type CredentialView = Pick<
 export class UserProfileReader {
   constructor(
     @InjectModel(CustomerDoc.name) private readonly customers: Model<CustomerDoc>,
+    @InjectModel(UserCredentialDoc.name) private readonly credentials: Model<UserCredentialDoc>,
     private readonly sessionWriter: SessionWriter,
     private readonly clock: ClockService,
   ) {}
+
+  /** The principal behind a live access token — the `GET /auth/me` read. */
+  async currentUser(userId: string): Promise<AuthenticatedUser> {
+    const credential = await this.credentials.findById(userId).lean();
+    if (!credential) {
+      throw new DomainError('UNAUTHENTICATED', 'Session is no longer valid');
+    }
+    return this.toAuthenticatedUser(credential);
+  }
 
   async createCustomerRecord(
     customerId: string,
@@ -62,6 +73,15 @@ export class UserProfileReader {
 
   async recordSession(input: RecordSessionInput): Promise<void> {
     await this.sessionWriter.record(input);
+  }
+
+  /** SMS OTP destination. Null for staff principals, who have no customer record. */
+  async phoneForCustomer(customerId: string | null): Promise<string | null> {
+    if (customerId === null) {
+      return null;
+    }
+    const customer = await this.customers.findById(customerId).select('phone').lean();
+    return customer?.phone ?? null;
   }
 
   async toAuthenticatedUser(credential: CredentialView): Promise<AuthenticatedUser> {

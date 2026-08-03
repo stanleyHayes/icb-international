@@ -7,6 +7,7 @@ import { ConflictError, NotFoundError } from '../../common/errors/index.js';
 import { newId } from '../../infrastructure/database/identifier.js';
 import { TransactionManager } from '../../infrastructure/database/transaction.manager.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
+import { balanceKey } from './domain/balance-key.js';
 import { AccountBalanceDoc, HoldDoc } from './infrastructure/ledger.schemas.js';
 
 export interface PlaceHoldCommand {
@@ -51,7 +52,12 @@ export class HoldService {
   ) {}
 
   async place(command: PlaceHoldCommand): Promise<HoldRecord> {
-    return this.transactionManager.withTransaction((session) => this.placeWithin(command, session));
+    // A hold writes the same `account_balances` document a posting does, so it queues on the
+    // same key. Without this, a card authorisation and a transfer on one account collide.
+    return this.transactionManager.withTransaction(
+      (session) => this.placeWithin(command, session),
+      { lockKeys: [balanceKey(command.accountRef, command.amount.currency)] },
+    );
   }
 
   async placeWithin(command: PlaceHoldCommand, session: ClientSession): Promise<HoldRecord> {
@@ -136,7 +142,13 @@ export class HoldService {
       await run(session);
       return;
     }
-    await this.transactionManager.withTransaction(run);
+
+    // Read outside the transaction only to name the balance we will contend on. A hold's account
+    // and currency never change, so the key is stable; `run` re-reads authoritatively inside.
+    const hold = await this.holds.findById(holdId, { accountRef: 1, currency: 1 }).lean();
+    const lockKeys = hold ? [balanceKey(hold.accountRef, hold.currency)] : [];
+
+    await this.transactionManager.withTransaction(run, { lockKeys });
   }
 
   /** Release every hold attached to a source, e.g. when a transfer completes or is cancelled. */

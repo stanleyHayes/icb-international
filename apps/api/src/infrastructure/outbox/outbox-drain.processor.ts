@@ -1,7 +1,8 @@
-import { Injectable, Logger, type OnApplicationBootstrap, type OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, Logger, type OnApplicationBootstrap, type OnModuleDestroy } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 
+import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
 import { DomainError } from '../../common/errors/index.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
 import {
@@ -38,12 +39,17 @@ export class OutboxDrainProcessor implements OnApplicationBootstrap, OnModuleDes
   private draining = false;
 
   constructor(
+    @Inject(CONFIG) private readonly appConfig: AppConfiguration,
     @InjectModel(OutboxEventDoc.name) private readonly events: Model<OutboxEventDoc>,
     private readonly consumers: OutboxConsumerService,
     private readonly clock: ClockService,
   ) {}
 
   onApplicationBootstrap(): void {
+    if (!this.appConfig.backgroundJobs.enabled) {
+      return;
+    }
+
     this.timer = setInterval(() => {
       void this.drainOnce().catch((error: unknown) => {
         this.logger.error({ err: error }, 'Outbox drain pass failed');

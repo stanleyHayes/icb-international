@@ -2,7 +2,12 @@ import 'reflect-metadata';
 
 import { NestFactory } from '@nestjs/core';
 
+// A CLI lives for one job. Periodic sweeps would fire mid-run and then race the shutdown that
+// follows, which is how this announced itself: "Dispute watch sweep failed" during a seed.
+process.env['BACKGROUND_JOBS_ENABLED'] = 'false';
+
 import { AppModule } from '../../app.module.js';
+import { isDomainError } from '../../common/errors/index.js';
 import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
 import { LedgerIntegrityService } from '../../modules/ledger/ledger-integrity.service.js';
 import { SeedService } from './seed.service.js';
@@ -58,7 +63,18 @@ async function main(): Promise<void> {
   }
 }
 
+/**
+ * A refusal the operator can act on gets the sentence; anything unexpected gets the stack,
+ * because that is the case where the trace is the only thing that helps.
+ */
+function describe(error: unknown): string {
+  if (isDomainError(error)) {
+    return error.message;
+  }
+  return error instanceof Error ? (error.stack ?? error.message) : String(error);
+}
+
 main().catch((error: unknown) => {
-  process.stderr.write(`\nSeed failed: ${error instanceof Error ? error.stack : String(error)}\n`);
+  process.stderr.write(`\nSeed failed: ${describe(error)}\n\n`);
   process.exit(1);
 });

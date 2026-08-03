@@ -17,7 +17,9 @@ describe('error taxonomy', () => {
     for (const code of ERROR_CODES) {
       expect(ERROR_STATUS[code], `missing status for ${code}`).toBeGreaterThanOrEqual(200);
     }
-    expect(Object.keys(ERROR_STATUS).sort()).toEqual([...ERROR_CODES].sort());
+    // Set comparison rather than sorted arrays: the assertion is about membership, and a
+    // locale-dependent sort would make it depend on the runner's collation.
+    expect(new Set(Object.keys(ERROR_STATUS))).toEqual(new Set(ERROR_CODES));
   });
 
   it('accepts a well-formed problem document', () => {

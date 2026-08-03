@@ -102,6 +102,22 @@ export class InterestAccrualStep {
   private async claimAndPost(input: AccrualInput, session: ClientSession): Promise<void> {
     const accrualId = newId();
 
+    await this.claimDay(accrualId, input, session);
+    const transactionId = await this.postAccrual(accrualId, input, session);
+
+    await this.accruals.updateOne(
+      { _id: accrualId },
+      { $set: { postedTransactionId: transactionId } },
+      { session },
+    );
+  }
+
+  /** The unique index on `(accountId, accrualDate)` rejects a second claim for the same day. */
+  private async claimDay(
+    accrualId: string,
+    input: AccrualInput,
+    session: ClientSession,
+  ): Promise<void> {
     await this.accruals.create(
       [
         {
@@ -119,7 +135,14 @@ export class InterestAccrualStep {
       ],
       { session, ordered: true },
     );
+  }
 
+  /** Interest expense up, customer liability up, in the accrual's own session. */
+  private async postAccrual(
+    accrualId: string,
+    input: AccrualInput,
+    session: ClientSession,
+  ): Promise<string> {
     const posted = await this.ledger.postWithin(
       {
         type: 'interest',
@@ -145,12 +168,7 @@ export class InterestAccrualStep {
       },
       session,
     );
-
-    await this.accruals.updateOne(
-      { _id: accrualId },
-      { $set: { postedTransactionId: posted.id } },
-      { session },
-    );
+    return posted.id;
   }
 
   private async ledgerBalance(accountId: string, currency: CurrencyCode): Promise<Money> {

@@ -15,25 +15,16 @@ import { newId } from '../../infrastructure/database/identifier.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
 import { customerRef } from '../ledger/domain/account-ref.js';
 import { AccountBalanceDoc } from '../ledger/infrastructure/ledger.schemas.js';
+import { ACCOUNT_NUMBER_RETRY_ATTEMPTS, BANK_CODE } from './accounts.constants.js';
 import { generateAccountNumber, generateIban } from './domain/account-number.js';
+import {
+  buildNewAccount,
+  type OpenAccountCommand,
+} from './infrastructure/account.factory.js';
 import { toAccountDetail, toAccountSummary } from './infrastructure/account.mapper.js';
 import { AccountDoc } from './infrastructure/account.schemas.js';
 
-export interface OpenAccountCommand {
-  readonly customerId: string;
-  readonly productCode: string;
-  readonly productName: string;
-  readonly kind: string;
-  readonly currency: CurrencyCode;
-  readonly nickname?: string;
-  readonly primary?: boolean;
-  readonly interestRate?: number;
-  readonly overdraftMinorUnits?: number;
-  readonly entropy?: () => number;
-}
-
-/** ICB's institution code inside an IBAN. */
-const BANK_CODE = 'ICBK';
+export type { OpenAccountCommand } from './infrastructure/account.factory.js';
 
 @Injectable()
 export class AccountsService {
@@ -51,30 +42,14 @@ export class AccountsService {
 
     const [created] = await this.accounts.create(
       [
-        {
-          _id: newId(),
-          customerId: command.customerId,
-          productCode: command.productCode,
-          productName: command.productName,
-          kind: command.kind,
+        buildNewAccount(command, {
+          id: newId(),
           number,
           iban: generateIban(this.config.bank.country, BANK_CODE, number),
           bic: this.config.bank.bic,
           sortCode: this.config.bank.sortCode,
-          currency: command.currency,
-          status: 'active',
-          nickname: command.nickname ?? null,
-          primary: command.primary ?? false,
-          overdraftMinorUnits: command.overdraftMinorUnits ?? 0,
-          interestRate: command.interestRate ?? null,
-          minimumBalanceMinorUnits: null,
-          monthlyFeeMinorUnits: null,
-          statementDay: 1,
-          lastStatementAt: null,
           openedAt,
-          closedAt: null,
-          closureReason: null,
-        },
+        }),
       ],
       session ? { session, ordered: true } : { ordered: true },
     );
@@ -84,7 +59,7 @@ export class AccountsService {
     }
 
     await this.seedBalanceRecord(created, session);
-    return toAccountSummary(created, this.emptyBalances(command.currency));
+    return toAccountSummary(created, this.rowFor(created, new Map()));
   }
 
   async listForCustomer(customerId: string): Promise<AccountSummary[]> {
@@ -95,9 +70,7 @@ export class AccountsService {
 
     const balances = await this.loadBalances(accounts.map((account) => account._id));
 
-    return accounts.map((account) =>
-      toAccountSummary(account, balances.get(account._id) ?? this.emptyBalances(account.currency)),
-    );
+    return accounts.map((account) => toAccountSummary(account, this.rowFor(account, balances)));
   }
 
   async getForCustomer(accountId: string, customerId: string): Promise<AccountDetail> {
@@ -106,10 +79,7 @@ export class AccountsService {
       throw new NotFoundError('Account', accountId);
     }
     const balances = await this.loadBalances([accountId]);
-    return toAccountDetail(
-      account,
-      balances.get(accountId) ?? this.emptyBalances(account.currency),
-    );
+    return toAccountDetail(account, this.rowFor(account, balances));
   }
 
   /**
@@ -138,6 +108,11 @@ export class AccountsService {
     return this.accounts.findOne({ number, status: { $ne: 'closed' } }).lean();
   }
 
+  /**
+   * Unguarded status write for system processes (simulation, deposit maturity) that have already
+   * done their own checks. Anything operator- or customer-driven goes through
+   * `AccountStatusService`, which enforces the state machine and the empty-account rule.
+   */
   async setStatus(accountId: string, status: AccountStatus, reason: string): Promise<void> {
     const update: Record<string, unknown> = { status };
     if (status === 'closed') {
@@ -145,16 +120,6 @@ export class AccountsService {
       update['closureReason'] = reason;
     }
     const result = await this.accounts.updateOne({ _id: accountId }, { $set: update });
-    if (result.matchedCount === 0) {
-      throw new NotFoundError('Account', accountId);
-    }
-  }
-
-  async updateNickname(accountId: string, customerId: string, nickname: string | null): Promise<void> {
-    const result = await this.accounts.updateOne(
-      { _id: accountId, customerId },
-      { $set: { nickname } },
-    );
     if (result.matchedCount === 0) {
       throw new NotFoundError('Account', accountId);
     }
@@ -181,7 +146,7 @@ export class AccountsService {
     };
   }
 
-  private async loadBalances(accountIds: string[]): Promise<Map<string, AccountBalanceRow>> {
+  private async loadBalances(accountIds: string[]): Promise<Map<string, LoadedBalanceRow>> {
     const refs = accountIds.map(customerRef);
     const rows = await this.balances.find({ accountRef: { $in: refs } }).lean();
 
@@ -191,7 +156,6 @@ export class AccountsService {
         {
           ledgerMinorUnits: row.ledgerMinorUnits,
           holdMinorUnits: row.holdMinorUnits,
-          overdraftMinorUnits: row.overdraftMinorUnits,
           currency: row.currency,
           asOf: row.asOf,
         },
@@ -199,14 +163,20 @@ export class AccountsService {
     );
   }
 
-  private emptyBalances(currency: string): AccountBalanceRow {
-    return {
+  /**
+   * The balance row for one account, with the overdraft taken from the account document.
+   *
+   * The ledger's cache rows are ledger-owned (N4); the overdraft is a credit decision, not a
+   * posting, so the account is its source of truth and staff changes appear immediately.
+   */
+  private rowFor(account: AccountDoc, balances: Map<string, LoadedBalanceRow>): AccountBalanceRow {
+    const row = balances.get(account._id) ?? {
       ledgerMinorUnits: 0,
       holdMinorUnits: 0,
-      overdraftMinorUnits: 0,
-      currency,
+      currency: account.currency,
       asOf: this.clock.now(),
     };
+    return { ...row, overdraftMinorUnits: account.overdraftMinorUnits };
   }
 
   /** Create the balance row up front so an account always has one to read. */
@@ -234,7 +204,7 @@ export class AccountsService {
 
   /** Retry on the (vanishingly rare) collision rather than failing the customer's application. */
   private async allocateAccountNumber(entropy: () => number): Promise<string> {
-    for (let attempt = 0; attempt < 5; attempt += 1) {
+    for (let attempt = 0; attempt < ACCOUNT_NUMBER_RETRY_ATTEMPTS; attempt += 1) {
       const candidate = generateAccountNumber(entropy);
       const existing = await this.accounts.exists({ number: candidate });
       if (!existing) {
@@ -252,3 +222,6 @@ export interface AccountBalanceRow {
   currency: string;
   asOf: Date;
 }
+
+/** What the ledger's cache carries; the overdraft comes from the account document instead. */
+type LoadedBalanceRow = Omit<AccountBalanceRow, 'overdraftMinorUnits'>;

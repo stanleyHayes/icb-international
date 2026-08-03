@@ -58,6 +58,8 @@ export interface AppConfiguration {
     readonly enabled: boolean;
     readonly seed: string;
   };
+  /** False in CLI runs, so periodic sweeps never race a short-lived process's shutdown. */
+  readonly backgroundJobs: { readonly enabled: boolean };
 }
 
 function formatIssues(error: unknown): string {
@@ -97,6 +99,7 @@ export function loadConfiguration(source: NodeJS.ProcessEnv): AppConfiguration {
     media: mediaSection(raw),
     bank: bankSection(raw),
     simulation: { enabled: raw.SIMULATION_ENABLED, seed: raw.SIMULATION_SEED },
+    backgroundJobs: { enabled: raw.BACKGROUND_JOBS_ENABLED },
   };
 }
 

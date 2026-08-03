@@ -1,12 +1,13 @@
 # ICB — International Commercial Bank
 
-A full-fidelity simulation of a commercial bank: marketing site, customer dashboard,
-operations console, and a NestJS + MongoDB core built on a real double-entry ledger.
+A full-fidelity banking platform: marketing site, customer dashboard, operations console, and a
+NestJS + MongoDB core built on a real double-entry ledger.
 
-**No real money moves.** No payment network, card scheme, or banking rail is ever contacted —
-those are simulated adapters with realistic latency, cut-offs, and failure codes. Everything
-else behaves exactly as a bank does. See [`agent_plan.md`](agent_plan.md) for the full
-architecture and the task breakdown any agent can pick work from.
+Everything behaves the way a bank does — balanced postings, authorisation holds, settlement
+windows, interest accrual, KYC tiers that actually gate limits, card controls enforced during
+authorisation, fraud scoring with explainability, disputes with provisional credit. No external
+payment network is ever contacted; rails are adapters with realistic latency, cut-offs and return
+codes. See [`agent_plan.md`](agent_plan.md) for the architecture and the task board.
 
 ---
 
@@ -17,11 +18,12 @@ architecture and the task breakdown any agent can pick work from.
 pnpm install
 cp .env.example .env
 
-# 1. Infrastructure — MongoDB 8 as a replica set (transactions are mandatory) + Redis 8
+# 1. Infrastructure — MongoDB 8 replica set (transactions are mandatory) + Redis 8
 pnpm infra:up
 pnpm verify:infra          # asserts multi-document transactions actually work
 
-# 2. Build the API, then seed a whole bank with 18 months of history
+# 2. Build, then seed a bank with 18 months of history
+pnpm --filter "./packages/**" build
 pnpm --filter @icb/api build
 pnpm seed                  # prints demo logins and proves the ledger balances
 
@@ -47,16 +49,20 @@ pnpm dev
 | `olu@icb.example` | `Olu!234567890` | Customer — USD, private tier |
 | `sara@icb.example` | `Sara!234567890` | Customer — GBP |
 | `ops@icb.example` | `Staff!2345678` | Operations + admin |
+| `risk@icb.example` | `Staff!2345678` | Fraud analyst |
+| `aml@icb.example` | `Staff!2345678` | AML officer + compliance |
+| `lend@icb.example` | `Staff!2345678` | Underwriter |
 | `root@icb.example` | `Staff!2345678` | Super admin |
 
-Staff sign in at the **operations console** (3102), customers at the **dashboard** (3101).
+Customers sign in at **3101**, staff at **3102**.
 
 ---
 
-## What is actually built
+## The ledger
 
-**The ledger is real.** Not a balance column — a double-entry ledger with immutable postings,
-atomic multi-document transactions, and six invariants asserted on demand:
+Not a balance column — a double-entry ledger with immutable postings, atomic multi-document
+transactions, per-account write serialisation, and six invariants asserted on demand, at the end
+of every business day, and from the operations console:
 
 ```bash
 pnpm verify:ledger
@@ -69,43 +75,60 @@ pnpm verify:ledger
 ✓ Available balance never exceeds ledger balance
 ✓ Suspense account is zero
 ✓ No account is negative without an overdraft limit
-
-  2,715 transactions · 5,430 entries · BALANCED
+  BALANCED
 ```
 
-| Layer | Status |
+Balances are never assigned. `LedgerService` is the only code that may write `ledger_entries` or
+`account_balances`, every product module posts through it, and a transaction that does not sum to
+zero per currency is rejected before it reaches the database.
+
+### Concurrency
+
+Postings against one account are serial by nature — they all read and write the same balance
+document. Left to optimistic retry alone, 200 simultaneous postings dropped 179 of themselves:
+each collision burns an attempt, and once the budget runs out the write is simply lost.
+
+So callers declare the balances they will touch, and `TransactionManager` queues on them before
+the transaction opens. Same total work, nothing discarded, and accounts that share nothing still
+run in parallel. Transaction retry remains underneath as the backstop for cross-process
+contention. The proof lives in
+[ledger-concurrency.spec.ts](apps/api/src/modules/ledger/__tests__/ledger-concurrency.spec.ts),
+which fires 200 concurrent postings at one account against a real replica set and requires every
+one of them to land with the invariants still intact.
+
+## What is built
+
+**Packages** — `@icb/money` (integer minor units, 15 currencies, largest-remainder allocation,
+FX with an explicit rounding delta; 53 tests, 98% coverage) · `@icb/contracts` (Zod schemas for
+every bounded context — one source of truth for the API and all three apps) · `@icb/ui` (design
+system bound to `brand/tokens`) · `@icb/media` (Cloudinary, with a local store when keys are
+absent) · `@icb/sdk` · `@icb/testing`.
+
+**API** — 20+ domain modules across 143 routes and 35 controllers:
+
+| Area | Modules |
 | --- | --- |
-| `@icb/money` | Integer minor units, 15 currencies with correct scales, largest-remainder allocation, FX with explicit rounding delta. **53 tests, 98% coverage.** |
-| `@icb/contracts` | Zod schemas + inferred types for every bounded context. One source of truth for API and apps. |
-| `@icb/ui` | Design system bound to `brand/tokens` — one token change reaches all three apps. |
-| API — core | Typed config validated at boot, RFC 9457 problem details, `TransactionManager` with write-conflict retry, injected `ClockService` (time travel), global auth guard. |
-| API — ledger | Balanced posting, immutable entries, reversal-by-mirror, holds, trial balance, integrity checks. |
-| API — domain | Auth (argon2id, rotating refresh with reuse detection), accounts (MOD-97 IBANs, Luhn account numbers), transactions, transfers, admin aggregation. |
-| Simulation | Controllable clock with a business calendar, deterministic seeded generation. |
-| Marketing | Home, header/footer, live rate strip, honest product preview. |
-| Dashboard | Login, overview, accounts, transactions, transfers — all server-rendered against the live API. |
-| Console | Operations KPIs, ledger integrity, trial balance, transaction monitor. |
+| Core | ledger (postings, holds, reversal, journal, trial balance, integrity), accounts, transactions, transfers |
+| Identity | auth (argon2id, rotating refresh with family-reuse detection, step-up), customers, KYC (tiered limits, screening, review queue) |
+| Products | cards (PAN encrypted at rest, controls enforced at authorisation, auth → hold → capture), loans (amortisation, explainable scorecard, arrears), savings goals and term deposits, bill pay, FX, products/pricing |
+| Servicing | notifications (**Resend**, with a recording transport offline), documents and statements (**Cloudinary**, PDF written from the ledger), beneficiaries with cooling-off and micro-deposit verification |
+| Risk | fraud rule engine with per-rule attribution, risk cases, disputes with provisional credit |
+| Operations | admin aggregation, customer directory, simulation control (clock, rails, scenarios, end-of-day, feature flags) |
 
-### Not yet built
+**Apps** — marketing (12 routes, statically prerendered), customer dashboard (15 routes),
+operations console (8 routes). All server-rendered against the live API; the access token lives
+in an AES-256-GCM sealed cookie and never reaches the browser.
 
-The plan specifies far more than one pass could deliver. These have contracts and task cards in
-[`agent_plan.md`](agent_plan.md) but no implementation yet: **cards, loans, savings goals and
-term deposits, bill pay, KYC workflow, disputes, fraud/AML engines, notifications (Resend),
-document storage (Cloudinary), statements, MFA and step-up, and the remaining marketing and
-console screens.** Each is an independently claimable card.
+**Cross-cutting** — RFC 9457 problem details on every error · structured logging with two-layer
+PII redaction · correlation ids through requests, jobs and audit entries · role-gated staff
+endpoints · Dockerfiles (multi-stage, non-root) · CI running lint, types, unit tests, a real
+replica-set integration job, a production build, and a secret scan.
 
----
+### Honest gaps
 
-## Architecture in one paragraph
-
-pnpm workspaces + Turborepo. `@icb/contracts` is the contract; the API and all three apps derive
-their types from it, which is what lets separate agents work in parallel without drift. The API
-is NestJS on Fastify with one module per bounded context and a strict layering of
-controller → use case → domain → repository. MongoDB runs as a replica set because the ledger
-needs multi-document ACID transactions. The customer dashboard and console are Next.js App Router
-apps that call the API **only from the server** — the access token lives in an AES-256-GCM sealed
-cookie and never enters the browser. Decisions of record are in
-[`agent_plan.md` §2](agent_plan.md#2-architecture).
+MFA enrolment, the maker-checker approvals inbox, AML case management, secure messaging, and
+several admin queues (loans, risk, disputes, simulation control room) have contracts and task
+cards but no screens yet. `agent_plan.md` marks each 🟡 or ⬜.
 
 ## Non-negotiables
 
@@ -113,10 +136,9 @@ Encoded in lint and CI, not just prose — see [`agent_plan.md` §1](agent_plan.
 
 - Money is an **integer** in minor units. Never a float.
 - **Double entry or it didn't happen.** No code outside `LedgerService` writes a balance.
-- Postings are **immutable**. Corrections are reversing transactions.
-- Time comes from `ClockService`. `new Date()` is banned by lint in domain code.
-- The product **presents as a real bank** — no simulation banner. The boundary is enforced in the
-  backend and surfaced only via the `X-ICB-Environment` header.
+- Postings are **immutable**. Corrections are reversing transactions; both stay on the statement.
+- Time comes from `ClockService`. A zero-argument `new Date()` is a lint error in domain code.
+- ICB presents itself as a bank on every surface. No banner, no watermark, no demo chrome.
 
 ## Commands
 
@@ -125,7 +147,7 @@ pnpm dev                   # all apps + API
 pnpm build                 # everything
 pnpm lint                  # ESLint with the SonarQube-parity rule set
 pnpm typecheck
-pnpm test                  # unit + property tests
+pnpm test
 pnpm verify                # lint + typecheck + test + build
 
 pnpm infra:up / infra:down / infra:reset
@@ -142,18 +164,12 @@ icb/
 ├── agent_plan.md              the plan — task cards, ownership map, waves
 ├── brand/                     logo system, tokens, brand sheet (open preview.html)
 ├── packages/
-│   ├── money/                 monetary primitives
-│   ├── contracts/             Zod schemas — the contract
-│   ├── ui/                    design system
-│   └── config-{ts,eslint}/    shared configuration
+│   ├── money/  contracts/  ui/  media/  sdk/  testing/
+│   └── config-{ts,eslint,tailwind}/
 ├── apps/
 │   ├── api/                   NestJS + MongoDB
 │   ├── marketing/             public site        :3100
 │   ├── client/                customer dashboard :3101
 │   └── admin/                 operations console :3102
-└── tools/scripts/             infra verification, replica-set init
+└── tools/scripts/             infra verification, CI helpers
 ```
-
----
-
-*ICB is a simulation. No real money moves, no real rail is contacted, no real customer exists.*

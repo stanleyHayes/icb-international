@@ -13,6 +13,7 @@ import {
   assertPositiveAmounts,
   signedDelta,
 } from './domain/balance-checker.js';
+import { balanceKey, balanceKeysFor } from './domain/balance-key.js';
 import type {
   PostedEntry,
   PostedTransaction,
@@ -53,8 +54,9 @@ export class LedgerService {
 
   /** Post a balanced transaction, opening its own database transaction. */
   async post(command: PostingCommand): Promise<PostedTransaction> {
-    return this.transactionManager.withTransaction((session) =>
-      this.postWithin(command, session),
+    return this.transactionManager.withTransaction(
+      (session) => this.postWithin(command, session),
+      { lockKeys: balanceKeysFor(command.lines) },
     );
   }
 
@@ -215,6 +217,11 @@ export class LedgerService {
     reason: string,
     actor: PostingCommand['actor'],
   ): Promise<PostedTransaction> {
+    // Read outside the transaction purely to name the balances we are about to contend on.
+    // Entries are immutable, so this set cannot change under us; the authoritative read still
+    // happens inside, against the session.
+    const lockKeys = await this.contendedBalanceKeys(transactionId);
+
     return this.transactionManager.withTransaction(async (session) => {
       const original = await this.transactions.findById(transactionId).session(session).lean();
       if (!original) {
@@ -246,7 +253,18 @@ export class LedgerService {
       );
 
       return reversal;
-    });
+    }, { lockKeys });
+  }
+
+  /** The balance documents a reversal of `transactionId` will touch — the original's, mirrored. */
+  private async contendedBalanceKeys(transactionId: string): Promise<string[]> {
+    const originalEntries = await this.entries
+      .find({ transactionId }, { accountRef: 1, currency: 1 })
+      .lean();
+
+    return [
+      ...new Set(originalEntries.map((entry) => balanceKey(entry.accountRef, entry.currency))),
+    ];
   }
 
   /** Each original posting, flipped. Amounts are unchanged; only the direction inverts. */

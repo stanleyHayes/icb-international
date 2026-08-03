@@ -101,14 +101,8 @@ export class CustomerDirectoryService {
       .select('_id')
       .lean();
 
-    const balances = await this.balances
-      .find({
-        accountRef: { $in: accounts.map((account) => customerRef(account._id)) },
-        currency: BASE_CURRENCY,
-      })
-      .lean();
+    const relationshipValue = await this.relationshipValueOf(accounts.map((a) => a._id));
 
-    const relationshipValue = balances.reduce((total, row) => total + row.ledgerMinorUnits, 0);
     return {
       id: customer._id,
       type: customer.type as CustomerAdminView['type'],
@@ -116,13 +110,7 @@ export class CustomerDirectoryService {
       tier: customer.tier as CustomerAdminView['tier'],
       email: customer.email,
       phone: customer.phone,
-      individual: (customer.individual ?? null) as CustomerAdminView['individual'],
-      business: (customer.business ?? null) as CustomerAdminView['business'],
-      residentialAddress: (customer.residentialAddress ??
-        null) as CustomerAdminView['residentialAddress'],
-      postalAddress: (customer.postalAddress ?? null) as CustomerAdminView['postalAddress'],
-      avatar: (customer.avatar ?? null) as CustomerAdminView['avatar'],
-      preferences: customer.preferences as CustomerAdminView['preferences'],
+      ...profileOf(customer),
       kyc: {
         level: customer.kycLevel as CustomerAdminView['kyc']['level'],
         status: customer.kycStatus as CustomerAdminView['kyc']['status'],
@@ -139,6 +127,32 @@ export class CustomerDirectoryService {
       internalNotes: 0,
     };
   }
+
+  /** Total base-currency balance across a customer's open accounts. */
+  private async relationshipValueOf(accountIds: string[]): Promise<number> {
+    const rows = await this.balances
+      .find({ accountRef: { $in: accountIds.map(customerRef) }, currency: BASE_CURRENCY })
+      .lean();
+    return rows.reduce((total, row) => total + row.ledgerMinorUnits, 0);
+  }
+}
+
+/**
+ * The loosely-typed profile sub-documents, narrowed in one place.
+ *
+ * Mongoose stores these as free-form objects; the contract is the authority on their shape, so
+ * the assertions live here rather than being repeated at every read site.
+ */
+function profileOf(customer: CustomerDoc) {
+  return {
+    individual: (customer.individual ?? null) as CustomerAdminView['individual'],
+    business: (customer.business ?? null) as CustomerAdminView['business'],
+    residentialAddress: (customer.residentialAddress ??
+      null) as CustomerAdminView['residentialAddress'],
+    postalAddress: (customer.postalAddress ?? null) as CustomerAdminView['postalAddress'],
+    avatar: (customer.avatar ?? null) as CustomerAdminView['avatar'],
+    preferences: customer.preferences as CustomerAdminView['preferences'],
+  };
 }
 
 /** Search text reaches a regex, so metacharacters must be neutralised before it does. */

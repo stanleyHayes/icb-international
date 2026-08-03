@@ -1,10 +1,15 @@
 import {
   loginRequestSchema,
+  mfaVerifyRequestSchema,
   registerRequestSchema,
   type AuthenticatedUser,
   type AuthTokens,
+  type LoginRequest,
+  type LoginResponse,
+  type MfaVerifyRequest,
+  type RegisterRequest,
 } from '@icb/contracts';
-import { Body, Controller, Get, Inject, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Post, Req, Res } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
@@ -12,88 +17,111 @@ import { Public } from '../../common/decorators/public.decorator.js';
 import { DomainError } from '../../common/errors/domain.error.js';
 import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
 import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
-import { AuthService, type DeviceContext, type IssuedSession } from './auth.service.js';
+import { AuthService } from './auth.service.js';
 import { REFRESH_COOKIE_NAME } from './auth.constants.js';
+import type { DeviceContext, IssuedSession } from './application/auth.types.js';
+import { LoginService } from './application/login.service.js';
+import { RegistrationService } from './application/registration.service.js';
 import type { AccessTokenClaims } from './application/token.service.js';
+import { UserProfileReader } from './application/user-profile-reader.js';
 
-interface AuthResponse {
+interface MfaVerifyResponse {
   tokens: AuthTokens;
   user: AuthenticatedUser;
 }
 
+/**
+ * Pre-auth flows: registration, login, MFA completion, and the refresh/logout cycle.
+ *
+ * The refresh token goes into an httpOnly, SameSite=Strict cookie and never into the response
+ * body — so no script on the page can read it, and it is not stored anywhere JavaScript
+ * reaches. The access token does go in the body, to be held in memory only.
+ */
 @Controller('auth')
 export class AuthController {
   constructor(
+    private readonly registration: RegistrationService,
+    private readonly logins: LoginService,
     private readonly auth: AuthService,
+    private readonly profiles: UserProfileReader,
     @Inject(CONFIG) private readonly config: AppConfiguration,
   ) {}
 
   @Public()
   @Post('register')
-  async register(
-    @Body(zodBody(registerRequestSchema)) body: unknown,
+  register(
+    @Body(zodBody(registerRequestSchema)) body: RegisterRequest,
     @Req() request: FastifyRequest,
-    @Res({ passthrough: true }) reply: FastifyReply,
-  ): Promise<AuthResponse> {
-    const issued = await this.auth.register(
-      registerRequestSchema.parse(body),
-      readDevice(request),
-    );
-    return this.completeSession(issued, reply);
+  ): Promise<AuthenticatedUser> {
+    return this.registration.register(body, readDevice(request));
   }
 
   @Public()
   @Post('login')
+  @HttpCode(200)
   async login(
-    @Body(zodBody(loginRequestSchema)) body: unknown,
+    @Body(zodBody(loginRequestSchema)) body: LoginRequest,
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
-  ): Promise<AuthResponse> {
-    const issued = await this.auth.login(loginRequestSchema.parse(body), readDevice(request));
-    return this.completeSession(issued, reply);
+  ): Promise<LoginResponse> {
+    const outcome = await this.logins.login(body, readDevice(request));
+    if (outcome.outcome === 'mfa_required') {
+      return { outcome: 'mfa_required', challenge: outcome.challenge };
+    }
+    this.setRefreshCookie(reply, outcome.session);
+    return { outcome: 'authenticated', ...sessionBody(outcome.session) };
+  }
+
+  @Public()
+  @Post('mfa/verify')
+  @HttpCode(200)
+  async verifyMfa(
+    @Body(zodBody(mfaVerifyRequestSchema)) body: MfaVerifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<MfaVerifyResponse> {
+    const issued = await this.logins.verifyMfa(body);
+    this.setRefreshCookie(reply, issued);
+    return sessionBody(issued);
   }
 
   @Public()
   @Post('refresh')
+  @HttpCode(200)
   async refresh(
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
-  ): Promise<AuthResponse> {
-    const token = readRefreshCookie(request);
-    const issued = await this.auth.refresh(token, readDevice(request));
-    return this.completeSession(issued, reply);
+  ): Promise<AuthTokens> {
+    const issued = await this.auth.refresh(readRefreshCookie(request), readDevice(request));
+    this.setRefreshCookie(reply, issued);
+    return sessionBody(issued).tokens;
   }
 
   @Public()
   @Post('logout')
+  @HttpCode(204)
   async logout(
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
-  ): Promise<{ ok: true }> {
+  ): Promise<void> {
     const token = request.cookies?.[REFRESH_COOKIE_NAME];
     if (token) {
       await this.auth.logout(token);
     }
     void reply.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });
-    return { ok: true };
   }
 
   @Post('logout-all')
-  async logoutEverywhere(@CurrentUser() user: AccessTokenClaims): Promise<{ revoked: number }> {
-    return { revoked: await this.auth.logoutEverywhere(user.sub) };
+  @HttpCode(204)
+  async logoutEverywhere(@CurrentUser() user: AccessTokenClaims): Promise<void> {
+    await this.auth.logoutEverywhere(user.sub);
   }
 
   @Get('me')
-  async me(@CurrentUser() user: AccessTokenClaims): Promise<AuthenticatedUser> {
-    return this.auth.currentUser(user.sub);
+  me(@CurrentUser() user: AccessTokenClaims): Promise<AuthenticatedUser> {
+    return this.profiles.currentUser(user.sub);
   }
 
-  /**
-   * The refresh token goes into an httpOnly, SameSite=Strict cookie and never into the response
-   * body — so no script on the page can read it, and it is not stored anywhere JavaScript
-   * reaches. The access token does go in the body, to be held in memory only.
-   */
-  private completeSession(issued: IssuedSession, reply: FastifyReply): AuthResponse {
+  private setRefreshCookie(reply: FastifyReply, issued: IssuedSession): void {
     void reply.setCookie(REFRESH_COOKIE_NAME, issued.refreshToken, {
       httpOnly: true,
       secure: this.config.isProduction,
@@ -101,12 +129,18 @@ export class AuthController {
       path: '/',
       maxAge: Math.floor(issued.refreshTtlMs / 1000),
     });
-
-    return {
-      tokens: { accessToken: issued.accessToken, expiresIn: issued.expiresIn, tokenType: 'Bearer' },
-      user: issued.user,
-    };
   }
+}
+
+function sessionBody(issued: IssuedSession): MfaVerifyResponse {
+  return {
+    tokens: {
+      accessToken: issued.accessToken,
+      expiresIn: issued.expiresIn,
+      tokenType: 'Bearer',
+    },
+    user: issued.user,
+  };
 }
 
 function readDevice(request: FastifyRequest): DeviceContext {

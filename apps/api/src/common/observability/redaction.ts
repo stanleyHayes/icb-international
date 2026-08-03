@@ -66,8 +66,14 @@ export const REDACT_PATHS: readonly string[] = [
 /** 13–19 digits, optionally grouped — the shape of a card number wherever it appears. */
 const PAN_PATTERN = /\b(?:\d[ -]?){12,18}\d\b/g;
 
-/** Bearer tokens and other long opaque credentials pasted into a message. */
-const BEARER_PATTERN = /\bBearer\s+[\w-]+\.?[\w-]*\.?[\w-]*/gi;
+/**
+ * Bearer credentials pasted into a message.
+ *
+ * The value must be at least 20 characters so that ordinary prose — "a Bearer token is
+ * required" — is not mangled into "Bearer [redacted] is required", which is how this rule
+ * first announced itself.
+ */
+const BEARER_PATTERN = /\bBearer\s+[\w-]{20,}(?:\.[\w-]+){0,2}/gi;
 
 /** Anything that looks like an email address in free text. */
 const EMAIL_PATTERN = /\b[\w.%+-]+@[\w.-]+\.[a-z]{2,}\b/gi;

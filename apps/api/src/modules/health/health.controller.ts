@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import type { Connection } from 'mongoose';
 
+import { Public } from '../../common/decorators/public.decorator.js';
 import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
 import { Inject } from '@nestjs/common';
 import { ClockService } from '../../simulation/clock/clock.service.js';
@@ -12,6 +13,7 @@ import { ClockService } from '../../simulation/clock/clock.service.js';
  * `/health` answers "is the process up" and must never touch a dependency — a slow database
  * should not get the container killed. `/health/ready` answers "can it serve traffic" and does.
  */
+@Public()
 @Controller('health')
 export class HealthController {
   private readonly startedAtMs: number;

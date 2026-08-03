@@ -1,279 +1,108 @@
-import type { CreateTransferRequest, TransferRail, TransferSummary } from '@icb/contracts';
-import { fromMinorUnits, isGreaterThan, type CurrencyCode, type Money } from '@icb/money';
-import { Injectable, Logger } from '@nestjs/common';
+import type {
+  CreateTransferRequest,
+  CursorPage,
+  TransferDetail,
+  TransferQuery,
+  TransferSummary,
+} from '@icb/contracts';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import type { ClientSession, Model } from 'mongoose';
+import type { Model } from 'mongoose';
 
-import { DomainError } from '../../common/errors/domain.error.js';
-import { InsufficientFundsError, NotFoundError } from '../../common/errors/index.js';
-import { newId, newReference } from '../../infrastructure/database/identifier.js';
-import { TransactionManager } from '../../infrastructure/database/transaction.manager.js';
+import { NotFoundError } from '../../common/errors/index.js';
+import { buildCursorPage } from '../../common/pagination/cursor.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
 import { AccountsService } from '../accounts/accounts.service.js';
-import { customerRef, glRef, type AccountRef } from '../ledger/domain/account-ref.js';
-import { GL_PENDING_SETTLEMENT } from '../ledger/domain/chart-of-accounts.js';
-import type { PostingLine } from '../ledger/domain/posting.types.js';
-import { LedgerService } from '../ledger/ledger.service.js';
-import { resolveRail } from './domain/rail-resolver.js';
-import { toTransferSummary } from './infrastructure/transfer.mapper.js';
+import { TransferNotCancellableError } from './domain/transfer-errors.js';
+import { CANCELLABLE_STATUSES } from './domain/transfers.constants.js';
+import { timelineEntry } from './infrastructure/transfer.factory.js';
+import {
+  toTransferDetail,
+  toTransferSummary,
+} from './infrastructure/transfer.mapper.js';
+import { buildTransferFilter } from './infrastructure/transfer-query.js';
 import { TransferDoc } from './infrastructure/transfer.schemas.js';
+import { TransferOrchestrator } from './application/transfer-orchestrator.js';
+import type { TransferStatus } from '@icb/contracts';
 
 /**
- * Money movement initiated by a customer.
+ * The customer-facing surface of the transfers module.
  *
- * The pipeline is the same for every rail — validate, check funds, post, record — and only the
- * *destination leg* differs: an on-us transfer credits another ICB account immediately, while an
- * outbound rail parks the value in pending settlement (2100) until the rail's window closes.
- * Keeping that the only variation is what stops each rail growing its own subtly different
- * money-handling code.
+ * Creation delegates to the orchestrator's pipeline; reads and cancellation are exercised here.
+ * A cancel is only ever a status transition — money that has already moved is recalled by a
+ * reversal, which is a different flow with a different owner.
  */
 @Injectable()
 export class TransfersService {
-  private readonly logger = new Logger(TransfersService.name);
-
   constructor(
     @InjectModel(TransferDoc.name) private readonly transfers: Model<TransferDoc>,
+    private readonly orchestrator: TransferOrchestrator,
     private readonly accounts: AccountsService,
-    private readonly ledger: LedgerService,
-    private readonly transactionManager: TransactionManager,
     private readonly clock: ClockService,
   ) {}
 
-  async create(customerId: string, request: CreateTransferRequest): Promise<TransferSummary> {
-    const source = await this.accounts.loadSpendable(request.fromAccountId, customerId);
-    const currency = source.currency as CurrencyCode;
-
-    if (request.amount.currency !== currency) {
-      throw new DomainError(
-        'ACCOUNT_CURRENCY_MISMATCH',
-        'Cross-currency transfers require an FX quote',
-        { context: { accountCurrency: currency, requestCurrency: request.amount.currency } },
-      );
-    }
-
-    const amount = fromMinorUnits(request.amount.minorUnits, currency);
-    const balances = await this.accounts.balancesFor(source._id, currency);
-
-    if (isGreaterThan(amount, balances.available)) {
-      throw new InsufficientFundsError(source._id, amount, balances.available);
-    }
-
-    const rail = resolveRail(request.destination);
-    const destinationLeg = await this.resolveDestinationLeg(request, rail);
-
-    const reference = newReference('TRF');
-    const transferId = newId();
-    const now = this.clock.now();
-
-    const posted = await this.transactionManager.withTransaction((session) =>
-      this.postAndRecord({ session, source, amount, request, rail, destinationLeg, reference, transferId, customerId, currency, now }),
-    );
-
-    this.logger.log({ transferId, rail, reference }, 'Transfer created');
-    return this.toSummary(transferId, source.number, posted.reference);
+  async create(customerId: string, request: CreateTransferRequest): Promise<TransferDetail> {
+    const doc = await this.orchestrator.initiate(customerId, request);
+    return this.get(customerId, doc._id);
   }
 
-  /** The unit of work: one balanced posting plus the transfer record, committed together. */
-  private async postAndRecord(input: PostAndRecordInput) {
-    const { session, source, amount, request, destinationLeg, reference, transferId } = input;
-
-    const lines = this.buildLines(source, amount, destinationLeg);
-
-    const transaction = await this.ledger.postWithin(
-      {
-        type: 'transfer_out',
-        description: destinationLeg.narrative,
-        actor: { kind: 'customer', id: input.customerId, label: source.number },
-        lines,
-        reference,
-        status: destinationLeg.immediate ? 'posted' : 'authorised',
-        sourceType: 'transfer',
-        sourceId: transferId,
-        ...(request.reference ? { metadata: { customerReference: request.reference } } : {}),
-      },
-      session,
-    );
-
-    await this.recordTransfer(input, transaction.id);
-    return transaction;
-  }
-
-  private async recordTransfer(
-    input: PostAndRecordInput,
-    transactionId: string,
-  ): Promise<void> {
-    const { source, amount, request, destinationLeg, reference, transferId, session } = input;
-    await this.transfers.create(
-      [
-        {
-          _id: transferId,
-          reference,
-          customerId: input.customerId,
-          fromAccountId: source._id,
-          destination: request.destination,
-          rail: input.rail,
-          status: destinationLeg.immediate ? 'completed' : 'in_settlement',
-          debitMinorUnits: amount.minorUnits,
-          creditMinorUnits: amount.minorUnits,
-          currency: input.currency,
-          feeMinorUnits: 0,
-          recipientName: destinationLeg.recipientName,
-          recipientMasked: destinationLeg.recipientMasked,
-          customerReference: request.reference ?? null,
-          note: request.note ?? null,
-          transactionId,
-          estimatedArrival: destinationLeg.estimatedArrival,
-          createdAt: input.now,
-          completedAt: destinationLeg.immediate ? input.now : null,
-          failureCode: null,
-          failureReason: null,
-        },
-      ],
-      { session, ordered: true },
-    );
-  }
-
-  /** Both legs of the posting: debit the sender, credit whatever the rail lands in. */
-  private buildLines(
-    source: { _id: string; number: string },
-    amount: Money,
-    leg: DestinationLeg,
-  ): PostingLine[] {
-    return [
-      { accountRef: customerRef(source._id), direction: 'debit', amount, narrative: leg.narrative },
-      {
-        accountRef: leg.accountRef,
-        direction: 'credit',
-        amount,
-        narrative: `From ${source.number}`,
-      },
-    ];
-  }
-
-  async listForCustomer(customerId: string, limit = 25): Promise<TransferSummary[]> {
+  async list(customerId: string, query: TransferQuery): Promise<CursorPage<TransferSummary>> {
     const rows = await this.transfers
-      .find({ customerId })
-      .sort({ createdAt: -1 })
-      .limit(limit)
+      .find(buildTransferFilter(customerId, query))
+      .sort({ _id: 1 })
+      .limit(query.limit + 1)
       .lean();
 
-    return rows.map((row) => toTransferSummary(row, row.fromAccountId));
-  }
-
-  /**
-   * Where the credit leg lands.
-   *
-   * On-us transfers credit the recipient's account directly and are final immediately. Everything
-   * else credits pending settlement — the money has left the customer but has not yet reached
-   * anyone, which is exactly what "in flight" means on a real statement.
-   */
-  private async resolveDestinationLeg(
-    request: CreateTransferRequest,
-    rail: TransferRail,
-  ): Promise<DestinationLeg> {
-    const destination = request.destination;
-    const internal = destination.kind === 'own_account' || destination.kind === 'icb_customer';
-    return internal ? this.internalLeg(destination) : this.externalLeg(destination, rail);
-  }
-
-  /** On-us: the recipient's account is credited directly and the transfer is final at once. */
-  private async internalLeg(
-    destination: CreateTransferRequest['destination'],
-  ): Promise<DestinationLeg> {
-    const target = await this.findInternalTarget(destination);
-
-    if (!target) {
-      throw new NotFoundError('Destination account', describeDestination(destination));
-    }
-
+    const page = buildCursorPage(rows, query.limit, (row) => row._id);
+    const labels = await this.accountLabels(page.items.map((row) => row.fromAccountId));
     return {
-      accountRef: customerRef(target._id),
-      recipientName: target.nickname ?? target.productName,
-      recipientMasked: maskAccountNumber(target.number),
-      narrative: `Transfer to ${maskAccountNumber(target.number)}`,
-      immediate: true,
-      estimatedArrival: this.clock.now(),
+      ...page,
+      items: page.items.map((row) =>
+        toTransferSummary(row, labels.get(row.fromAccountId) ?? row.fromAccountId),
+      ),
     };
   }
 
-  private async findInternalTarget(destination: CreateTransferRequest['destination']) {
-    if (destination.kind === 'own_account') {
-      return this.accounts.loadSpendable(destination.accountId);
-    }
-    if (destination.kind === 'icb_customer') {
-      return this.accounts.findByNumber(destination.accountNumber);
-    }
-    return null;
-  }
-
-  /**
-   * Outbound: value moves to pending settlement (2100) until the rail's window closes. The money
-   * has left the customer but has not yet reached anyone — which is what "in flight" means.
-   */
-  private externalLeg(
-    destination: CreateTransferRequest['destination'],
-    rail: TransferRail,
-  ): DestinationLeg {
-    const name =
-      'accountHolderName' in destination ? destination.accountHolderName : 'External account';
-
-    return {
-      accountRef: glRef(GL_PENDING_SETTLEMENT),
-      recipientName: name,
-      recipientMasked: maskAccountNumber(describeDestination(destination)),
-      narrative: `Transfer to ${name}`,
-      immediate: false,
-      estimatedArrival: this.clock.addBusinessDays(rail === 'swift' ? 2 : 1),
-    };
-  }
-
-  private async toSummary(
-    transferId: string,
-    fromLabel: string,
-    reference: string,
-  ): Promise<TransferSummary> {
-    const row = await this.transfers.findById(transferId).lean();
+  async get(customerId: string, transferId: string): Promise<TransferDetail> {
+    const row = await this.transfers.findOne({ _id: transferId, customerId }).lean();
     if (!row) {
       throw new NotFoundError('Transfer', transferId);
     }
-    return { ...toTransferSummary(row, fromLabel), reference };
+    const labels = await this.accountLabels([row.fromAccountId]);
+    return toTransferDetail(row, labels.get(row.fromAccountId) ?? row.fromAccountId);
   }
-}
 
-/** Everything the posting unit of work needs, grouped so it stays under the parameter limit. */
-interface PostAndRecordInput {
-  session: ClientSession;
-  source: { _id: string; number: string };
-  amount: Money;
-  request: CreateTransferRequest;
-  rail: TransferRail;
-  destinationLeg: DestinationLeg;
-  reference: string;
-  transferId: string;
-  customerId: string;
-  currency: CurrencyCode;
-  now: Date;
-}
+  /** Cancel-if-pending: only a transfer that has not started moving can be recalled. */
+  async cancel(customerId: string, transferId: string, reason?: string): Promise<TransferDetail> {
+    const row = await this.transfers.findOne({ _id: transferId, customerId }).lean();
+    if (!row) {
+      throw new NotFoundError('Transfer', transferId);
+    }
+    if (!CANCELLABLE_STATUSES.includes(row.status as TransferStatus)) {
+      throw new TransferNotCancellableError(transferId, row.status as TransferStatus);
+    }
 
-/** Where the credit leg lands, and what the customer is told about it. */
-interface DestinationLeg {
-  accountRef: AccountRef;
-  recipientName: string;
-  recipientMasked: string;
-  narrative: string;
-  immediate: boolean;
-  estimatedArrival: Date;
-}
+    await this.transfers.updateOne(
+      { _id: transferId, status: row.status },
+      {
+        $set: { status: 'cancelled' },
+        $push: {
+          timeline: timelineEntry(this.clock.now(), 'cancelled', reason ?? null),
+        },
+      },
+    );
+    return this.get(customerId, transferId);
+  }
 
-/** The identifier a destination is addressed by, whichever shape it takes. */
-function describeDestination(destination: CreateTransferRequest['destination']): string {
-  if ('iban' in destination) return destination.iban;
-  if ('accountNumber' in destination) return destination.accountNumber;
-  if ('accountId' in destination) return destination.accountId;
-  return '';
-}
-
-/** Never show a full destination identifier back to a customer. */
-function maskAccountNumber(value: string): string {
-  return value.length <= 4 ? value : `•••• ${value.slice(-4)}`;
+  /** Receipt labels for the source accounts on a page, loaded once per distinct account. */
+  private async accountLabels(accountIds: string[]): Promise<Map<string, string>> {
+    const labels = new Map<string, string>();
+    for (const accountId of [...new Set(accountIds)]) {
+      // A historical transfer outlives its account; a frozen or closed source must not
+      // break the list, so an unloadable account falls back to its id as the label.
+      const account = await this.accounts.loadSpendable(accountId).catch(() => null);
+      labels.set(accountId, account?.nickname ?? account?.number ?? accountId);
+    }
+    return labels;
+  }
 }

@@ -99,6 +99,27 @@ export class FeeAssessmentStep {
     const chargeId = newId();
     const period = periodOf(input.context.businessDate);
 
+    await this.claimPeriod(chargeId, period, input, session);
+
+    if (!input.affordable) {
+      return;
+    }
+
+    const transactionId = await this.postFee(chargeId, period, input, session);
+    await this.charges.updateOne(
+      { _id: chargeId },
+      { $set: { postedTransactionId: transactionId } },
+      { session },
+    );
+  }
+
+  /** The unique index on `(accountId, period, code)` rejects a second charge for the month. */
+  private async claimPeriod(
+    chargeId: string,
+    period: string,
+    input: FeeInput,
+    session: ClientSession,
+  ): Promise<void> {
     await this.charges.create(
       [
         {
@@ -115,11 +136,15 @@ export class FeeAssessmentStep {
       ],
       { session, ordered: true },
     );
+  }
 
-    if (!input.affordable) {
-      return;
-    }
-
+  /** Customer liability down, fee income up. */
+  private async postFee(
+    chargeId: string,
+    period: string,
+    input: FeeInput,
+    session: ClientSession,
+  ): Promise<string> {
     const posted = await this.ledger.postWithin(
       {
         type: 'fee',
@@ -145,12 +170,7 @@ export class FeeAssessmentStep {
       },
       session,
     );
-
-    await this.charges.updateOne(
-      { _id: chargeId },
-      { $set: { postedTransactionId: posted.id } },
-      { session },
-    );
+    return posted.id;
   }
 
   /** Ledger balance less holds, plus any arranged overdraft. */

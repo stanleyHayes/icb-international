@@ -105,18 +105,17 @@ export class StatementGenerationStep {
   ): Promise<number> {
     const ref = customerRef(account._id);
     const opening = openings.get(ref) ?? 0;
-    const movement = movements.get(ref);
-    const closing = opening + (movement?.net ?? 0);
+    const movement = movements.get(ref) ?? emptyMovement(ref);
 
     const result = await this.external.statements().updateOne(
       { accountId: account._id, period: period.label },
       {
         $set: {
           openingBalanceMinorUnits: opening,
-          closingBalanceMinorUnits: closing,
-          debitTurnoverMinorUnits: movement?.debits ?? 0,
-          creditTurnoverMinorUnits: movement?.credits ?? 0,
-          entryCount: movement?.entries ?? 0,
+          closingBalanceMinorUnits: opening + movement.net,
+          debitTurnoverMinorUnits: movement.debits,
+          creditTurnoverMinorUnits: movement.credits,
+          entryCount: movement.entries,
           currency: account.currency,
           generatedAt: context.asOf,
         },
@@ -127,4 +126,9 @@ export class StatementGenerationStep {
 
     return result.upsertedCount > 0 ? 1 : 0;
   }
+}
+
+/** An account with no activity still gets a statement: the absence of movement is information. */
+function emptyMovement(ref: string): Movement {
+  return { _id: ref, net: 0, debits: 0, credits: 0, entries: 0 };
 }

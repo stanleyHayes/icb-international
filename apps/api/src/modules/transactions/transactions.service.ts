@@ -1,13 +1,8 @@
 import type {
   CursorPage,
-  EntryDirection,
-  TransactionCategory,
   TransactionDetail,
   TransactionQuery,
-  TransactionStatus,
   TransactionSummary,
-  TransactionType,
-  Posting,
 } from '@icb/contracts';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -15,72 +10,35 @@ import type { Model } from 'mongoose';
 
 import { NotFoundError } from '../../common/errors/index.js';
 import { AccountDoc } from '../accounts/infrastructure/account.schemas.js';
-import { toMoneyDto } from '../accounts/infrastructure/account.mapper.js';
 import { customerRef } from '../ledger/domain/account-ref.js';
 import {
   LedgerEntryDoc,
   LedgerTransactionDoc,
 } from '../ledger/infrastructure/ledger.schemas.js';
-import { categoriseTransaction } from './domain/categoriser.js';
+import { TransactionAnnotationsService } from './annotations.service.js';
+import {
+  baselinesFromSums,
+  computeRunningBalances,
+  type RunningBalanceEntry,
+} from './domain/running-balance.js';
+import { buildEntryFilter, newerThanClause, type EntryFilter } from './domain/transaction-filters.js';
+import { toDetail, toSummary } from './infrastructure/transaction.mapper.js';
+import { SETTLED_STATUSES } from './transactions.constants.js';
 
-/**
- * Mongoose has renamed its exported filter type across majors, so the query is assembled as a
- * plain record and handed to `find` at the call site. Keeping it structural rather than importing
- * a moving type means this file survives the next rename.
- */
-type EntryFilter = Record<string, unknown>;
-
-const SETTLED_STATUSES = ['posted', 'settled'] as const;
-
-/**
- * Fields the enrichment modules (fees, FX, notes, attachments) will populate once built. Held in
- * one place so their absence is explicit rather than scattered nulls.
- */
-const EMPTY_ENRICHMENT = {
-  fees: [],
-  fx: null,
-  note: null,
-  tags: [],
-  attachmentCount: 0,
-};
-
-/** One filter clause per supported query parameter. Undefined means "not filtering on this". */
-const FILTER_CLAUSES: readonly {
-  field: string;
-  build: (query: TransactionQuery) => unknown;
-}[] = [
-  { field: '_id', build: (q) => (q.cursor ? { $lt: q.cursor } : undefined) },
-  { field: 'direction', build: (q) => q.direction },
-  { field: 'transactionType', build: (q) => (q.type?.length ? { $in: q.type } : undefined) },
-  { field: 'transactionStatus', build: (q) => (q.status?.length ? { $in: q.status } : undefined) },
-  { field: 'currency', build: (q) => q.currency },
-  {
-    field: 'valueDate',
-    build: (q) =>
-      q.from || q.to
-        ? { ...(q.from ? { $gte: q.from } : {}), ...(q.to ? { $lte: q.to } : {}) }
-        : undefined,
-  },
-  {
-    field: 'minorUnits',
-    build: (q) =>
-      q.minMinorUnits !== undefined || q.maxMinorUnits !== undefined
-        ? {
-            ...(q.minMinorUnits !== undefined ? { $gte: q.minMinorUnits } : {}),
-            ...(q.maxMinorUnits !== undefined ? { $lte: q.maxMinorUnits } : {}),
-          }
-        : undefined,
-  },
-  { field: 'narrative', build: (q) => (q.q ? { $regex: escapeRegex(q.q), $options: 'i' } : undefined) },
-];
+interface SettledSum {
+  accountRef: string;
+  currency: string;
+  sum: number;
+}
 
 /**
  * The customer-facing view of the ledger.
  *
  * A ledger entry is a posting against one account; a "transaction" on a statement is that
  * posting seen from the account's own point of view — which is why direction, running balance,
- * and counterparty are all resolved relative to the account being viewed rather than stored
- * once globally.
+ * and merchant are all resolved relative to the account being viewed rather than stored once
+ * globally. Balances are always derived from entries (agent_plan.md N4), here with two
+ * aggregations per page — never one query per row.
  */
 @Injectable()
 export class TransactionsService {
@@ -89,6 +47,7 @@ export class TransactionsService {
     @InjectModel(LedgerTransactionDoc.name)
     private readonly transactions: Model<LedgerTransactionDoc>,
     @InjectModel(AccountDoc.name) private readonly accounts: Model<AccountDoc>,
+    private readonly annotations: TransactionAnnotationsService,
   ) {}
 
   async list(customerId: string, query: TransactionQuery): Promise<CursorPage<TransactionSummary>> {
@@ -97,19 +56,29 @@ export class TransactionsService {
       return { items: [], nextCursor: null, hasMore: false };
     }
 
-    const filter = this.buildFilter(refs, query);
-    // One extra row tells us whether another page exists without a second count query.
     const rows = await this.entries
-      .find(filter)
+      .find(buildEntryFilter(refs, query))
       .sort({ bookedAt: -1, _id: -1 })
       .limit(query.limit + 1)
       .lean();
 
+    // One extra row tells us whether another page exists without a second count query.
     const hasMore = rows.length > query.limit;
     const page = hasMore ? rows.slice(0, query.limit) : rows;
+    const transactionIds = page.map((row) => row.transactionId);
 
-    const headers = await this.loadHeaders(page.map((row) => row.transactionId));
-    const items = page.map((row) => this.toSummary(row, headers.get(row.transactionId)));
+    const [headers, balances, annotations] = await Promise.all([
+      this.loadHeaders(transactionIds),
+      this.runningBalancesFor(page),
+      this.annotations.getForTransactions(customerId, transactionIds),
+    ]);
+
+    const items = page.map((row) =>
+      toSummary(row, headers.get(row.transactionId), {
+        runningMinorUnits: balances.get(row._id) ?? null,
+        categoryOverride: annotations.get(row.transactionId)?.category ?? null,
+      }),
+    );
 
     return {
       items,
@@ -119,6 +88,36 @@ export class TransactionsService {
   }
 
   async detail(customerId: string, transactionId: string): Promise<TransactionDetail> {
+    const entry = await this.requireEntry(customerId, transactionId);
+
+    const [header, allEntries, annotation, balances] = await Promise.all([
+      this.transactions.findById(transactionId).lean(),
+      this.entries.find({ transactionId }).sort({ sequence: 1 }).lean(),
+      this.annotations.getForTransaction(customerId, transactionId),
+      this.runningBalancesFor([entry]),
+    ]);
+
+    return toDetail(entry, {
+      header: header ?? null,
+      entries: allEntries,
+      annotation,
+      runningMinorUnits: balances.get(entry._id) ?? null,
+    });
+  }
+
+  /** Notes/tags/category writes. The transaction must be one of the customer's own first. */
+  async annotate(
+    customerId: string,
+    transactionId: string,
+    patch: Parameters<TransactionAnnotationsService['upsert']>[2],
+  ): Promise<TransactionDetail> {
+    await this.requireEntry(customerId, transactionId);
+    await this.annotations.upsert(customerId, transactionId, patch);
+    return this.detail(customerId, transactionId);
+  }
+
+  /** The entry for this transaction on one of the customer's accounts, or a 404. */
+  private async requireEntry(customerId: string, transactionId: string): Promise<LedgerEntryDoc> {
     const refs = await this.customerAccountRefs(customerId);
     const entry = await this.entries
       .findOne({ transactionId, accountRef: { $in: refs } })
@@ -127,62 +126,50 @@ export class TransactionsService {
     if (!entry) {
       throw new NotFoundError('Transaction', transactionId);
     }
-
-    const header = await this.transactions.findById(transactionId).lean();
-    const allEntries = await this.entries.find({ transactionId }).sort({ sequence: 1 }).lean();
-
-    return {
-      ...this.toSummary(entry, header ?? undefined),
-      postings: allEntries.map(toPosting),
-      ...EMPTY_ENRICHMENT,
-      ...linkedRecords(header),
-    };
+    return entry;
   }
 
-  /** Total money in and out over a period, used by the insights screen. */
-  async cashflow(
-    customerId: string,
-    from: string,
-    to: string,
-  ): Promise<{ incomeMinorUnits: number; expenseMinorUnits: number; currency: string }> {
-    const refs = await this.customerAccountRefs(customerId);
-    const rows = await this.entries.aggregate<{ _id: EntryDirection; total: number; currency: string }>([
+  /**
+   * Running balance after each entry of the page, keyed by entry id. Two aggregations cover
+   * the whole page: the settled total per account+currency, and the part of it newer than the
+   * page. Their difference is the baseline the in-page walk subtracts from.
+   */
+  private async runningBalancesFor(page: LedgerEntryDoc[]): Promise<Map<string, number | null>> {
+    const newest = page[0];
+    if (!newest) {
+      return new Map();
+    }
+
+    const refs = [...new Set(page.map((row) => row.accountRef))];
+    const [totals, newer] = await Promise.all([
+      this.settledSums(refs, {}),
+      this.settledSums(refs, newerThanClause(newest.bookedAt, newest._id)),
+    ]);
+
+    const computed = computeRunningBalances(
+      page.map(toRunningBalanceEntry),
+      baselinesFromSums(totals, newer),
+    );
+    return new Map(page.map((row, index) => [row._id, computed[index] ?? null]));
+  }
+
+  private settledSums(refs: string[], extra: EntryFilter): Promise<SettledSum[]> {
+    return this.entries.aggregate<SettledSum>([
       {
         $match: {
           accountRef: { $in: refs },
-          valueDate: { $gte: from, $lte: to },
-          transactionStatus: { $in: ['posted', 'settled'] },
+          transactionStatus: { $in: SETTLED_STATUSES },
+          ...extra,
         },
       },
-      { $group: { _id: '$direction', total: { $sum: '$minorUnits' }, currency: { $first: '$currency' } } },
+      {
+        $group: {
+          _id: { ref: '$accountRef', cur: '$currency' },
+          sum: { $sum: '$signedMinorUnits' },
+        },
+      },
+      { $project: { _id: 0, accountRef: '$_id.ref', currency: '$_id.cur', sum: 1 } },
     ]);
-
-    const credit = rows.find((row) => row._id === 'credit');
-    const debit = rows.find((row) => row._id === 'debit');
-
-    return {
-      incomeMinorUnits: credit?.total ?? 0,
-      expenseMinorUnits: debit?.total ?? 0,
-      currency: credit?.currency ?? debit?.currency ?? 'USD',
-    };
-  }
-
-  private buildFilter(refs: string[], query: TransactionQuery): EntryFilter {
-    const filter: EntryFilter = { accountRef: { $in: refs } };
-
-    for (const clause of FILTER_CLAUSES) {
-      const value = clause.build(query);
-      if (value !== undefined) {
-        filter[clause.field] = value;
-      }
-    }
-
-    // Applied last so it overrides an explicit status filter when pending rows are excluded.
-    if (!query.includePending) {
-      filter['transactionStatus'] = { $in: SETTLED_STATUSES };
-    }
-
-    return filter;
   }
 
   private async customerAccountRefs(customerId: string, accountId?: string): Promise<string[]> {
@@ -195,69 +182,13 @@ export class TransactionsService {
     const headers = await this.transactions.find({ _id: { $in: ids } }).lean();
     return new Map(headers.map((header) => [header._id, header]));
   }
-
-  private toSummary(
-    entry: LedgerEntryDoc,
-    header: LedgerTransactionDoc | undefined,
-  ): TransactionSummary {
-    const description = entry.narrative ?? header?.description ?? 'Transaction';
-    const category: TransactionCategory = categoriseTransaction(
-      entry.transactionType,
-      description,
-      entry.direction,
-    );
-
-    return {
-      id: entry.transactionId,
-      accountId: entry.accountRef.slice('acct:'.length),
-      reference: header?.reference ?? entry.transactionId,
-      type: entry.transactionType as TransactionType,
-      status: entry.transactionStatus as TransactionStatus,
-      direction: entry.direction,
-      amount: toMoneyDto(entry.minorUnits, entry.currency),
-      runningBalance: null,
-      description,
-      category,
-      merchant: null,
-      counterparty: null,
-      bookedAt: entry.bookedAt.toISOString(),
-      valueDate: entry.valueDate,
-      pending: entry.transactionStatus !== 'posted' && entry.transactionStatus !== 'settled',
-    };
-  }
 }
 
-/** User-supplied search text goes into a regex, so metacharacters must be neutralised. */
-function escapeRegex(value: string): string {
-  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/** A ledger entry as one line of the customer-facing posting breakdown. */
-function toPosting(posting: LedgerEntryDoc): Posting {
+function toRunningBalanceEntry(entry: LedgerEntryDoc): RunningBalanceEntry {
   return {
-    id: posting._id,
-    accountLabel: posting.accountRef,
-    direction: posting.direction,
-    amount: toMoneyDto(posting.minorUnits, posting.currency),
-    valueDate: posting.valueDate,
-    sequence: posting.sequence,
-  };
-}
-
-/** The originating record id, but only when it came from the expected kind of source. */
-function sourceIdFor(header: LedgerTransactionDoc | null, kind: string): string | null {
-  return header?.sourceType === kind ? (header.sourceId ?? null) : null;
-}
-
-/** Cross-references from a transaction to the records that caused or amended it. */
-function linkedRecords(header: LedgerTransactionDoc | null) {
-  return {
-    relatedTransferId: sourceIdFor(header, 'transfer'),
-    relatedCardId: sourceIdFor(header, 'card'),
-    reversalOfId: header?.reversesTransactionId ?? null,
-    reversedById: header?.reversedByTransactionId ?? null,
-    disputeId: null,
-    metadata: header?.metadata,
-    settledAt: header?.settledAt?.toISOString() ?? null,
+    accountRef: entry.accountRef,
+    currency: entry.currency,
+    signedMinorUnits: entry.signedMinorUnits,
+    settled: (SETTLED_STATUSES as readonly string[]).includes(entry.transactionStatus),
   };
 }

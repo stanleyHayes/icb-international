@@ -3,8 +3,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { DatabaseModule } from '../../infrastructure/database/database.module.js';
 import { HoldService } from './hold.service.js';
+import { JournalController } from './journal/journal.controller.js';
+import { JournalService } from './journal/journal.service.js';
 import { LedgerIntegrityService } from './ledger-integrity.service.js';
 import { LedgerService } from './ledger.service.js';
+import { TrialBalanceService } from './trial-balance.service.js';
 import {
   AccountBalanceDoc,
   AccountBalanceSchema,
@@ -31,7 +34,15 @@ import {
       { name: HoldDoc.name, schema: HoldSchema },
     ]),
   ],
-  providers: [LedgerService, HoldService, LedgerIntegrityService],
-  exports: [LedgerService, HoldService, LedgerIntegrityService, MongooseModule],
+  controllers: [JournalController],
+  providers: [LedgerService, HoldService, LedgerIntegrityService, JournalService, TrialBalanceService],
+  exports: [
+    LedgerService,
+    HoldService,
+    LedgerIntegrityService,
+    JournalService,
+    TrialBalanceService,
+    MongooseModule,
+  ],
 })
 export class LedgerModule {}

@@ -58,6 +58,11 @@ export const configurationSchema = z
     BASE_CURRENCY: z.string().length(3).default('USD'),
     BUSINESS_TIMEZONE: z.string().default('UTC'),
 
+    /**
+     * Background pollers (outbox drain, dispute watch, dispute comms). Off for CLI runs such as
+     * `pnpm seed`, where a sweep firing mid-run races the shutdown that follows it.
+     */
+    BACKGROUND_JOBS_ENABLED: booleanish.default(true),
     SIMULATION_ENABLED: booleanish.default(true),
     SIMULATION_SEED: z.string().default('icb-default-seed'),
     ICB_SIMULATION_ACKNOWLEDGED: booleanish.default(false),

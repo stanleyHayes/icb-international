@@ -2,12 +2,32 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import type { ClientSession, Connection } from 'mongoose';
 
+import { KeyedMutex } from './keyed-mutex.js';
+
 /** Mongo labels retryable transaction failures rather than using distinct error codes. */
 const TRANSIENT_LABEL = 'TransientTransactionError';
 const UNKNOWN_COMMIT_LABEL = 'UnknownTransactionCommitResult';
 
-const MAX_ATTEMPTS = 5;
-const BASE_BACKOFF_MS = 20;
+/**
+ * Retry budget.
+ *
+ * This is the backstop, not the primary defence — contention is handled by serialising on
+ * `lockKeys` before the transaction opens. What is left for the retry loop is cross-process
+ * contention and the occasional unrelated conflict, both of which clear in a couple of attempts.
+ * The budget stays generous because the cost of exhausting it is a dropped payment.
+ */
+const MAX_ATTEMPTS = 12;
+const BASE_BACKOFF_MS = 15;
+const MAX_BACKOFF_MS = 750;
+
+export interface TransactionOptions {
+  /**
+   * Documents this unit of work will contend on, named by a stable application-level key
+   * (for the ledger, the account ref). Work sharing a key is serialised in-process so it
+   * queues instead of colliding. Omit when the work touches nothing hot.
+   */
+  lockKeys?: readonly string[];
+}
 
 interface LabelledError {
   hasErrorLabel?: (label: string) => boolean;
@@ -23,26 +43,41 @@ function isRetryable(error: unknown): boolean {
 }
 
 /**
- * Runs a unit of work inside a MongoDB transaction, with the retry behaviour the driver expects.
+ * Runs a unit of work inside a MongoDB transaction.
  *
- * Two things make this necessary rather than optional:
+ * A double-entry posting writes a transaction header, N immutable entries, and N balance updates.
+ * A partial write there is a corrupted ledger, not a failed request — hence the transaction.
  *
- *  1. Double-entry postings write a transaction header, N immutable entries, and N balance
- *     updates. A partial write there is a corrupted ledger, not a failed request.
- *  2. Mongo surfaces write conflicts as *transient* errors that the caller is expected to retry.
- *     Under concurrent transfers on one account this happens routinely; without the retry loop
- *     the bank simply drops payments under load.
+ * Contention is then handled in two layers, and the order matters:
  *
- * Callers must thread the returned session into every operation inside the callback. An
- * operation that forgets the session silently escapes the transaction.
+ *  1. **Serialise, via `lockKeys`.** Callers name the documents they will contend on. Work
+ *     sharing a key queues instead of colliding. This is the primary defence, because postings
+ *     against one account are serial work whatever we do — the choice is only whether they take
+ *     turns or fight.
+ *  2. **Retry, underneath.** Mongo reports write conflicts as *transient* errors the caller is
+ *     expected to retry. This catches what layer 1 cannot see: contention between processes, and
+ *     conflicts on documents the caller did not think to declare.
+ *
+ * Callers must thread the supplied session into every operation inside the callback. An operation
+ * that forgets the session silently escapes the transaction.
  */
 @Injectable()
 export class TransactionManager {
   private readonly logger = new Logger(TransactionManager.name);
+  private readonly mutex = new KeyedMutex();
 
   constructor(@InjectConnection() private readonly connection: Connection) {}
 
-  async withTransaction<T>(work: (session: ClientSession) => Promise<T>): Promise<T> {
+  async withTransaction<T>(
+    work: (session: ClientSession) => Promise<T>,
+    options: TransactionOptions = {},
+  ): Promise<T> {
+    return this.mutex.withKeys(options.lockKeys ?? [], () => this.attemptUntilCommitted(work));
+  }
+
+  private async attemptUntilCommitted<T>(
+    work: (session: ClientSession) => Promise<T>,
+  ): Promise<T> {
     let lastError: unknown;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
@@ -72,8 +107,13 @@ export class TransactionManager {
     session: ClientSession,
     work: (session: ClientSession) => Promise<T>,
   ): Promise<T> {
+    // `majority` rather than `snapshot`. Snapshot isolation makes any two transactions that
+    // touch the same document conflict, and every posting touches the same account balance.
+    // Nothing here needs repeatable reads: balances are updated with `$inc`, which is an atomic
+    // blind write, and the entries are inserts. Atomicity — the property the ledger actually
+    // depends on — comes from the transaction either way.
     session.startTransaction({
-      readConcern: { level: 'snapshot' },
+      readConcern: { level: 'majority' },
       writeConcern: { w: 'majority' },
       readPreference: 'primary',
     });
@@ -95,7 +135,7 @@ export class TransactionManager {
    * conflict at the same instant retry at the same instant and conflict again.
    */
   private async backOff(attempt: number): Promise<void> {
-    const ceiling = BASE_BACKOFF_MS * 2 ** (attempt - 1);
+    const ceiling = Math.min(BASE_BACKOFF_MS * 2 ** (attempt - 1), MAX_BACKOFF_MS);
     // Deliberately unseeded: the whole point of jitter is that two conflicting transactions
     // must NOT pick the same retry delay. A deterministic source would defeat it.
     // eslint-disable-next-line no-restricted-syntax, sonarjs/pseudo-random -- see above

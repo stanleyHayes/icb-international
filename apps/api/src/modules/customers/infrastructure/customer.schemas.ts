@@ -22,6 +22,17 @@ export class AddressSub {
 }
 export const AddressSubSchema = SchemaFactory.createForClass(AddressSub);
 
+/** One entry in the lifecycle audit trail — appended on every guarded transition, never edited. */
+@Schema({ _id: false })
+export class StatusChangeSub {
+  @Prop({ type: String, required: true }) from!: string;
+  @Prop({ type: String, required: true }) to!: string;
+  @Prop({ type: String, required: true }) reason!: string;
+  @Prop({ type: String, required: true }) changedBy!: string;
+  @Prop({ type: Date, required: true }) changedAt!: Date;
+}
+export const StatusChangeSubSchema = SchemaFactory.createForClass(StatusChangeSub);
+
 @Schema({ collection: 'customers', timestamps: true, versionKey: false })
 export class CustomerDoc {
   @Prop({ type: String, default: newId })
@@ -32,6 +43,9 @@ export class CustomerDoc {
 
   @Prop({ type: String, required: true, index: true })
   status!: string;
+
+  @Prop({ type: [StatusChangeSubSchema], default: [] })
+  statusHistory!: StatusChangeSub[];
 
   @Prop({ type: String, required: true, default: 'standard', index: true })
   tier!: string;
