@@ -14,11 +14,16 @@
     "clean": "rm -rf .turbo *.tsbuildinfo"
   },
   "dependencies": {
+    "@hookform/resolvers": "5.7.1",
+    "@icb/contracts": "workspace:*",
     "@icb/money": "workspace:*",
+    "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "1.28.0",
-    "tailwind-merge": "3.6.0"
+    "react-hook-form": "7.84.0",
+    "tailwind-merge": "3.6.0",
+    "zod": "4.4.3"
   },
   "peerDependencies": {
     "react": "^19",
@@ -27,9 +32,14 @@
   "devDependencies": {
     "@icb/config-eslint": "workspace:*",
     "@icb/config-ts": "workspace:*",
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/jest-dom": "7.0.0",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "eslint": "10.8.0",
+    "jsdom": "30.0.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "typescript": "6.0.3",

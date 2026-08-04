@@ -1,19 +1,16 @@
 'use server';
 
-import { loginRequestSchema, type AuthenticatedUser, type AuthTokens } from '@icb/contracts';
+import { loginRequestSchema, type LoginResponse } from '@icb/contracts';
 import { redirect } from 'next/navigation';
 
 import { apiRaw } from '@/lib/api';
-import { clearSession, writeSession } from '@/lib/session';
+import { clearSession } from '@/lib/session';
+
+import { establishSession } from './session';
 
 export interface LoginState {
   error: string | null;
   fieldErrors: Record<string, string>;
-}
-
-interface LoginPayload {
-  tokens: AuthTokens;
-  user: AuthenticatedUser;
 }
 
 /**
@@ -48,21 +45,20 @@ export async function loginAction(_previous: LoginState, formData: FormData): Pr
     };
   }
 
-  const payload = data as LoginPayload;
-  const refreshCookie = response.headers.get('set-cookie') ?? '';
+  const payload = data as LoginResponse;
 
-  await writeSession({
-    accessToken: payload.tokens.accessToken,
-    refreshCookie,
-    expiresAt: Date.now() + payload.tokens.expiresIn * 1000,
-    user: {
-      userId: payload.user.userId,
-      customerId: payload.user.customerId,
-      email: payload.user.email,
-      firstName: payload.user.firstName,
-      lastName: payload.user.lastName,
-    },
-  });
+  // A second factor stands between password and session: hand the challenge to the MFA screen.
+  // The challenge id is opaque and short-lived, so travelling in the URL leaks nothing useful.
+  if (payload.outcome === 'mfa_required') {
+    const query = new URLSearchParams({
+      challengeId: payload.challenge.challengeId,
+      method: payload.challenge.method,
+      ...(payload.challenge.hint ? { hint: payload.challenge.hint } : {}),
+    });
+    redirect(`/login/mfa?${query.toString()}`);
+  }
+
+  await establishSession(response.headers.get('set-cookie'), payload.tokens, payload.user);
 
   redirect('/');
 }

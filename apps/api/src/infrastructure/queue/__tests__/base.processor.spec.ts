@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
 import { describe, expect, it, vi } from 'vitest';
 
+import { currentCorrelationId } from '../../../common/observability/correlation.context.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { BaseJobProcessor, type DeadLetterRecord } from '../base.processor.js';
 import { DEAD_LETTER_JOB_NAME } from '../queue.constants.js';
@@ -93,5 +94,34 @@ describe('process', () => {
 
     await expect(processor.process(job)).rejects.toThrow('boom');
     expect(deadLetterQueue.add).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs the handler under the correlation id the job payload carries', async () => {
+    const { processor } = setup();
+    processor.handler.mockImplementation(() => Promise.resolve(currentCorrelationId() ?? 'none'));
+    const job = {
+      ...fakeJob(),
+      data: { transferId: 'trf-1', correlationId: 'corr-evt-3' },
+    } as unknown as Job<Payload, string>;
+
+    await expect(processor.process(job)).resolves.toBe('corr-evt-3');
+    // The scope ends with the job: nothing leaks into whatever the worker picks up next.
+    expect(currentCorrelationId()).toBeNull();
+  });
+
+  it('gives a payload without a correlation id a fresh one, never an empty scope', async () => {
+    const { processor } = setup();
+    // Captured rather than returned: the handler's declared result is a string, and reading the
+    // id into a local lets the assertion prove it was non-null instead of coercing it to satisfy
+    // the signature.
+    let seen: string | null = null;
+    processor.handler.mockImplementation(() => {
+      seen = currentCorrelationId();
+      return Promise.resolve('done');
+    });
+
+    await processor.process(fakeJob());
+
+    expect(seen).toEqual(expect.any(String));
   });
 });

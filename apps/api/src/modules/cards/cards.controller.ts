@@ -11,6 +11,7 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { z } from 'zod';
 
 import { CurrentCustomer } from '../../common/decorators/current-user.decorator.js';
+import { Idempotent } from '../../common/decorators/idempotent.decorator.js';
 import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
 import { CardsService, type UpdateCardRequest } from './cards.service.js';
 import type { CardQuery } from './application/card-reader.js';
@@ -46,6 +47,7 @@ export class CardsController {
   }
 
   @Post()
+  @Idempotent()
   async issue(
     @CurrentCustomer() customerId: string,
     @Body(zodBody(issueCardRequestSchema)) body: ReturnType<typeof issueCardRequestSchema.parse>,

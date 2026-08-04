@@ -1,6 +1,7 @@
 import { type z } from 'zod';
 import {
   advanceDisputeRequestSchema,
+  attachDisputeEvidenceRequestSchema,
   createDisputeRequestSchema,
   cursorPageSchema,
   disputeQuerySchema,
@@ -17,7 +18,15 @@ export const disputesEndpoints = {
     idempotent: true,
   }),
   get: get('/disputes/:disputeId', disputeSchema),
-  adminAdvance: post('/admin/disputes/:disputeId/advance', disputeSchema, {
+  attachEvidence: post('/disputes/:disputeId/evidence', disputeSchema, {
+    body: attachDisputeEvidenceRequestSchema,
+    idempotent: true,
+  }),
+  adminQueue: get('/disputes/admin/queue', cursorPageSchema(disputeSchema), {
+    query: disputeQuerySchema,
+  }),
+  adminGet: get('/disputes/admin/:disputeId', disputeSchema),
+  adminAdvance: post('/disputes/:disputeId/advance', disputeSchema, {
     body: advanceDisputeRequestSchema,
   }),
 };
@@ -30,6 +39,15 @@ export function createDisputesApi(call: Requester) {
       call(disputesEndpoints.create, { body, options }),
     get: (disputeId: string, options?: RequestOptions) =>
       call(disputesEndpoints.get, { params: { disputeId }, options }),
+    attachEvidence: (
+      disputeId: string,
+      body: z.input<typeof attachDisputeEvidenceRequestSchema>,
+      options?: RequestOptions,
+    ) => call(disputesEndpoints.attachEvidence, { params: { disputeId }, body, options }),
+    adminQueue: (query?: z.input<typeof disputeQuerySchema>, options?: RequestOptions) =>
+      call(disputesEndpoints.adminQueue, { query, options }),
+    adminGet: (disputeId: string, options?: RequestOptions) =>
+      call(disputesEndpoints.adminGet, { params: { disputeId }, options }),
     adminAdvance: (
       disputeId: string,
       body: z.input<typeof advanceDisputeRequestSchema>,

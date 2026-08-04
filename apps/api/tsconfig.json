@@ -1,15 +1,24 @@
 {
   "extends": "@icb/config-ts/node.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "noEmit": false,
+    "noEmit": true,
     "sourceMap": true,
     "declaration": false,
-    "declarationMap": false
+    "declarationMap": false,
+    // The contract suites import the OpenAPI route tables from the contracts package *source*;
+    // the package only publishes dist/, so there is no real subpath export to resolve. These
+    // mirror the aliases in vitest.contract.config.ts — change both together.
+    "paths": {
+      "@icb/contracts/openapi/routes/*": ["../../packages/contracts/scripts/openapi/routes/*.ts"],
+      "@icb/contracts/openapi/spec": ["../../packages/contracts/scripts/openapi/spec.ts"],
+      "@icb/contracts/openapi": ["../../packages/contracts/scripts/openapi/routes/index.ts"]
+    }
   },
-  "include": ["src/**/*"],
+  // `test/**` is included so tsc and eslint both see the contract layer. `rootDir` lives in
+  // tsconfig.build.json, not here: it is an emit concern, and pinning it here is what kept the
+  // whole test tree outside any project — unchecked by tsc and unparseable by eslint.
+  "include": ["src/**/*", "test/**/*", "vitest.setup.ts", "*.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { ClientSession, Model } from 'mongoose';
 
 import { ConflictError, NotFoundError } from '../../common/errors/index.js';
+import { MetricsService } from '../../common/observability/metrics.service.js';
 import { newId, newReference } from '../../infrastructure/database/identifier.js';
 import { TransactionManager } from '../../infrastructure/database/transaction.manager.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
@@ -50,6 +51,7 @@ export class LedgerService {
     private readonly balances: Model<AccountBalanceDoc>,
     private readonly transactionManager: TransactionManager,
     private readonly clock: ClockService,
+    private readonly metrics: MetricsService,
   ) {}
 
   /** Post a balanced transaction, opening its own database transaction. */
@@ -85,6 +87,11 @@ export class LedgerService {
     });
 
     await this.applyBalances(command.lines, session, bookedAt);
+
+    // Counted here, not in `post()`: nearly every posting arrives through `postWithin` inside a
+    // caller's larger transaction. The rare abort-and-retry counts twice — for a throughput
+    // signal that is noise, and the integrity check (not this counter) is what guards the books.
+    this.metrics.ledgerPosting(command.type);
 
     this.logger.debug(
       { transactionId, reference, lines: command.lines.length },

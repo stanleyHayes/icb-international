@@ -10,12 +10,21 @@ import {
   type LoanQuote,
   type LoanQuoteRequest,
   type PayoffQuote,
+  type UploadSignature,
 } from '@icb/contracts';
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
 
 import { CurrentCustomer } from '../../common/decorators/current-user.decorator.js';
+import { Idempotent } from '../../common/decorators/idempotent.decorator.js';
 import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
+import {
+  attachLoanDocumentRequestSchema,
+  loanDocumentUploadRequestSchema,
+  type AttachLoanDocumentRequest,
+  type LoanDocumentUploadRequest,
+} from './infrastructure/loan-document.requests.js';
 import { LoanApplicationsService } from './loan-applications.service.js';
+import { LoanDocumentsService } from './loan-documents.service.js';
 import { LoanRepaymentService, type RepaymentRequest } from './loan-repayment.service.js';
 import { LoansService } from './loans.service.js';
 
@@ -31,6 +40,7 @@ export class LoansController {
     private readonly loans: LoansService,
     private readonly applications: LoanApplicationsService,
     private readonly repayments: LoanRepaymentService,
+    private readonly documents: LoanDocumentsService,
   ) {}
 
   @Get()
@@ -82,6 +92,29 @@ export class LoansController {
     return this.applications.accept(applicationId, customerId);
   }
 
+  /**
+   * Mint a short-lived signature so the browser uploads a supporting document straight to the
+   * storage provider. The bytes never reach this API.
+   */
+  @Post('applications/:applicationId/documents/upload-signature')
+  @HttpCode(HttpStatus.OK)
+  async documentUploadSignature(
+    @CurrentCustomer() customerId: string,
+    @Param('applicationId') applicationId: string,
+    @Body(zodBody(loanDocumentUploadRequestSchema)) body: LoanDocumentUploadRequest,
+  ): Promise<UploadSignature> {
+    return this.documents.mintUploadSignature(applicationId, customerId, body);
+  }
+
+  @Post('applications/:applicationId/documents')
+  async attachDocument(
+    @CurrentCustomer() customerId: string,
+    @Param('applicationId') applicationId: string,
+    @Body(zodBody(attachLoanDocumentRequestSchema)) body: AttachLoanDocumentRequest,
+  ): Promise<LoanApplication> {
+    return this.documents.attach(applicationId, customerId, body);
+  }
+
   @Get(':loanId')
   async detail(
     @CurrentCustomer() customerId: string,
@@ -99,6 +132,7 @@ export class LoansController {
   }
 
   @Post(':loanId/repayments')
+  @Idempotent()
   async repay(
     @CurrentCustomer() customerId: string,
     @Param('loanId') loanId: string,

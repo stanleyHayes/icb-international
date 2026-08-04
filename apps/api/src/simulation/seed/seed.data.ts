@@ -101,7 +101,6 @@ export const SEED_STAFF = [
   { email: 'risk@icb.example', firstName: 'Tobi', lastName: 'Adeleke', roles: ['fraud_analyst'] },
   { email: 'aml@icb.example', firstName: 'Grace', lastName: 'Owusu', roles: ['aml_officer', 'compliance'] },
   { email: 'lend@icb.example', firstName: 'Marcus', lastName: 'Bello', roles: ['underwriter'] },
-  { email: 'root@icb.example', firstName: 'Ada', lastName: 'Nwosu', roles: ['super_admin'] },
 ] as const;
 
 export const STAFF_PASSWORD = 'Staff!2345678';

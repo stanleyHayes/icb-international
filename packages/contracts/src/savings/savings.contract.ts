@@ -114,6 +114,13 @@ export const breakDepositQuoteSchema = z.object({
   validUntil: isoDateTimeSchema,
 });
 
+/** What happens at maturity. Changing it never moves money by itself. */
+export const updateTermDepositRequestSchema = z.object({
+  maturityInstruction: z.enum(['rollover_principal', 'rollover_all', 'transfer_out']),
+  /** Where the proceeds go on `transfer_out` — and where a rollover draws fees from. */
+  rolloverAccountId: idSchema.optional(),
+});
+
 export const savingsQuerySchema = cursorQuerySchema.extend({
   status: z.array(z.enum(['active', 'achieved', 'paused', 'cancelled'])).optional(),
 });
@@ -124,3 +131,4 @@ export type TermDeposit = z.infer<typeof termDepositSchema>;
 export type DepositRateBand = z.infer<typeof depositRateBandSchema>;
 export type OpenTermDepositRequest = z.infer<typeof openTermDepositRequestSchema>;
 export type BreakDepositQuote = z.infer<typeof breakDepositQuoteSchema>;
+export type UpdateTermDepositRequest = z.infer<typeof updateTermDepositRequestSchema>;

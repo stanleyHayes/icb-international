@@ -38,6 +38,6 @@ import { TransactionsService } from './transactions.service.js';
     TransactionAnnotationsService,
     TransactionExportsService,
   ],
-  exports: [TransactionsService, TransactionAnnotationsService],
+  exports: [TransactionsService, TransactionAnalyticsService, TransactionAnnotationsService],
 })
 export class TransactionsModule {}

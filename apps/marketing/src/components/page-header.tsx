@@ -20,7 +20,7 @@ export function PageHeader({
   return (
     <header className="border-b border-[var(--icb-border)] bg-[var(--icb-bg-subtle)]">
       <div className="mx-auto max-w-[1200px] px-5 py-16 lg:py-20">
-        <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent)] uppercase">
+        <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
           {eyebrow}
         </p>
         <h1 className="mt-3 max-w-3xl font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">

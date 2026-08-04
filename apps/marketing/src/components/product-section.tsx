@@ -1,5 +1,5 @@
 import { Card, CardBody } from '@icb/ui';
-import { Check } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import Link from 'next/link';
 
 import type { ProductCopy } from '@/content/products';
@@ -26,7 +26,7 @@ export function ProductSection({
       <div className="mx-auto max-w-[1200px] px-5 py-16 lg:py-20">
         <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:items-center">
           <div className={reversed ? 'lg:order-2' : ''}>
-            <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent)] uppercase">
+            <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
               {product.tagline}
             </p>
             <h2 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em]">
@@ -49,12 +49,21 @@ export function ProductSection({
               ))}
             </ul>
 
-            <Link
-              href="/open-account"
-              className="mt-8 inline-flex h-11 items-center rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"
-            >
-              Open an account
-            </Link>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link
+                href="/open-account"
+                className="inline-flex h-11 items-center rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"
+              >
+                Open an account
+              </Link>
+              <Link
+                href={product.href}
+                className="inline-flex h-11 items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-5 text-sm font-medium transition-colors hover:bg-[var(--icb-bg-muted)]"
+              >
+                Learn more
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
           </div>
 
           <div className={reversed ? 'lg:order-1' : ''}>

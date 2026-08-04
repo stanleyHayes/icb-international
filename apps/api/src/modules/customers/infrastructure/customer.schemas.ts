@@ -158,7 +158,11 @@ export class UserCredentialDoc {
   @Prop({ type: Date, default: null })
   lastLoginAt!: Date | null;
 
-  @Prop({ type: [String], required: true, default: [] })
+  // `default` without `required`: Mongoose's array required-validator rejects an empty
+  // array, so `required: true, default: []` can never be satisfied by its own default —
+  // and empty is the ordinary case here. It survives today only where the write goes
+  // through updateOne, which skips validators; a create() on this path would 500.
+  @Prop({ type: [String], default: [] })
   roles!: string[];
 
   @Prop({ type: Boolean, required: true, default: true })

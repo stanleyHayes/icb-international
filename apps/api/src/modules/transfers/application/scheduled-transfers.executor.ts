@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { ClientSession, Model } from 'mongoose';
 
 import { isDomainError } from '../../../common/errors/index.js';
+import { MetricsService } from '../../../common/observability/metrics.service.js';
 import { TransactionManager } from '../../../infrastructure/database/transaction.manager.js';
 import { OutboxService } from '../../../infrastructure/outbox/outbox.service.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
@@ -24,6 +25,7 @@ import { TransferPreparationService } from './transfer-preparation.service.js';
 export class ScheduledTransfersExecutor {
   private readonly logger = new Logger(ScheduledTransfersExecutor.name);
 
+  // eslint-disable-next-line max-params -- every collaborator is load-bearing; a bag of unrelated infrastructure would satisfy the count and hurt the reading.
   constructor(
     @InjectModel(TransferDoc.name) private readonly transfers: Model<TransferDoc>,
     private readonly orchestrator: TransferOrchestrator,
@@ -31,6 +33,7 @@ export class ScheduledTransfersExecutor {
     private readonly transactionManager: TransactionManager,
     private readonly outbox: OutboxService,
     private readonly clock: ClockService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async executeDue(transferId: string): Promise<void> {
@@ -45,7 +48,7 @@ export class ScheduledTransfersExecutor {
       const prepared = await this.preparation.preparedFromDocument(claimed);
       const lockKeys = await this.orchestrator.contendedKeys(prepared);
 
-      await this.transactionManager.withTransaction(async (session) => {
+      const status = await this.transactionManager.withTransaction(async (session) => {
         await this.preparation.assertFunds(prepared);
         const execution = await this.orchestrator.executePrepared(prepared, session);
 
@@ -56,7 +59,10 @@ export class ScheduledTransfersExecutor {
         );
         await this.orchestrator.publishSent(prepared, session);
         await this.planNextRun(claimed, session);
+        return execution.status;
       }, { lockKeys });
+      // After the commit, so a retried transaction never counts the same outcome twice.
+      this.metrics.transferOutcome(claimed.rail, status);
       this.logger.log({ transferId }, 'Scheduled transfer executed');
     } catch (error) {
       await this.markFailed(claimed, error);
@@ -117,5 +123,6 @@ export class ScheduledTransfersExecutor {
         session,
       );
     });
+    this.metrics.transferOutcome(claimed.rail, 'failed');
   }
 }

@@ -17,6 +17,7 @@ import { AuditPort } from './application/audit.port.js';
 import { ChangePasswordService } from './application/change-password.service.js';
 import { CredentialVerifier } from './application/credential-verifier.service.js';
 import { EmailVerificationService } from './application/email-verification.service.js';
+import { LoginHistoryService } from './application/login-history.service.js';
 import { LoginService } from './application/login.service.js';
 import { MfaChallengeService } from './application/mfa-challenge.service.js';
 import { MfaEnrolmentService } from './application/mfa-enrolment.service.js';
@@ -36,8 +37,8 @@ import { AuthSecurityController } from './auth-security.controller.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import {
-  AuditEventDoc,
-  AuditEventSchema,
+  SecurityEventDoc,
+  SecurityEventSchema,
   MfaChallengeDoc,
   MfaChallengeSchema,
   TrustedDeviceDoc,
@@ -65,7 +66,7 @@ import { MfaController } from './mfa.controller.js';
       { name: SessionDoc.name, schema: SessionSchema },
       { name: MfaChallengeDoc.name, schema: MfaChallengeSchema },
       { name: TrustedDeviceDoc.name, schema: TrustedDeviceSchema },
-      { name: AuditEventDoc.name, schema: AuditEventSchema },
+      { name: SecurityEventDoc.name, schema: SecurityEventSchema },
     ]),
   ],
   controllers: [AuthController, AuthSecurityController, MfaController],
@@ -77,6 +78,7 @@ import { MfaController } from './mfa.controller.js';
     CredentialVerifier,
     EmailVerificationService,
     FieldEncryptionService,
+    LoginHistoryService,
     LoginService,
     MfaChallengeService,
     MfaEnrolmentService,

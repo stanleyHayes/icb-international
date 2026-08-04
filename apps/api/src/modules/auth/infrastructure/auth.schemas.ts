@@ -86,11 +86,20 @@ export const TrustedDeviceSchema = SchemaFactory.createForClass(TrustedDeviceDoc
 TrustedDeviceSchema.index({ userId: 1, deviceId: 1 });
 
 /**
- * Append-only, hash-chained (N7): every row points at the hash of the row before it, so a
+ * Authentication and security events: sign-ins, MFA challenges, credential changes.
+ *
+ * Append-only and hash-chained (N7) — every row points at the hash of the row before it, so a
  * tampered or deleted event breaks the chain and is detectable on verification.
+ *
+ * Distinct from the governance trail in `modules/audit`, which chains *changes to bank records*
+ * (before/after, sequence, subject) rather than authentication attempts. The two were once both
+ * called `AuditEventDoc` over the same `audit_events` collection; because Mongoose keys its model
+ * registry by class name, only the first module to register won and every write from the other
+ * failed validation — silently, because the audit interceptor swallows append failures. Separate
+ * names and separate collections are what keep both trails real.
  */
-@Schema({ collection: 'audit_events', timestamps: false, versionKey: false })
-export class AuditEventDoc {
+@Schema({ collection: 'security_events', timestamps: false, versionKey: false })
+export class SecurityEventDoc {
   @Prop({ type: String, default: newId })
   _id!: string;
 
@@ -123,5 +132,5 @@ export class AuditEventDoc {
   @Prop({ type: Date, required: true, index: true })
   occurredAt!: Date;
 }
-export type AuditEventDocument = HydratedDocument<AuditEventDoc>;
-export const AuditEventSchema = SchemaFactory.createForClass(AuditEventDoc);
+export type SecurityEventDocument = HydratedDocument<SecurityEventDoc>;
+export const SecurityEventSchema = SchemaFactory.createForClass(SecurityEventDoc);

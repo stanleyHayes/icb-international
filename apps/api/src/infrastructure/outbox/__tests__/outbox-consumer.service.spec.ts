@@ -15,6 +15,7 @@ const event: OutboxEvent = {
   type: 'transfer.settled',
   payload: { transferId: 'trf-1' },
   attempts: 1,
+  correlationId: 'corr-1',
 };
 
 function setup() {

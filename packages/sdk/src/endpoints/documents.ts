@@ -1,40 +1,56 @@
-import { z } from 'zod';
+import { type z } from 'zod';
 import {
   documentSchema,
+  documentUploadRequestSchema,
   downloadLinkSchema,
   generateStatementRequestSchema,
-  idSchema,
+  issueLetterRequestSchema,
+  itemsEnvelopeSchema,
   statementSchema,
+  uploadSignatureSchema,
 } from '@icb/contracts';
 
 import { get, post, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
 
-const statementQuerySchema = z.object({ accountId: idSchema.optional() });
-
 export const documentsEndpoints = {
-  listStatements: get('/documents/statements', z.array(statementSchema), {
-    query: statementQuerySchema,
-  }),
-  generateStatement: post('/documents/statements', statementSchema, {
+  listStatements: get('/statements', itemsEnvelopeSchema(statementSchema)),
+  generateStatement: post('/statements/generate', statementSchema, {
     body: generateStatementRequestSchema,
     idempotent: true,
   }),
-  list: get('/documents', z.array(documentSchema)),
+  getStatementDownloadLink: get('/statements/:statementId/download', downloadLinkSchema),
+  list: get('/documents', itemsEnvelopeSchema(documentSchema)),
   getDownloadLink: get('/documents/:documentId/download', downloadLinkSchema),
+  createUploadSignature: post('/documents/upload-signature', uploadSignatureSchema, {
+    body: documentUploadRequestSchema,
+    idempotent: true,
+  }),
+  issueLetter: post('/documents/letters', documentSchema, {
+    body: issueLetterRequestSchema,
+    idempotent: true,
+  }),
 };
 
 export function createDocumentsApi(call: Requester) {
   return {
-    listStatements: (query?: z.input<typeof statementQuerySchema>, options?: RequestOptions) =>
-      call(documentsEndpoints.listStatements, { query, options }),
+    listStatements: (options?: RequestOptions) =>
+      call(documentsEndpoints.listStatements, { options }),
     generateStatement: (
       body: z.input<typeof generateStatementRequestSchema>,
       options?: RequestOptions,
     ) => call(documentsEndpoints.generateStatement, { body, options }),
+    getStatementDownloadLink: (statementId: string, options?: RequestOptions) =>
+      call(documentsEndpoints.getStatementDownloadLink, { params: { statementId }, options }),
     list: (options?: RequestOptions) => call(documentsEndpoints.list, { options }),
     getDownloadLink: (documentId: string, options?: RequestOptions) =>
       call(documentsEndpoints.getDownloadLink, { params: { documentId }, options }),
+    createUploadSignature: (
+      body: z.input<typeof documentUploadRequestSchema>,
+      options?: RequestOptions,
+    ) => call(documentsEndpoints.createUploadSignature, { body, options }),
+    issueLetter: (body: z.input<typeof issueLetterRequestSchema>, options?: RequestOptions) =>
+      call(documentsEndpoints.issueLetter, { body, options }),
   };
 }
 

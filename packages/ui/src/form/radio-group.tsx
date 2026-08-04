@@ -1,0 +1,113 @@
+'use client';
+
+import { cn } from '../lib/cn';
+import { useFieldA11y, useFieldState } from './use-field';
+
+export interface RadioOption {
+  readonly value: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly disabled?: boolean;
+}
+
+export interface RadioGroupProps {
+  readonly options: readonly RadioOption[];
+  readonly value?: string | null;
+  readonly onChange?: (value: string) => void;
+  readonly onBlur?: () => void;
+  readonly name?: string;
+  readonly orientation?: 'vertical' | 'horizontal';
+  readonly disabled?: boolean;
+  readonly id?: string;
+  readonly className?: string;
+}
+
+const RADIO_BOX_CLASSES = [
+  'relative inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
+  'border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] shadow-[var(--shadow-xs)]',
+  'transition-colors duration-150 peer-checked:border-[var(--icb-primary)]',
+  'peer-focus-visible:focus-ring peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
+].join(' ');
+
+const RADIO_DOT_CLASSES =
+  'h-2.5 w-2.5 rounded-full bg-[var(--icb-primary)] opacity-0 peer-checked:opacity-100';
+
+/**
+ * A group of native radios — same `name`, so arrow-key movement between options is the
+ * browser's own behaviour. Controlled via `value`/`onChange`, matching a RHF `Controller`.
+ */
+export function RadioGroup({
+  options,
+  value,
+  onChange,
+  onBlur,
+  name,
+  orientation = 'vertical',
+  disabled,
+  id,
+  className,
+}: Readonly<RadioGroupProps>) {
+  const a11y = useFieldA11y({ id, disabled });
+  const field = useFieldState();
+  return (
+    <div
+      role="radiogroup"
+      id={a11y.id}
+      aria-labelledby={field?.labelId}
+      aria-describedby={a11y.describedBy}
+      aria-invalid={a11y.invalid}
+      className={cn(
+        'flex gap-3',
+        orientation === 'vertical' ? 'flex-col' : 'flex-row flex-wrap',
+        className,
+      )}
+    >
+      {options.map((option) => (
+        <RadioItem
+          key={option.value}
+          option={option}
+          name={name ?? a11y.id}
+          checked={value === option.value}
+          groupDisabled={a11y.disabled}
+          onSelect={() => onChange?.(option.value)}
+          onBlur={onBlur}
+        />
+      ))}
+    </div>
+  );
+}
+
+interface RadioItemProps {
+  readonly option: RadioOption;
+  readonly name: string;
+  readonly checked: boolean;
+  readonly groupDisabled: boolean | undefined;
+  readonly onSelect: () => void;
+  readonly onBlur?: (() => void) | undefined;
+}
+
+function RadioItem({ option, name, checked, groupDisabled, onSelect, onBlur }: RadioItemProps) {
+  return (
+    <label className="inline-flex cursor-pointer items-start gap-2.5 text-sm text-[var(--icb-text)] has-disabled:cursor-not-allowed has-disabled:opacity-60">
+      <span className={RADIO_BOX_CLASSES}>
+        <input
+          type="radio"
+          name={name}
+          value={option.value}
+          checked={checked}
+          disabled={groupDisabled === true || option.disabled === true}
+          onChange={onSelect}
+          onBlur={onBlur}
+          className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        />
+        <span aria-hidden="true" className={RADIO_DOT_CLASSES} />
+      </span>
+      <span className="flex flex-col">
+        <span>{option.label}</span>
+        {option.description != null ? (
+          <span className="text-xs text-[var(--icb-text-muted)]">{option.description}</span>
+        ) : null}
+      </span>
+    </label>
+  );
+}

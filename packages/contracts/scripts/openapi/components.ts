@@ -4,6 +4,7 @@ import * as accountsContract from '../../src/accounts/accounts.contract.js';
 import * as adminContract from '../../src/admin/admin.contract.js';
 import * as authContract from '../../src/auth/auth.contract.js';
 import * as beneficiariesContract from '../../src/beneficiaries/beneficiaries.contract.js';
+import * as budgetsContract from '../../src/budgets/budgets.contract.js';
 import * as cardsContract from '../../src/cards/cards.contract.js';
 import * as errorsModule from '../../src/common/errors.js';
 import * as primitivesModule from '../../src/common/primitives.js';
@@ -66,6 +67,7 @@ const CONTRACT_MODULES: readonly Record<string, unknown>[] = [
   adminContract,
   authContract,
   beneficiariesContract,
+  budgetsContract,
   cardsContract,
   customersContract,
   documentsContract,

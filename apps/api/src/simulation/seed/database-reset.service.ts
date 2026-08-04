@@ -18,6 +18,12 @@ const SEEDED_COLLECTIONS = [
   'ledger_entries',
   'holds',
   'transfers',
+  // Both trails reference customers, accounts and postings by id. A reset that destroys those
+  // and leaves the trails behind produces an audit history pointing at records that no longer
+  // exist — and, because the governance trail is hashed head-to-tail, a chain whose surviving
+  // links can never verify against the bank they now sit beside.
+  'audit_events',
+  'security_events',
 ] as const;
 
 @Injectable()

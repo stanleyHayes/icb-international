@@ -1,0 +1,11 @@
+{
+  "extends": "@icb/config-ts/node.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"]
+  },
+  "include": ["./**/*.ts", "../../src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "../../src/**/__tests__/**"]
+}

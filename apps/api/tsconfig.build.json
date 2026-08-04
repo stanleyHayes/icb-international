@@ -3,10 +3,19 @@
   "exclude": [
     "node_modules",
     "dist",
+    "test",
+    "vitest.setup.ts",
+    "*.config.ts",
     "src/**/__tests__/**",
     "src/**/*.spec.ts"
   ],
   "compilerOptions": {
+    // Emit settings live only here. Both are deliberately absent from the base config: an
+    // inferred rootDir rejects the cross-package imports the contract suites make, which is what
+    // kept the whole test tree outside any project — unchecked by tsc, unparseable by eslint.
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   }
 }

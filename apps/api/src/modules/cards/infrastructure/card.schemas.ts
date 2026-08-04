@@ -122,6 +122,19 @@ export class CardDoc {
 
   @Prop({ type: Date, default: null })
   reportedAt!: Date | null;
+
+  /**
+   * A staff block, as opposed to the customer's own freeze. While `blockedBy` is set the customer
+   * cannot unfreeze the card from the app — the block is the bank's decision, not theirs.
+   */
+  @Prop({ type: String, default: null })
+  blockedReason!: string | null;
+
+  @Prop({ type: String, default: null })
+  blockedBy!: string | null;
+
+  @Prop({ type: Date, default: null })
+  blockedAt!: Date | null;
 }
 
 export type CardDocument = HydratedDocument<CardDoc>;

@@ -14,7 +14,11 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "test:e2e": "turbo run test:e2e",
+    "test:e2e": "playwright test",
+    "test:contract": "pnpm --filter @icb/api test:contract",
+    "test:integration": "pnpm --filter @icb/api test:integration",
+    "test:security": "pnpm --filter @icb/api test:security",
+    "test:a11y": "playwright test --config e2e/a11y/playwright.config.ts",
     "verify": "turbo run lint typecheck test build",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,css,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,css,yml,yaml}\"",
@@ -29,6 +33,7 @@
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
     "@icb/config-eslint": "workspace:*",
     "@icb/config-ts": "workspace:*",
     "@types/node": "^26.1.2",

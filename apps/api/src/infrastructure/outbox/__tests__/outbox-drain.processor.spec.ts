@@ -1,6 +1,7 @@
 import type { Model } from 'mongoose';
 import { describe, expect, it, vi } from 'vitest';
 
+import { currentCorrelationId } from '../../../common/observability/correlation.context.js';
 import type { AppConfiguration } from '../../../config/configuration.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import type { OutboxConsumerService } from '../outbox-consumer.service.js';
@@ -83,6 +84,7 @@ describe('drainOnce', () => {
       type: 'transfer.settled',
       payload: { transferId: 'trf-1' },
       attempts: 1,
+      correlationId: null,
     });
     expect(events.updateOne).toHaveBeenCalledWith(
       { _id: 'evt-1' },
@@ -95,6 +97,35 @@ describe('drainOnce', () => {
     claimSequence(events, [fakeEvent(), fakeEvent({ _id: 'evt-2' })]);
 
     await expect(processor.drainOnce()).resolves.toBe(2);
+  });
+
+  it('delivers under the correlation id stamped on the event, ending the scope afterwards', async () => {
+    const { events, consumers, processor } = setup();
+    let seenDuringDelivery: string | null = null;
+    consumers.deliver.mockImplementation(() => {
+      seenDuringDelivery = currentCorrelationId();
+      return Promise.resolve('delivered');
+    });
+    claimSequence(events, [fakeEvent({ correlationId: 'corr-req-5' })]);
+
+    await processor.drainOnce();
+
+    expect(seenDuringDelivery).toBe('corr-req-5');
+    expect(currentCorrelationId()).toBeNull();
+  });
+
+  it('gives an event published outside a request a fresh correlation scope', async () => {
+    const { events, consumers, processor } = setup();
+    let seenDuringDelivery: string | null = null;
+    consumers.deliver.mockImplementation(() => {
+      seenDuringDelivery = currentCorrelationId();
+      return Promise.resolve('delivered');
+    });
+    claimSequence(events, [fakeEvent({ correlationId: null })]);
+
+    await processor.drainOnce();
+
+    expect(seenDuringDelivery).toEqual(expect.any(String));
   });
 
   it('reschedules with exponential backoff when delivery fails', async () => {

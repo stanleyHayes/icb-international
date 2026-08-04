@@ -120,6 +120,49 @@ export class CardCaptureService {
   }
 
   /**
+   * Staff force-expire: the reservation goes back to the customer now instead of when the
+   * seven-day window closes, and the authorisation is marked `expired` — the same state the
+   * sweep would have left it in, so the history reads identically either way.
+   *
+   * The card id from the path is checked against the authorisation: an authorisation that
+   * belongs to another card is reported as not found, never as a mismatch to probe with.
+   */
+  async expireForCard(
+    cardId: string,
+    authorisationId: string,
+    reason: string,
+  ): Promise<CardAuthorisation> {
+    const authorisation = await this.loadApproved(authorisationId);
+    if (authorisation.cardId !== cardId) {
+      throw new NotFoundError(AUTHORISATION, authorisationId);
+    }
+
+    await this.transactionManager.withTransaction(
+      async (session) => {
+        await this.releaseHold(authorisation, reason, session);
+        const result = await this.authorisations.updateOne(
+          { _id: authorisationId, status: APPROVED },
+          { $set: { status: 'expired' } },
+          { session },
+        );
+        assertClaimed(result.matchedCount, authorisationId);
+      },
+      // Releasing the hold writes the same balance document a capture does.
+      {
+        lockKeys: [
+          balanceKey(
+            customerRef(authorisation.accountId),
+            authorisation.currency as CurrencyCode,
+          ),
+        ],
+      },
+    );
+
+    this.logger.log({ authorisationId }, 'Card authorisation force-expired by staff');
+    return this.reload(authorisationId);
+  }
+
+  /**
    * Debit the customer and credit card settlement receivable (GL 1200): the customer's money has
    * left, and the bank now owes it onward to the acquirer.
    */

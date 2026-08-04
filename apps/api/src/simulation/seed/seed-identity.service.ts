@@ -10,7 +10,7 @@ import {
 } from '../../modules/customers/infrastructure/customer.schemas.js';
 import { ClockService } from '../clock/clock.service.js';
 import type { RandomHelpers } from './random.js';
-import { STAFF_PASSWORD, type SeedPersona } from './seed.data.js';
+import type { SeedPersona } from './seed.data.js';
 
 const DAY_MS = 86_400_000;
 
@@ -88,7 +88,10 @@ export class SeedIdentityService {
   }
 
   /** Upserted so re-seeding without a reset does not duplicate the operations team. */
-  async createStaff(staff: { email: string; roles: readonly string[] }): Promise<void> {
+  async createStaff(
+    staff: { email: string; roles: readonly string[] },
+    password: string,
+  ): Promise<void> {
     await this.credentials.updateOne(
       { email: staff.email },
       {
@@ -96,7 +99,7 @@ export class SeedIdentityService {
           _id: newId(),
           customerId: null,
           email: staff.email,
-          passwordHash: await this.passwords.hash(STAFF_PASSWORD),
+          passwordHash: await this.passwords.hash(password),
           emailVerified: true,
           roles: [...staff.roles],
           active: true,

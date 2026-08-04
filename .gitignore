@@ -7,6 +7,7 @@ coverage/
 .turbo/
 *.tsbuildinfo
 .env
+.env.production
 .env.local
 .env.*.local
 !.env.example
@@ -21,3 +22,10 @@ storage/
 .raven/.cache/
 .raven/.model-session.json
 apps/api/.raven/
+
+# QA-07 a11y suite scratch (storage state, resolved ids, merged results)
+e2e/a11y/.auth/
+e2e/a11y/results/
+
+# QA-06 Playwright journey artifacts (traces, screenshots, videos)
+e2e/.artifacts/

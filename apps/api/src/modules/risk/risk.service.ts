@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 
 import { ConflictError } from '../../common/errors/index.js';
+import { MetricsService } from '../../common/observability/metrics.service.js';
 import { newId } from '../../infrastructure/database/identifier.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
 import { buildNarrative } from './domain/narrative.js';
@@ -47,6 +48,7 @@ export class RiskService {
     private readonly cases: RiskCasesService,
     @InjectModel(RiskAssessmentDoc.name) private readonly assessments: Model<RiskAssessmentDoc>,
     private readonly clock: ClockService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async assess(request: AssessmentRequest): Promise<RiskAssessment> {
@@ -102,6 +104,9 @@ export class RiskService {
     if (!created) {
       throw new ConflictError('The risk assessment could not be recorded');
     }
+    // Counted for every subject, allowed ones included — an allow rate nobody graphs is a
+    // rule-tuning blind spot, the same reason the assessment itself is always stored.
+    this.metrics.fraudDecision(decision);
     this.logger.debug({ score, decision, fired: firedRules.length }, 'Assessed');
     return created;
   }

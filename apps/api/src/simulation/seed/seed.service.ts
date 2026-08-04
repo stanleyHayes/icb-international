@@ -1,7 +1,8 @@
 import { fromDecimalNumber, type CurrencyCode } from '@icb/money';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConflictError } from '../../common/errors/index.js';
 import { newId } from '../../infrastructure/database/identifier.js';
+import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
 import { AccountsService } from '../../modules/accounts/accounts.service.js';
 import { customerRef, glRef } from '../../modules/ledger/domain/account-ref.js';
 import { GL_CASH, GL_INTEREST_EXPENSE } from '../../modules/ledger/domain/chart-of-accounts.js';
@@ -20,7 +21,23 @@ import {
   type SeedPersona,
 } from './seed.data.js';
 
+/** How far back the demo bank's statement history runs, unless a caller asks for less. */
 const HISTORY_MONTHS = 18;
+
+export interface SeedOptions {
+  readonly reset: boolean;
+  readonly seed: string;
+  /**
+   * Months of transaction history per account. Defaults to {@link HISTORY_MONTHS}.
+   *
+   * Eighteen months is what makes the demo bank feel lived-in, and it costs ~2,700 postings —
+   * every one of them a real ledger transaction, serialised per account. A caller that only
+   * needs the *shape* of a populated bank (the contract suite boots one per file) should ask
+   * for the smallest history that still fills every collection, rather than pay for the story.
+   */
+  readonly historyMonths?: number;
+}
+
 export interface SeedResult {
   customers: number;
   accounts: number;
@@ -45,20 +62,22 @@ export class SeedService {
     private readonly clock: ClockService,
     private readonly identities: SeedIdentityService,
     private readonly databaseReset: DatabaseResetService,
+    @Inject(CONFIG) private readonly config: AppConfiguration,
   ) {}
 
-  async run(options: { reset: boolean; seed: string }): Promise<SeedResult> {
+  async run(options: SeedOptions): Promise<SeedResult> {
     if (options.reset) {
       await this.reset();
     } else {
       await this.assertEmpty();
     }
 
+    const historyMonths = options.historyMonths ?? HISTORY_MONTHS;
     const random = createHelpers(options.seed);
     const result: SeedResult = { customers: 0, accounts: 0, transactions: 0, logins: [] };
 
     for (const persona of SEED_PERSONAS) {
-      const counts = await this.seedPersona(persona, random);
+      const counts = await this.seedPersona(persona, random, historyMonths);
       result.customers += 1;
       result.accounts += counts.accounts;
       result.transactions += counts.transactions;
@@ -66,13 +85,31 @@ export class SeedService {
     }
 
     for (const staff of SEED_STAFF) {
-      await this.identities.createStaff(staff);
+      await this.identities.createStaff(staff, STAFF_PASSWORD);
       result.logins.push({
         email: staff.email,
         password: STAFF_PASSWORD,
         role: staff.roles.join(', '),
       });
     }
+
+    const adminEmail = this.config.seed.initialAdminEmail;
+    if (SEED_STAFF.some((staff) => staff.email === adminEmail)) {
+      throw new ConflictError(
+        `INITIAL_ADMIN_EMAIL (${adminEmail}) collides with a built-in staff seed account. Choose a distinct address.`,
+        { adminEmail },
+      );
+    }
+
+    await this.identities.createStaff(
+      { email: adminEmail, roles: ['super_admin'] },
+      this.config.seed.initialAdminPassword,
+    );
+    result.logins.push({
+      email: adminEmail,
+      password: this.config.seed.initialAdminPassword,
+      role: 'super_admin',
+    });
 
     this.logger.log(result, 'Seed complete');
     return result;
@@ -104,6 +141,7 @@ export class SeedService {
   private async seedPersona(
     persona: SeedPersona,
     random: RandomHelpers,
+    historyMonths: number,
   ): Promise<{ accounts: number; transactions: number }> {
     const customerId = newId();
     const currency = persona.currency as CurrencyCode;
@@ -136,7 +174,7 @@ export class SeedService {
     let transactions = 0;
     transactions += await this.fundAccount(current.id, persona.openingBalance, currency, 'Account opening deposit');
     transactions += await this.fundAccount(savings.id, persona.savingsBalance, currency, 'Savings opening deposit');
-    transactions += await this.generateHistory(current.id, persona, currency, random);
+    transactions += await this.generateHistory(current.id, persona, currency, random, historyMonths);
 
     return { accounts: 2, transactions };
   }
@@ -162,7 +200,7 @@ export class SeedService {
   }
 
   /**
-   * Eighteen months of plausible activity: salary in, recurring bills out, discretionary spend
+   * Plausible activity month by month: salary in, recurring bills out, discretionary spend
    * scattered through each month, and interest paid on the savings balance.
    */
   private async generateHistory(
@@ -170,11 +208,12 @@ export class SeedService {
     persona: SeedPersona,
     currency: CurrencyCode,
     random: RandomHelpers,
+    historyMonths: number,
   ): Promise<number> {
     const today = this.clock.now();
     let count = 0;
 
-    for (let monthsAgo = HISTORY_MONTHS; monthsAgo >= 0; monthsAgo -= 1) {
+    for (let monthsAgo = historyMonths; monthsAgo >= 0; monthsAgo -= 1) {
       const month = new Date(
         Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - monthsAgo, 1),
       );

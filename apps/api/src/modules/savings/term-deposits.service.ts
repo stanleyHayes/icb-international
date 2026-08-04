@@ -12,6 +12,7 @@ import type { ClientSession, Model } from 'mongoose';
 
 import { DomainError } from '../../common/errors/domain.error.js';
 import {
+  ConflictError,
   InsufficientFundsError,
   NotFoundError,
   ValidationError,
@@ -31,6 +32,7 @@ import {
   type CreateDepositInput,
 } from './infrastructure/term-deposit.factory.js';
 import { toTermDeposit } from './infrastructure/term-deposit.mapper.js';
+import type { UpdateTermDepositRequest } from './infrastructure/term-deposit.requests.js';
 import { TermDepositDoc } from './infrastructure/term-deposit.schemas.js';
 import { TermDepositPostingService } from './term-deposit-posting.service.js';
 
@@ -152,6 +154,60 @@ export class TermDepositsService {
         message: `The minimum opening amount is ${minimumDepositMinorUnits(currency)} ${currency} minor units`,
       },
     ]);
+  }
+
+  /**
+   * Change what happens at maturity. Only while the deposit is live and unmatured: once the
+   * lifecycle has run, the instruction has already been acted on and editing it would rewrite
+   * history. A nominated rollover account must be the customer's own, in the deposit currency.
+   */
+  async updateMaturity(
+    customerId: string,
+    depositId: string,
+    patch: UpdateTermDepositRequest,
+  ): Promise<TermDeposit> {
+    const deposit = await this.loadDeposit(customerId, depositId);
+    this.assertUpdatable(deposit);
+
+    const update: Record<string, unknown> = {};
+    if (patch.maturityInstruction !== undefined) {
+      update['maturityInstruction'] = patch.maturityInstruction;
+    }
+    if (patch.rolloverAccountId !== undefined) {
+      update['rolloverAccountId'] = await this.resolveRolloverPatch(
+        customerId,
+        deposit.currency as CurrencyCode,
+        patch.rolloverAccountId,
+      );
+    }
+
+    await this.deposits.updateOne({ _id: deposit._id }, { $set: update });
+    this.logger.log({ depositId }, 'Term deposit maturity instruction updated');
+    return this.get(customerId, depositId);
+  }
+
+  private assertUpdatable(deposit: TermDepositDoc): void {
+    if (deposit.status !== 'active' || deposit.maturesOn <= this.clock.today()) {
+      throw new ConflictError('This deposit can no longer be amended', {
+        depositId: deposit._id,
+        status: deposit.status,
+        maturesOn: deposit.maturesOn,
+      });
+    }
+  }
+
+  /** A new nomination is validated; an explicit null clears it. */
+  private async resolveRolloverPatch(
+    customerId: string,
+    currency: CurrencyCode,
+    rolloverAccountId: string | null,
+  ): Promise<string | null> {
+    if (rolloverAccountId === null) {
+      return null;
+    }
+    const account = await this.accounts.loadSpendable(rolloverAccountId, customerId);
+    this.assertCurrency(currency, account.currency);
+    return account._id;
   }
 
   async list(customerId: string): Promise<TermDeposit[]> {

@@ -1,6 +1,6 @@
 import type { CardSummary, CursorPage } from '@icb/contracts';
 import { Card, CardBody, EmptyState, StatusBadge } from '@icb/ui';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Plus } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -14,12 +14,21 @@ export default async function CardsPage() {
 
   return (
     <>
-      <header>
-        <h1 className="font-display text-3xl font-bold tracking-[-0.02em]">Cards</h1>
-        <p className="mt-1.5 text-sm text-[var(--icb-text-muted)]">
-          Freeze, set limits and control where each card works. Every control is applied at
-          authorisation, not just recorded.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-[-0.02em]">Cards</h1>
+          <p className="mt-1.5 text-sm text-[var(--icb-text-muted)]">
+            Freeze, set limits and control where each card works. Every control is applied at
+            authorisation, not just recorded.
+          </p>
+        </div>
+        <Link
+          href="/cards/new"
+          className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-4 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors hover:bg-[var(--icb-primary-hover)]"
+        >
+          <Plus size={16} />
+          New card
+        </Link>
       </header>
 
       {items.length > 0 ? (

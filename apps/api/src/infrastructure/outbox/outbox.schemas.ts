@@ -31,6 +31,13 @@ export class OutboxEventDoc {
   @Prop({ type: Object, required: true })
   payload!: Record<string, unknown>;
 
+  /**
+   * The request that caused this event, so the delivery hop — however much later it runs —
+   * logs against the same thread as the state change that produced it.
+   */
+  @Prop({ type: String, default: null })
+  correlationId!: string | null;
+
   @Prop({ type: String, required: true, default: OUTBOX_STATES.Pending })
   state!: OutboxState;
 

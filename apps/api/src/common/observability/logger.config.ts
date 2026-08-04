@@ -3,6 +3,7 @@ import type { Params } from 'nestjs-pino';
 import type { AppConfiguration } from '../../config/configuration.js';
 import { newId } from '../../infrastructure/database/identifier.js';
 import { CORRELATION_ID_HEADER } from './correlation.constants.js';
+import { currentCorrelationId } from './correlation.context.js';
 import { REDACT_PATHS, REDACTED, scrubText } from './redaction.js';
 
 /**
@@ -51,6 +52,12 @@ export function buildLoggerConfig(config: AppConfiguration): Params {
         return typeof header === 'string' && header.length > 0 ? header : newId();
       },
       redact: { paths: [...REDACT_PATHS], censor: REDACTED },
+      // Every line written inside a correlation scope — request, outbox delivery, queue job —
+      // carries the id, so one thread of work reads as one thread in the logs.
+      mixin: () => {
+        const correlationId = currentCorrelationId();
+        return correlationId === null ? {} : { correlationId };
+      },
       autoLogging: {
         ignore: (request) => (request.url ?? '').startsWith('/health'),
       },

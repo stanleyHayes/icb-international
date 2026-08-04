@@ -16,7 +16,9 @@ import { spentOnRailToday } from '../infrastructure/transfer-query.js';
 import { TransferDoc } from '../infrastructure/transfer.schemas.js';
 import { DestinationResolver, type ResolvedDestination } from './destination-resolver.js';
 import { FRAUD_CHECK_PORT, type FraudCheckPort } from './fraud-check.port.js';
-import { TransferQuotesService, type RedeemedTransferQuote } from './transfer-quotes.service.js';
+import { TransferQuoteRedemptionService } from './transfer-quote-redemption.service.js';
+import type { RedeemedTransferQuote } from './transfer-quotes.service.js';
+import type { StepUpProof } from './transfer-step-up.service.js';
 import type { PreparedTransfer } from './transfer-pipeline.types.js';
 
 type ResolvedTerms = Omit<RedeemedTransferQuote, 'quoteId'> & {
@@ -37,7 +39,7 @@ export class TransferPreparationService {
     @InjectModel(TransferDoc.name) private readonly transfers: Model<TransferDoc>,
     private readonly accounts: AccountsService,
     private readonly destinations: DestinationResolver,
-    private readonly quotes: TransferQuotesService,
+    private readonly redemption: TransferQuoteRedemptionService,
     @Inject(FRAUD_CHECK_PORT) private readonly fraud: FraudCheckPort,
     private readonly clock: ClockService,
   ) {}
@@ -45,10 +47,11 @@ export class TransferPreparationService {
   async prepare(
     customerId: string,
     request: CreateTransferRequest,
+    proof?: StepUpProof,
   ): Promise<PreparedTransfer> {
     const resolved = await this.destinations.resolve(request.destination, customerId);
     const source = await this.accounts.loadSpendable(request.fromAccountId, customerId);
-    const terms = await this.resolveTerms(customerId, request, resolved.destination);
+    const terms = await this.resolveTerms(customerId, request, resolved.destination, proof);
 
     assertPerTransactionLimit(terms.rail, terms.debit);
     const spent = await spentOnRailToday(this.transfers, customerId, terms.rail, this.clock);
@@ -80,23 +83,33 @@ export class TransferPreparationService {
     };
   }
 
-  /** Quote redemption, or the inline same-currency terms. */
+  /**
+   * Quote redemption, or the inline same-currency terms. The redemption service owns the
+   * step-up rule: a quote that flagged `requiresStepUp` is checked before it is spent, and
+   * the inline path applies the same threshold, because skipping the quote must not skip
+   * the check.
+   */
   private async resolveTerms(
     customerId: string,
     request: CreateTransferRequest,
     destination: CreateTransferRequest['destination'],
+    proof: StepUpProof | undefined,
   ): Promise<ResolvedTerms> {
     if (request.quoteId) {
-      const quote = await this.quotes.redeem(customerId, request.quoteId, {
-        fromAccountId: request.fromAccountId,
-        destination,
-      });
+      const quote = await this.redemption.confirm(
+        customerId,
+        request.quoteId,
+        { fromAccountId: request.fromAccountId, destination },
+        proof,
+      );
       return { ...quote, totalFees: totalFees(quote.fees, quote.debit.currency) };
     }
 
     const debit = fromMinorUnits(request.amount.minorUnits, request.amount.currency);
     const rail = resolveRail(destination);
     const fees = feesFor(rail, debit.currency);
+    const total = totalFees(fees, debit.currency);
+    await this.redemption.assertHighValueStepUp(debit, total, proof);
     return {
       quoteId: null,
       rail,
@@ -104,7 +117,7 @@ export class TransferPreparationService {
       credit: debit,
       fx: null,
       fees,
-      totalFees: totalFees(fees, debit.currency),
+      totalFees: total,
       estimatedArrival: this.clock.now(),
     };
   }

@@ -2,6 +2,7 @@ import { getConnectionToken } from '@nestjs/mongoose';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { MetricsModule } from '../../../common/observability/metrics.module.js';
 import { ConfigModule } from '../../../config/config.module.js';
 import { ClockModule } from '../../../simulation/clock/clock.module.js';
 import { EndOfDayService } from '../../../simulation/eod/end-of-day.service.js';
@@ -27,7 +28,10 @@ describe('SimulationModule wiring', () => {
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
-      imports: [ConfigModule, ClockModule, SimulationModule],
+      // MetricsModule is @Global in the real graph, so AppModule importing it once makes
+      // MetricsService available to every instrumented service. A partial graph gets no such
+      // favour — it has to import it explicitly or the ledger cannot be constructed.
+      imports: [ConfigModule, ClockModule, MetricsModule, SimulationModule],
     })
       // The container never talks to Mongo here; only the graph is under test.
       .overrideProvider(getConnectionToken())

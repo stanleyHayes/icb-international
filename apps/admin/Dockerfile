@@ -24,6 +24,17 @@ COPY packages/ packages/
 COPY brand/ brand/
 COPY apps/admin/ apps/admin/
 
+# NEXT_PUBLIC_* values are inlined into the bundle at build time, so they arrive as build
+# args — never via a .env file, which .dockerignore keeps out of the context on purpose.
+ARG NEXT_PUBLIC_API_URL=http://localhost:4100/v1
+ARG NEXT_PUBLIC_MARKETING_URL=http://localhost:3100
+ARG NEXT_PUBLIC_CLIENT_URL=http://localhost:3101
+ARG NEXT_PUBLIC_ADMIN_URL=http://localhost:3102
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_PUBLIC_MARKETING_URL=$NEXT_PUBLIC_MARKETING_URL \
+    NEXT_PUBLIC_CLIENT_URL=$NEXT_PUBLIC_CLIENT_URL \
+    NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
+
 RUN pnpm --filter @icb/money build && pnpm --filter @icb/contracts build
 RUN pnpm --filter @icb/admin build
 
@@ -39,4 +50,10 @@ COPY --from=build --chown=icb:icb /repo/apps/admin/public           ./apps/admin
 
 USER icb
 EXPOSE 3102
+
+# Liveness: any non-5xx response means the standalone server is up; the root route may
+# legitimately redirect to /login, so a 3xx is healthy too.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3102)+'/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"
+
 CMD ["node", "apps/admin/server.js"]

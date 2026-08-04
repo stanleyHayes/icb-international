@@ -1,9 +1,18 @@
 import { z } from 'zod';
 import {
+  attachmentUploadRequestSchema,
+  callbackCompleteRequestSchema,
+  callbackRequestSchema,
+  callbackViewSchema,
   createTicketRequestSchema,
+  inboxQuerySchema,
   replyToTicketRequestSchema,
+  satisfactionRequestSchema,
+  staffCallbackQuerySchema,
+  staffTicketViewSchema,
   supportMessageSchema,
   supportTicketSchema,
+  uploadSignatureSchema,
 } from '@icb/contracts';
 
 import { get, post, type Requester } from '../endpoint.js';
@@ -17,9 +26,34 @@ export const supportEndpoints = {
   reply: post('/support/tickets/:ticketId/messages', supportMessageSchema, {
     body: replyToTicketRequestSchema,
   }),
+  rateSatisfaction: post('/support/tickets/:ticketId/satisfaction', supportTicketSchema, {
+    body: satisfactionRequestSchema,
+  }),
+  createAttachmentUploadSignature: post(
+    '/support/attachments/upload-signature',
+    uploadSignatureSchema,
+    { body: attachmentUploadRequestSchema, idempotent: true },
+  ),
+  requestCallback: post('/support/callbacks', callbackViewSchema, {
+    body: callbackRequestSchema,
+    idempotent: true,
+  }),
+  listCallbacks: get('/support/callbacks', z.array(callbackViewSchema)),
+  staffInbox: get('/support/staff/inbox', z.array(staffTicketViewSchema), {
+    query: inboxQuerySchema,
+  }),
+  staffListCallbacks: get('/support/staff/callbacks', z.array(callbackViewSchema), {
+    query: staffCallbackQuerySchema,
+  }),
+  staffCompleteCallback: post(
+    '/support/staff/callbacks/:callbackId/complete',
+    callbackViewSchema,
+    { body: callbackCompleteRequestSchema },
+  ),
+  staffCancelCallback: post('/support/staff/callbacks/:callbackId/cancel', callbackViewSchema, {}),
 };
 
-export function createSupportApi(call: Requester) {
+function createTicketMethods(call: Requester) {
   return {
     listTickets: (options?: RequestOptions) => call(supportEndpoints.listTickets, { options }),
     createTicket: (body: z.input<typeof createTicketRequestSchema>, options?: RequestOptions) =>
@@ -33,7 +67,41 @@ export function createSupportApi(call: Requester) {
       body: z.input<typeof replyToTicketRequestSchema>,
       options?: RequestOptions,
     ) => call(supportEndpoints.reply, { params: { ticketId }, body, options }),
+    rateSatisfaction: (
+      ticketId: string,
+      body: z.input<typeof satisfactionRequestSchema>,
+      options?: RequestOptions,
+    ) => call(supportEndpoints.rateSatisfaction, { params: { ticketId }, body, options }),
+    createAttachmentUploadSignature: (
+      body: z.input<typeof attachmentUploadRequestSchema>,
+      options?: RequestOptions,
+    ) => call(supportEndpoints.createAttachmentUploadSignature, { body, options }),
+    staffInbox: (query?: z.input<typeof inboxQuerySchema>, options?: RequestOptions) =>
+      call(supportEndpoints.staffInbox, { query, options }),
   };
+}
+
+function createCallbackMethods(call: Requester) {
+  return {
+    requestCallback: (body: z.input<typeof callbackRequestSchema>, options?: RequestOptions) =>
+      call(supportEndpoints.requestCallback, { body, options }),
+    listCallbacks: (options?: RequestOptions) => call(supportEndpoints.listCallbacks, { options }),
+    staffListCallbacks: (
+      query?: z.input<typeof staffCallbackQuerySchema>,
+      options?: RequestOptions,
+    ) => call(supportEndpoints.staffListCallbacks, { query, options }),
+    staffCompleteCallback: (
+      callbackId: string,
+      body: z.input<typeof callbackCompleteRequestSchema>,
+      options?: RequestOptions,
+    ) => call(supportEndpoints.staffCompleteCallback, { params: { callbackId }, body, options }),
+    staffCancelCallback: (callbackId: string, options?: RequestOptions) =>
+      call(supportEndpoints.staffCancelCallback, { params: { callbackId }, options }),
+  };
+}
+
+export function createSupportApi(call: Requester) {
+  return { ...createTicketMethods(call), ...createCallbackMethods(call) };
 }
 
 export type SupportApi = ReturnType<typeof createSupportApi>;

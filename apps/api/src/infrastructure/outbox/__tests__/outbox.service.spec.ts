@@ -2,6 +2,7 @@ import type { ClientSession, Model } from 'mongoose';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DomainError } from '../../../common/errors/index.js';
+import { runWithCorrelation } from '../../../common/observability/correlation.context.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { OUTBOX_STATES, type OutboxEventDoc } from '../outbox.schemas.js';
 import { OutboxService } from '../outbox.service.js';
@@ -33,6 +34,7 @@ describe('publish', () => {
         {
           type: 'transfer.settled',
           payload: { transferId: 'trf-1' },
+          correlationId: null,
           state: OUTBOX_STATES.Pending,
           attempts: 0,
           availableAt: NOW,
@@ -41,6 +43,30 @@ describe('publish', () => {
       ],
       { session },
     );
+  });
+
+  it('stamps the event with the correlation id in scope at publish time', async () => {
+    const { model, service } = setup();
+    model.create.mockResolvedValue([{ _id: 'evt-3' }]);
+
+    await runWithCorrelation('corr-req-9', () =>
+      service.publish({ type: 'transfer.sent', payload: {} }, session),
+    );
+
+    const [rows] = model.create.mock.calls[0] as [{ correlationId: string | null }[]];
+    expect(rows[0]?.correlationId).toBe('corr-req-9');
+  });
+
+  it('prefers an explicitly supplied correlation id over the ambient one', async () => {
+    const { model, service } = setup();
+    model.create.mockResolvedValue([{ _id: 'evt-4' }]);
+
+    await runWithCorrelation('corr-ambient', () =>
+      service.publish({ type: 'transfer.sent', payload: {}, correlationId: 'corr-explicit' }, session),
+    );
+
+    const [rows] = model.create.mock.calls[0] as [{ correlationId: string | null }[]];
+    expect(rows[0]?.correlationId).toBe('corr-explicit');
   });
 
   it('honours a caller-supplied availability instant for delayed events', async () => {

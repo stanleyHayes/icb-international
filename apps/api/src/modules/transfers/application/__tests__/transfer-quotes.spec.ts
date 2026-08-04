@@ -20,6 +20,7 @@ import {
   type TransferQuoteDoc,
 } from '../../infrastructure/transfer-quote.schemas.js';
 import type { TransferPricing } from '../transfer-pricing.js';
+import { TransferQuoteRedemptionService } from '../transfer-quote-redemption.service.js';
 import { TransferQuotesService } from '../transfer-quotes.service.js';
 
 const NOW = new Date('2026-08-03T10:00:00.000Z');
@@ -70,7 +71,13 @@ function setup() {
     clock,
     config,
   );
-  return { model, accounts, destinations, pricing, fxIssue, clock, service };
+  const redemption = new TransferQuoteRedemptionService(
+    model as never,
+    { assert: vi.fn().mockResolvedValue(undefined) } as never,
+    clock,
+    config,
+  );
+  return { model, accounts, destinations, pricing, fxIssue, clock, service, redemption };
 }
 
 function quoteRequest(overrides: Partial<TransferQuoteRequest> = {}): TransferQuoteRequest {
@@ -209,11 +216,11 @@ describe('redeem', () => {
   });
 
   it('returns the signed terms for a live quote', async () => {
-    const { model, service } = context;
+    const { model, redemption } = context;
     model.findOne.mockReturnValue(lean(quoteDoc()));
     model.findOneAndUpdate.mockReturnValue(lean(quoteDoc({ status: 'redeemed' })));
 
-    const redeemed = await service.redeem('cust-1', 'q-1', BINDING);
+    const redeemed = await redemption.confirm('cust-1', 'q-1', BINDING);
 
     expect(redeemed.debit).toEqual({ minorUnits: 10_000, currency: 'GBP' });
     expect(redeemed.rail).toBe('ach');
@@ -225,11 +232,11 @@ describe('redeem', () => {
   });
 
   it('throws QUOTE_EXPIRED once the TTL has elapsed, and records the expiry', async () => {
-    const { model, clock, service } = context;
+    const { model, clock, redemption } = context;
     model.findOne.mockReturnValue(lean(quoteDoc()));
     clock.advance(TRANSFER_QUOTE_TTL_MS + 1000);
 
-    await expect(service.redeem('cust-1', 'q-1', BINDING)).rejects.toThrow(
+    await expect(redemption.confirm('cust-1', 'q-1', BINDING)).rejects.toThrow(
       TransferQuoteExpiredError,
     );
     expect(model.updateOne).toHaveBeenCalledWith(
@@ -239,40 +246,40 @@ describe('redeem', () => {
   });
 
   it('is single-use: a second redemption loses the race', async () => {
-    const { model, service } = context;
+    const { model, redemption } = context;
     model.findOne.mockReturnValue(lean(quoteDoc()));
     model.findOneAndUpdate.mockReturnValue(lean(null));
 
-    await expect(service.redeem('cust-1', 'q-1', BINDING)).rejects.toThrow(
+    await expect(redemption.confirm('cust-1', 'q-1', BINDING)).rejects.toThrow(
       TransferQuoteAlreadyUsedError,
     );
   });
 
   it('rejects an already-redeemed quote before any update', async () => {
-    const { model, service } = context;
+    const { model, redemption } = context;
     model.findOne.mockReturnValue(lean(quoteDoc({ status: TRANSFER_QUOTE_STATUSES.REDEEMED })));
 
-    await expect(service.redeem('cust-1', 'q-1', BINDING)).rejects.toThrow(
+    await expect(redemption.confirm('cust-1', 'q-1', BINDING)).rejects.toThrow(
       TransferQuoteAlreadyUsedError,
     );
     expect(model.findOneAndUpdate).not.toHaveBeenCalled();
   });
 
   it('rejects a tampered quote: edited terms no longer verify', async () => {
-    const { model, service } = context;
+    const { model, redemption } = context;
     model.findOne.mockReturnValue(lean(quoteDoc({ feeMinorUnits: 999_999 })));
 
-    await expect(service.redeem('cust-1', 'q-1', BINDING)).rejects.toThrow(
+    await expect(redemption.confirm('cust-1', 'q-1', BINDING)).rejects.toThrow(
       TransferQuoteSignatureInvalidError,
     );
   });
 
   it('pays only the destination the quote was issued for', async () => {
-    const { model, service } = context;
+    const { model, redemption } = context;
     model.findOne.mockReturnValue(lean(quoteDoc()));
 
     await expect(
-      service.redeem('cust-1', 'q-1', {
+      redemption.confirm('cust-1', 'q-1', {
         fromAccountId: 'acct-1',
         destination: { kind: 'icb_customer', accountNumber: '0011223344' },
       }),
@@ -280,9 +287,9 @@ describe('redeem', () => {
   });
 
   it('throws NotFound for an unknown quote', async () => {
-    const { model, service } = context;
+    const { model, redemption } = context;
     model.findOne.mockReturnValue(lean(null));
 
-    await expect(service.redeem('cust-1', 'nope', BINDING)).rejects.toThrow(NotFoundError);
+    await expect(redemption.confirm('cust-1', 'nope', BINDING)).rejects.toThrow(NotFoundError);
   });
 });

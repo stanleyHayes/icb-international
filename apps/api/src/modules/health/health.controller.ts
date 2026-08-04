@@ -1,3 +1,4 @@
+import type { LedgerIntegrityReport } from '@icb/contracts';
 import { Controller, Get } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import type { Connection } from 'mongoose';
@@ -6,6 +7,7 @@ import { Public } from '../../common/decorators/public.decorator.js';
 import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
 import { Inject } from '@nestjs/common';
 import { ClockService } from '../../simulation/clock/clock.service.js';
+import { LedgerHealthService } from './ledger-health.service.js';
 
 /**
  * Liveness and readiness.
@@ -22,6 +24,7 @@ export class HealthController {
     @InjectConnection() private readonly connection: Connection,
     @Inject(CONFIG) private readonly config: AppConfiguration,
     private readonly clock: ClockService,
+    private readonly ledgerHealth: LedgerHealthService,
   ) {
     this.startedAtMs = clock.epochMs();
   }
@@ -39,7 +42,7 @@ export class HealthController {
   ready(): {
     status: 'ready' | 'not_ready';
     database: string;
-    simulatedNow: string;
+    serverTime: string;
     businessDate: string;
   } {
     // Mongoose exposes readyState as a numeric enum; 1 is "connected".
@@ -48,8 +51,15 @@ export class HealthController {
     return {
       status: connected ? 'ready' : 'not_ready',
       database,
-      simulatedNow: this.clock.now().toISOString(),
+      serverTime: this.clock.now().toISOString(),
       businessDate: this.clock.today(),
     };
+  }
+
+  @Get('ledger')
+  ledger(): Promise<LedgerIntegrityReport> {
+    // Cached for a minute inside the service — the aggregation is expensive and a probe
+    // polling every few seconds has no use for a fresher answer.
+    return this.ledgerHealth.report();
   }
 }

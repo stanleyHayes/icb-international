@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 
 import { CurrentCustomer } from '../../common/decorators/current-user.decorator.js';
+import { Idempotent } from '../../common/decorators/idempotent.decorator.js';
 import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
 import {
   SavingsGoalsService,
@@ -76,6 +77,7 @@ export class SavingsGoalsController {
 
   /** Moves real money: the funding account is debited and the goal's account credited. */
   @Post(':goalId/contribute')
+  @Idempotent()
   async contribute(
     @CurrentCustomer() customerId: string,
     @Param('goalId') goalId: string,

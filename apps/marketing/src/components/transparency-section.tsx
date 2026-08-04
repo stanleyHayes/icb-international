@@ -9,7 +9,7 @@ export function TransparencySection() {
         <div className="mx-auto max-w-[1200px] px-5 py-20">
           <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
             <div>
-              <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent)] uppercase">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
                 Transparency
               </p>
               <h2 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl">

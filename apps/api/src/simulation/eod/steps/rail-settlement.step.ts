@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { ClientSession, Model } from 'mongoose';
 
+import { MetricsService } from '../../../common/observability/metrics.service.js';
 import { TransactionManager } from '../../../infrastructure/database/transaction.manager.js';
 import { glRef } from '../../../modules/ledger/domain/account-ref.js';
 import {
@@ -33,6 +34,7 @@ export class RailSettlementStep {
     @InjectModel(TransferDoc.name) private readonly transfers: Model<TransferDoc>,
     private readonly ledger: LedgerService,
     private readonly transactionManager: TransactionManager,
+    private readonly metrics: MetricsService,
   ) {}
 
   async run(context: EodContext): Promise<number> {
@@ -53,7 +55,7 @@ export class RailSettlementStep {
   }
 
   private async settleOne(transfer: TransferDoc, context: EodContext): Promise<number> {
-    return this.transactionManager.withTransaction(async (session) => {
+    const settled = await this.transactionManager.withTransaction(async (session) => {
       const claimed = await this.claim(transfer._id, context, session);
       if (!claimed) {
         return 0;
@@ -61,6 +63,11 @@ export class RailSettlementStep {
       await this.postSettlement(transfer, context, session);
       return 1;
     });
+    // After the commit: a transfer settled twice by a retried run still counts once.
+    if (settled === 1) {
+      this.metrics.transferOutcome(transfer.rail, 'completed');
+    }
+    return settled;
   }
 
   /**

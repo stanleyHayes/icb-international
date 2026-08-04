@@ -14,11 +14,14 @@ export type AccountRef = `acct:${string}` | `gl:${string}`;
 const CUSTOMER_PREFIX = 'acct:';
 const GL_PREFIX = 'gl:';
 
-export function customerRef(accountId: string): AccountRef {
+// Each constructor returns its own half of the union rather than the union itself. A caller that
+// asks for a customer reference has proven it is holding a customer reference, and can say so in
+// its own signature without re-narrowing something it just built.
+export function customerRef(accountId: string): `acct:${string}` {
   return `${CUSTOMER_PREFIX}${accountId}`;
 }
 
-export function glRef(code: string): AccountRef {
+export function glRef(code: string): `gl:${string}` {
   // Fails fast on a typo'd code rather than silently creating a phantom account.
   getGlAccount(code);
   return `${GL_PREFIX}${code}`;

@@ -57,6 +57,12 @@ export class PricingService {
     return updated.rateSchedule;
   }
 
+  /** The product's full effective-dated schedule, past and announced changes alike. */
+  async rateScheduleFor(productCode: string): Promise<RateChange[]> {
+    const doc = await this.catalogue.documentFor(productCode);
+    return doc.rateSchedule;
+  }
+
   /** The fee a customer at `customerTier` would pay on `subject`, after waivers and caps. */
   async quoteFee(
     productCode: string,

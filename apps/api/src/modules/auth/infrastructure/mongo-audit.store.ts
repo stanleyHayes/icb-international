@@ -7,10 +7,10 @@ import type { Model } from 'mongoose';
 import { newId } from '../../../infrastructure/database/identifier.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { AuditPort, type AuditEventInput } from '../application/audit.port.js';
-import { AuditEventDoc } from './auth.schemas.js';
+import { SecurityEventDoc } from './auth.schemas.js';
 
 /**
- * The default audit store: append-only `audit_events`, hash-chained per N7.
+ * The security-event store: append-only `security_events`, hash-chained per N7.
  *
  * Each event's hash covers the previous event's hash, so deleting or editing history breaks the
  * chain verifiably. A failed append is logged, never rethrown: an audit-store hiccup must not
@@ -21,7 +21,7 @@ export class MongoAuditStore extends AuditPort {
   private readonly logger = new Logger(MongoAuditStore.name);
 
   constructor(
-    @InjectModel(AuditEventDoc.name) private readonly events: Model<AuditEventDoc>,
+    @InjectModel(SecurityEventDoc.name) private readonly events: Model<SecurityEventDoc>,
     private readonly clock: ClockService,
   ) {
     super();

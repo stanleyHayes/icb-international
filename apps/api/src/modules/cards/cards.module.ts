@@ -17,6 +17,8 @@ import { CardSettingsService } from './application/card-settings.service.js';
 import { CardSpendService } from './application/card-spend.service.js';
 import { CardNetworkController } from './card-network.controller.js';
 import { CardSettingsController } from './card-settings.controller.js';
+import { CardsStaffController } from './cards-staff.controller.js';
+import { CardsStaffService } from './cards-staff.service.js';
 import { CardsController } from './cards.controller.js';
 import { CardsService } from './cards.service.js';
 import {
@@ -45,9 +47,10 @@ import { CardDoc, CardSchema } from './infrastructure/card.schemas.js';
       { name: CustomerDoc.name, schema: CustomerSchema },
     ]),
   ],
-  controllers: [CardsController, CardSettingsController, CardNetworkController],
+  controllers: [CardsController, CardSettingsController, CardNetworkController, CardsStaffController],
   providers: [
     CardsService,
+    CardsStaffService,
     CardReader,
     CardSpendService,
     CardIssuanceService,

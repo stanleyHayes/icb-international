@@ -2,6 +2,8 @@ import { WorkerHost } from '@nestjs/bullmq';
 import type { Logger } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
 
+import { currentCorrelationId, runWithCorrelation } from '../../common/observability/correlation.context.js';
+import { newId } from '../database/identifier.js';
 import type { ClockService } from '../../simulation/clock/clock.service.js';
 import { DEAD_LETTER_JOB_NAME } from './queue.constants.js';
 
@@ -14,6 +16,21 @@ export interface DeadLetterRecord<TData = unknown> {
   readonly failedReason: string;
   readonly attemptsMade: number;
   readonly deadLetteredAt: string;
+}
+
+/**
+ * The id a job runs under. Producers that enqueue from a request or an outbox event put the
+ * current correlation id on the job payload; anything else gets a fresh one, so a job's logs
+ * always form one searchable thread.
+ */
+function jobCorrelationId(data: unknown): string {
+  if (typeof data === 'object' && data !== null && 'correlationId' in data) {
+    const candidate = data.correlationId;
+    if (typeof candidate === 'string' && candidate.length > 0) {
+      return candidate;
+    }
+  }
+  return currentCorrelationId() ?? newId();
 }
 
 /**
@@ -44,12 +61,16 @@ export abstract class BaseJobProcessor<TData = unknown, TResult = unknown> exten
   }
 
   async process(job: Job<TData, TResult>): Promise<TResult> {
-    try {
-      return await this.handle(job);
-    } catch (error) {
-      await this.onAttemptFailed(job, error);
-      throw error;
-    }
+    // `run` is correct here (unlike in the HTTP interceptor): the processor owns the whole
+    // async boundary, so the context covers `handle` and the dead-letter path alike.
+    return runWithCorrelation(jobCorrelationId(job.data), async () => {
+      try {
+        return await this.handle(job);
+      } catch (error) {
+        await this.onAttemptFailed(job, error);
+        throw error;
+      }
+    });
   }
 
   protected abstract handle(job: Job<TData, TResult>): Promise<TResult>;

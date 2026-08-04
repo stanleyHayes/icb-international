@@ -34,7 +34,11 @@ export class RiskAssessmentDoc {
   @Prop({ type: String, required: true, index: true })
   decision!: string;
 
-  @Prop({ type: [Object], required: true, default: [] })
+  // `default` without `required`: Mongoose's array required-validator rejects an empty
+  // array, so `required: true, default: []` can never be satisfied by its own default —
+  // and empty is the ordinary case here. It survives today only where the write goes
+  // through updateOne, which skips validators; a create() on this path would 500.
+  @Prop({ type: [Object], default: [] })
   firedRules!: FiredRule[];
 
   @Prop({ type: String, required: true })

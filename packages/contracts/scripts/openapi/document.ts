@@ -30,6 +30,7 @@ const TAG_DESCRIPTIONS: Readonly<Record<TagName, string>> = {
   [TAG.transactions]: 'The customer-facing ledger: search, detail, export, insights.',
   [TAG.transfers]: 'Money movement: quotes, transfers, templates, standing orders.',
   [TAG.beneficiaries]: 'Saved payees with cooling-off and micro-deposit verification.',
+  [TAG.budgets]: 'Per-category spending budgets evaluated against the ledger.',
   [TAG.cards]: 'Card issuing, controls, limits, PIN, and authorisations.',
   [TAG.lending]: 'Loan products, quotes, applications, and repayments.',
   [TAG.savings]: 'Savings goals and fixed-term deposits.',
@@ -41,9 +42,11 @@ const TAG_DESCRIPTIONS: Readonly<Record<TagName, string>> = {
   [TAG.disputes]: 'Chargeback disputes from filing to resolution.',
   [TAG.risk]: 'Fraud rules, cases, and AML alerting (staff).',
   [TAG.governance]: 'Staff administration, audit trail, and maker-checker approvals.',
-  [TAG.admin]: 'Ops dashboard, transaction monitor, manual postings, and ledger reports.',
+  [TAG.admin]:
+    'Ops KPIs, transaction monitor, manual postings, staff card operations, and ledger reports.',
   [TAG.simulation]: 'Simulation control: time travel, rails, scenarios (super-admin).',
   [TAG.system]: 'Operational health endpoints.',
+  [TAG.content]: 'Published FAQ, branch and ATM locations, and content-managed rate entries.',
 };
 
 /** Builds the complete OpenAPI 3.1 document from the contract schemas and route tables. */

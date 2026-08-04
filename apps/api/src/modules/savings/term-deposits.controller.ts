@@ -5,10 +5,15 @@ import {
   type OpenTermDepositRequest,
   type TermDeposit,
 } from '@icb/contracts';
-import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 
 import { CurrentCustomer } from '../../common/decorators/current-user.decorator.js';
+import { Idempotent } from '../../common/decorators/idempotent.decorator.js';
 import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
+import {
+  updateTermDepositRequestSchema,
+  type UpdateTermDepositRequest,
+} from './infrastructure/term-deposit.requests.js';
 import { TermDepositBreakService } from './term-deposit-break.service.js';
 import { TermDepositsService } from './term-deposits.service.js';
 
@@ -52,6 +57,16 @@ export class TermDepositsController {
     return this.deposits.get(customerId, depositId);
   }
 
+  /** Amend the maturity instruction or rollover account — only while the deposit is unmatured. */
+  @Patch('deposits/:depositId')
+  async update(
+    @CurrentCustomer() customerId: string,
+    @Param('depositId') depositId: string,
+    @Body(zodBody(updateTermDepositRequestSchema)) body: UpdateTermDepositRequest,
+  ): Promise<TermDeposit> {
+    return this.deposits.updateMaturity(customerId, depositId, body);
+  }
+
   @Get('deposits/:depositId/break-quote')
   async breakQuote(
     @CurrentCustomer() customerId: string,
@@ -61,6 +76,7 @@ export class TermDepositsController {
   }
 
   @Post('deposits/:depositId/break')
+  @Idempotent()
   @HttpCode(200)
   async breakDeposit(
     @CurrentCustomer() customerId: string,

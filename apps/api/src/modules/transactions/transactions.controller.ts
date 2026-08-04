@@ -20,7 +20,11 @@ import { Idempotent } from '../../common/decorators/idempotent.decorator.js';
 import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
 import { ZodValidationPipe, zodBody } from '../../common/pipes/zod-validation.pipe.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
-import { TransactionAnalyticsService } from './analytics.service.js';
+import {
+  TransactionAnalyticsService,
+  type MerchantsAnalytics,
+  type RecurringAnalytics,
+} from './analytics.service.js';
 import { renderReceiptHtml } from './domain/receipt-html.js';
 import { TransactionExportsService } from './exports.service.js';
 import { TransactionsService } from './transactions.service.js';
@@ -31,6 +35,7 @@ const spendQuerySchema = spendByCategorySchema.pick({ currency: true }).extend({
   to: isoDateSchema.optional(),
 });
 const cashflowQuerySchema = cashflowSchema.pick({ currency: true, granularity: true });
+const currencyOnlyQuerySchema = spendByCategorySchema.pick({ currency: true });
 
 const HTML_CONTENT_TYPE = 'text/html; charset=utf-8';
 
@@ -69,6 +74,24 @@ export class TransactionsController {
     query: ReturnType<typeof cashflowQuerySchema.parse>,
   ): Promise<Cashflow> {
     return this.analytics.cashflow(customerId, query);
+  }
+
+  @Get('analytics/merchants')
+  async merchants(
+    @CurrentCustomer() customerId: string,
+    @Query(new ZodValidationPipe(spendQuerySchema))
+    query: ReturnType<typeof spendQuerySchema.parse>,
+  ): Promise<MerchantsAnalytics> {
+    return this.analytics.merchants(customerId, query);
+  }
+
+  @Get('analytics/recurring')
+  async recurring(
+    @CurrentCustomer() customerId: string,
+    @Query(new ZodValidationPipe(currencyOnlyQuerySchema))
+    query: ReturnType<typeof currencyOnlyQuerySchema.parse>,
+  ): Promise<RecurringAnalytics> {
+    return this.analytics.recurring(customerId, query);
   }
 
   /**

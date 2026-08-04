@@ -37,7 +37,22 @@ export class CardAuthorisationLogService {
   ): Promise<CursorPage<CardAuthorisation>> {
     // Ownership is proved against the card before a single authorisation row is read.
     await this.reader.loadOwned(cardId, customerId);
+    return this.list(cardId, query);
+  }
 
+  /** The staff console's history: the card must exist, but no ownership scope applies. */
+  async listForCardAsStaff(
+    cardId: string,
+    query: AuthorisationQuery,
+  ): Promise<CursorPage<CardAuthorisation>> {
+    await this.reader.loadById(cardId);
+    return this.list(cardId, query);
+  }
+
+  private async list(
+    cardId: string,
+    query: AuthorisationQuery,
+  ): Promise<CursorPage<CardAuthorisation>> {
     const filter: Record<string, unknown> = { cardId };
     if (query.cursor) {
       filter['_id'] = { $lt: query.cursor };

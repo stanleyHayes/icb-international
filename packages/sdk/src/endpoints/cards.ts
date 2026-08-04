@@ -21,7 +21,7 @@ import { type RequestOptions } from '../http.js';
 
 export const cardsEndpoints = {
   list: get('/cards', cursorPageSchema(cardSummarySchema), { query: cardQuerySchema }),
-  issue: post('/cards', cardDetailSchema, { body: issueCardRequestSchema, idempotent: true }),
+  issue: post('/cards', cardDetailSchema, { body: issueCardRequestSchema }),
   get: get('/cards/:cardId', cardDetailSchema),
   update: patch('/cards/:cardId', cardDetailSchema, { body: updateCardRequestSchema }),
   revealSensitive: get('/cards/:cardId/sensitive', cardSensitiveDetailsSchema),
@@ -32,10 +32,7 @@ export const cardsEndpoints = {
     body: updateCardLimitsRequestSchema,
   }),
   setPin: postVoid('/cards/:cardId/pin', { body: setCardPinRequestSchema }),
-  report: post('/cards/:cardId/report', cardDetailSchema, {
-    body: reportCardRequestSchema,
-    idempotent: true,
-  }),
+  report: post('/cards/:cardId/report', cardDetailSchema, { body: reportCardRequestSchema }),
   setTravelNotice: post('/cards/:cardId/travel-notice', cardDetailSchema, {
     body: travelNoticeRequestSchema,
   }),

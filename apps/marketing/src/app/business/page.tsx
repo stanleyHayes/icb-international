@@ -2,17 +2,35 @@ import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/page-header';
 import { ProductSection } from '@/components/product-section';
-import { BUSINESS_PRODUCTS } from '@/content/products';
+import { BUSINESS_PRODUCTS } from '@/content/products-business';
+import { breadcrumbJsonLd, financialProductsJsonLd, JsonLd } from '@/lib/seo/json-ld';
+import { pageMetadata } from '@/lib/seo/metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Business banking',
   description:
     'Business current accounts, payments and collections, trade finance and lending from ICB.',
-};
+  path: '/business',
+});
 
 export default function BusinessPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'Home', path: '/' },
+          { name: 'Business banking', path: '/business' },
+        ])}
+      />
+      <JsonLd
+        data={financialProductsJsonLd(
+          BUSINESS_PRODUCTS.map((product) => ({
+            name: product.name,
+            description: product.description,
+            path: product.href,
+          })),
+        )}
+      />
       <PageHeader
         eyebrow="Business"
         title="Banking that keeps up with your cash cycle"

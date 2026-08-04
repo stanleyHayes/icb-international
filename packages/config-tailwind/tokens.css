@@ -53,7 +53,8 @@
 
   --icb-text: var(--icb-slate-900);
   --icb-text-muted: var(--icb-slate-600);
-  --icb-text-subtle: var(--icb-slate-500);
+  /* slate-600, not 500: on the white surface 500 measures 4.25:1, under the 4.5:1 AA floor. */
+  --icb-text-subtle: var(--icb-slate-600);
   --icb-text-inverse: #ffffff;
   --icb-text-on-brand: #ffffff;
 
@@ -64,6 +65,13 @@
   --icb-accent: var(--icb-gold-500);
   --icb-accent-hover: var(--icb-gold-600);
   --icb-accent-subtle: var(--icb-gold-50);
+  /*
+   * Gold as *text*, which the brand gold cannot be: gold-500 on white measures 2.42:1, far under
+   * the 4.5:1 AA floor, and axe flagged it on three marketing routes. gold-700 is 5.72:1 and
+   * still unmistakably the brand. `--icb-accent` stays as-is for fills, rules and icons, where
+   * the 3:1 non-text threshold applies instead.
+   */
+  --icb-accent-text: var(--icb-gold-700);
 
   --icb-focus-ring: var(--icb-navy-500);
 
@@ -199,6 +207,8 @@
   --icb-accent: var(--icb-gold-300);
   --icb-accent-hover: var(--icb-gold-200);
   --icb-accent-subtle: rgba(201, 162, 39, 0.16);
+  /* 10.4:1 against the dark surface — text and fill can share one value here. */
+  --icb-accent-text: var(--icb-gold-300);
 
   --icb-success-fg: #6ee7b7;
   --icb-success-bg: rgba(14, 159, 110, 0.16);

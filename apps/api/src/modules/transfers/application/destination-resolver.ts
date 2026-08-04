@@ -26,8 +26,9 @@ export interface RecipientDisplay {
 }
 
 /**
- * Expands a `beneficiary` destination to the destination it was saved with, and answers what
- * the receipt should call the recipient.
+ * Expands a `beneficiary` destination to the destination it was saved with, re-checks that an
+ * `own_account` destination really is the caller's, and answers what the receipt should call
+ * the recipient.
  *
  * Every money-moving path resolves through here, so "what are we actually paying?" has exactly
  * one answer — and the fraud and cooling-off checks downstream always see the same expansion.
@@ -45,6 +46,13 @@ export class DestinationResolver {
     destination: TransferDestination,
     customerId: string,
   ): Promise<ResolvedDestination> {
+    if (destination.kind === 'own_account') {
+      // `own_account` must mean the *caller's* account everywhere money moves — quote time
+      // included, not just confirm. Loading it owned re-checks ownership server-side, so a
+      // quote naming a stranger's account fails 404 here instead of issuing terms for it.
+      await this.accounts.loadSpendable(destination.accountId, customerId);
+      return { destination, beneficiaryId: null, beneficiaryName: null, beneficiaryMasked: null };
+    }
     if (destination.kind !== 'beneficiary') {
       return { destination, beneficiaryId: null, beneficiaryName: null, beneficiaryMasked: null };
     }

@@ -1,15 +1,9 @@
 import { fromMinorUnits } from '@icb/money';
-import { Test, type TestingModule } from '@nestjs/testing';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { AppModule } from '../../../app.module.js';
-import { newId } from '../../../infrastructure/database/identifier.js';
-import { AccountsService } from '../../accounts/accounts.service.js';
 import { customerRef, glRef } from '../domain/account-ref.js';
 import { GL_CASH } from '../domain/chart-of-accounts.js';
-import { LedgerIntegrityService } from '../ledger-integrity.service.js';
-import { LedgerService } from '../ledger.service.js';
-import { isReplicaSetAvailable } from './mongo-availability.js';
+import { requireLive, useLiveLedger } from './live-ledger.harness.js';
 
 /**
  * The test that matters.
@@ -24,89 +18,24 @@ import { isReplicaSetAvailable } from './mongo-availability.js';
  * an unavailable Docker daemon is an environment fact, never a false failure.
  */
 describe('ledger under concurrency', () => {
-  let moduleRef: TestingModule | undefined;
-  let ledger: LedgerService;
-  let accounts: AccountsService;
-  let integrity: LedgerIntegrityService;
-  let accountId: string;
-  let mongoAvailable = false;
-
-  const CURRENCY = 'USD' as const;
   const OPENING_MINOR_UNITS = 1_000_000; // 10,000.00
   const CONCURRENT_POSTINGS = 200;
   const POSTING_MINOR_UNITS = 250; // 2.50 each
-  const SKIP_MESSAGE =
-    'MongoDB replica set is not reachable (start it with `pnpm infra:up`); skipping live-database ledger tests';
 
-  /** Gate every live-database assertion behind replica-set availability. */
-  function requireReplicaSet(context: { skip: (note?: string) => never }): void {
-    if (!mongoAvailable) {
-      context.skip(SKIP_MESSAGE);
-    }
-  }
-
-  beforeAll(async () => {
-    if (!(await isReplicaSetAvailable())) {
-      return; // Each test skips itself with a message — never a false failure.
-    }
-
-    mongoAvailable = true;
-
-    // The DI container is all this needs — no HTTP server, so no adapter to load.
-    const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    moduleRef = module;
-    await module.init();
-
-    ledger = module.get(LedgerService);
-    accounts = module.get(AccountsService);
-    integrity = module.get(LedgerIntegrityService);
-
-    const account = await accounts.open({
-      customerId: newId(),
-      productCode: 'ICB-CURRENT',
-      productName: 'Concurrency test account',
-      kind: 'current',
-      currency: CURRENCY,
-    });
-    accountId = account.id;
-
-    await ledger.post({
-      type: 'deposit',
-      description: 'Opening balance',
-      actor: { kind: 'system', id: null, label: 'test' },
-      lines: [
-        {
-          accountRef: glRef(GL_CASH),
-          direction: 'debit',
-          amount: fromMinorUnits(OPENING_MINOR_UNITS, CURRENCY),
-        },
-        {
-          accountRef: customerRef(accountId),
-          direction: 'credit',
-          amount: fromMinorUnits(OPENING_MINOR_UNITS, CURRENCY),
-        },
-      ],
-    });
-    // Generous: booting the full application module against a real replica set is not fast.
-  }, 240_000);
-
-  afterAll(async () => {
-    await moduleRef?.close();
-  });
+  const getLive = useLiveLedger(OPENING_MINOR_UNITS);
 
   it(`keeps the ledger exact across ${CONCURRENT_POSTINGS} simultaneous postings`, async (context) => {
-    requireReplicaSet(context);
-
-    const amount = fromMinorUnits(POSTING_MINOR_UNITS, CURRENCY);
+    const live = requireLive(context, getLive());
+    const amount = fromMinorUnits(POSTING_MINOR_UNITS, live.currency);
 
     const results = await Promise.allSettled(
       Array.from({ length: CONCURRENT_POSTINGS }, (_unused, index) =>
-        ledger.post({
+        live.ledger.post({
           type: 'card_purchase',
           description: `Concurrent posting ${index}`,
           actor: { kind: 'system', id: null, label: 'test' },
           lines: [
-            { accountRef: customerRef(accountId), direction: 'debit', amount },
+            { accountRef: customerRef(live.accountId), direction: 'debit', amount },
             { accountRef: glRef(GL_CASH), direction: 'credit', amount },
           ],
         }),
@@ -120,16 +49,18 @@ describe('ledger under concurrency', () => {
     const rejected = results.filter((result) => result.status === 'rejected');
     expect(rejected.map((result) => String(result.reason))).toEqual([]);
 
-    const balance = await ledger.getBalance(customerRef(accountId), CURRENCY);
+    const balance = await live.ledger.getBalance(customerRef(live.accountId), live.currency);
     expect(balance.minorUnits).toBe(
       OPENING_MINOR_UNITS - CONCURRENT_POSTINGS * POSTING_MINOR_UNITS,
     );
+    // Exactness is the point, but note the floor too: the storm leaves the account positive.
+    expect(balance.minorUnits).toBeGreaterThanOrEqual(0);
   }, 180_000);
 
   it('leaves every invariant intact afterwards', async (context) => {
-    requireReplicaSet(context);
+    const live = requireLive(context, getLive());
 
-    const report = await integrity.verify();
+    const report = await live.integrity.verify();
 
     for (const check of report.checks) {
       expect(check.passed, `${check.name}: ${check.detail}`).toBe(true);
@@ -139,54 +70,54 @@ describe('ledger under concurrency', () => {
   }, 120_000);
 
   it('refuses an unbalanced transaction rather than writing half of it', async (context) => {
-    requireReplicaSet(context);
+    const live = requireLive(context, getLive());
 
-    const before = await ledger.getBalance(customerRef(accountId), CURRENCY);
+    const before = await live.ledger.getBalance(customerRef(live.accountId), live.currency);
 
     await expect(
-      ledger.post({
+      live.ledger.post({
         type: 'adjustment',
         description: 'Deliberately unbalanced',
         actor: { kind: 'system', id: null, label: 'test' },
         lines: [
           {
-            accountRef: customerRef(accountId),
+            accountRef: customerRef(live.accountId),
             direction: 'debit',
-            amount: fromMinorUnits(500, CURRENCY),
+            amount: fromMinorUnits(500, live.currency),
           },
           {
             accountRef: glRef(GL_CASH),
             direction: 'credit',
-            amount: fromMinorUnits(400, CURRENCY),
+            amount: fromMinorUnits(400, live.currency),
           },
         ],
       }),
     ).rejects.toThrow();
 
-    const after = await ledger.getBalance(customerRef(accountId), CURRENCY);
+    const after = await live.ledger.getBalance(customerRef(live.accountId), live.currency);
     expect(after.minorUnits).toBe(before.minorUnits);
   }, 60_000);
 
   it('reverses by mirroring, leaving both transactions on the record', async (context) => {
-    requireReplicaSet(context);
+    const live = requireLive(context, getLive());
 
-    const amount = fromMinorUnits(7_500, CURRENCY);
-    const before = await ledger.getBalance(customerRef(accountId), CURRENCY);
+    const amount = fromMinorUnits(7_500, live.currency);
+    const before = await live.ledger.getBalance(customerRef(live.accountId), live.currency);
 
-    const original = await ledger.post({
+    const original = await live.ledger.post({
       type: 'card_purchase',
       description: 'To be reversed',
       actor: { kind: 'system', id: null, label: 'test' },
       lines: [
-        { accountRef: customerRef(accountId), direction: 'debit', amount },
+        { accountRef: customerRef(live.accountId), direction: 'debit', amount },
         { accountRef: glRef(GL_CASH), direction: 'credit', amount },
       ],
     });
 
-    const afterPost = await ledger.getBalance(customerRef(accountId), CURRENCY);
+    const afterPost = await live.ledger.getBalance(customerRef(live.accountId), live.currency);
     expect(afterPost.minorUnits).toBe(before.minorUnits - amount.minorUnits);
 
-    const reversal = await ledger.reverse(original.id, 'Duplicate charge', {
+    const reversal = await live.ledger.reverse(original.id, 'Duplicate charge', {
       kind: 'staff',
       id: null,
       label: 'test',
@@ -194,12 +125,12 @@ describe('ledger under concurrency', () => {
 
     expect(reversal.id).not.toBe(original.id);
 
-    const afterReversal = await ledger.getBalance(customerRef(accountId), CURRENCY);
+    const afterReversal = await live.ledger.getBalance(customerRef(live.accountId), live.currency);
     expect(afterReversal.minorUnits).toBe(before.minorUnits);
 
     // Reversing twice must be impossible; the second attempt is a conflict, not a second credit.
     await expect(
-      ledger.reverse(original.id, 'Again', { kind: 'staff', id: null, label: 'test' }),
+      live.ledger.reverse(original.id, 'Again', { kind: 'staff', id: null, label: 'test' }),
     ).rejects.toThrow();
   }, 90_000);
 });

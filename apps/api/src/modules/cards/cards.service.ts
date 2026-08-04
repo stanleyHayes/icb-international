@@ -69,6 +69,9 @@ export class CardsService {
   ): Promise<CardDetail> {
     const card = await this.reader.loadOwned(cardId, customerId);
     assertCardAmendable(card);
+    if (request.frozen === false) {
+      assertNotStaffBlocked(card);
+    }
 
     const update: Record<string, unknown> = {};
     if (request.nickname !== undefined) {
@@ -96,6 +99,7 @@ export class CardsService {
   async activate(cardId: string, customerId: string): Promise<CardDetail> {
     const card = await this.reader.loadOwned(cardId, customerId);
     assertCardAmendable(card);
+    assertNotStaffBlocked(card);
 
     if (card.status !== INITIAL_STATUS) {
       throw new ConflictError('Only a newly issued card can be activated', {
@@ -134,6 +138,32 @@ export class CardsService {
   }
 
   /**
+   * The staff console's block: a freeze the customer cannot lift. `blockedBy` is what marks it as
+   * the bank's decision rather than the customer's own toggle — while it is set, every
+   * customer-side unfreeze and activation path refuses, and only a reissue moves the card on.
+   */
+  async blockAsStaff(cardId: string, reason: string, actorId: string): Promise<CardDetail> {
+    const card = await this.reader.loadById(cardId);
+    assertCardAmendable(card);
+
+    await this.cards.updateOne(
+      { _id: card._id },
+      {
+        $set: {
+          frozen: true,
+          status: statusAfterFreeze(card.activatedAt, true),
+          blockedReason: reason,
+          blockedBy: actorId,
+          blockedAt: this.clock.now(),
+        },
+      },
+    );
+
+    this.logger.log({ cardId, actorId }, 'Card blocked by staff');
+    return this.reader.detail(card);
+  }
+
+  /**
    * Report a card and, unless the customer declines it, replace it. The returned detail is the
    * *replacement* when one was minted, because that is the card the customer now needs to see.
    */
@@ -143,11 +173,24 @@ export class CardsService {
     request: ReportCardRequest,
   ): Promise<CardDetail> {
     const card = await this.reader.loadOwned(cardId, customerId);
+    return this.reportCard(card, request);
+  }
+
+  /**
+   * The staff console's report: the identical one-way path as the customer's own, without the
+   * ownership scope — a fraud analyst reports a card they could never own.
+   */
+  async reportAsStaff(cardId: string, request: ReportCardRequest): Promise<CardDetail> {
+    const card = await this.reader.loadById(cardId);
+    return this.reportCard(card, request);
+  }
+
+  private async reportCard(card: CardDoc, request: ReportCardRequest): Promise<CardDetail> {
     assertCardAmendable(card);
     await this.markReported(card, request);
 
     if (!request.reissue) {
-      return this.reader.detailOwned(cardId, customerId);
+      return this.reader.detail(card);
     }
 
     const replacement = await this.issuance.reissue(card);
@@ -159,8 +202,8 @@ export class CardsService {
     );
     await this.cards.updateOne({ _id: card._id }, { $set: { replacedByCardId: replacement._id } });
 
-    this.logger.log({ cardId, replacementId: replacement._id }, 'Card reported and replaced');
-    return this.reader.detailOwned(replacement._id, customerId);
+    this.logger.log({ cardId: card._id, replacementId: replacement._id }, 'Card reported and replaced');
+    return this.reader.detail(replacement);
   }
 
   private async markReported(card: CardDoc, request: ReportCardRequest): Promise<void> {
@@ -179,5 +222,17 @@ export class CardsService {
         },
       },
     );
+  }
+}
+
+/**
+ * A card staff blocked stays frozen no matter what the customer asks for — the whole point of a
+ * bank-side block is that the person holding the card cannot undo it. Only a reissue moves on.
+ */
+function assertNotStaffBlocked(card: CardDoc): void {
+  if (card.blockedBy) {
+    throw new ConflictError('This card was blocked by the bank and cannot be unfrozen', {
+      cardId: card._id,
+    });
   }
 }

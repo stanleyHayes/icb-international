@@ -4,6 +4,7 @@ import {
   authTokensSchema,
   changePasswordRequestSchema,
   forgotPasswordRequestSchema,
+  loginHistoryEntrySchema,
   loginRequestSchema,
   loginResponseSchema,
   mfaChallengeSchema,
@@ -44,6 +45,7 @@ export const authEndpoints = {
   logoutAll: postVoid('/auth/logout-all'),
   me: get('/auth/me', authenticatedUserSchema),
   listSessions: get('/auth/sessions', z.array(sessionSchema)),
+  loginHistory: get('/auth/login-history', z.array(loginHistoryEntrySchema)),
   revokeSession: del('/auth/sessions/:sessionId'),
   forgotPassword: postVoid('/auth/forgot-password', {
     body: forgotPasswordRequestSchema,
@@ -59,7 +61,9 @@ export const authEndpoints = {
   confirmTotp: post('/auth/totp/confirm', recoveryCodesSchema, { body: totpConfirmRequestSchema }),
   disableTotp: postVoid('/auth/totp/disable', { body: totpConfirmRequestSchema }),
   requestStepUp: post('/auth/step-up', mfaChallengeSchema, { body: stepUpRequestSchema }),
-  verifyStepUp: post('/auth/step-up/verify', stepUpTokenSchema, { body: stepUpVerifyRequestSchema }),
+  verifyStepUp: post('/auth/step-up/verify', stepUpTokenSchema, {
+    body: stepUpVerifyRequestSchema,
+  }),
 };
 
 export function createAuthApi(call: Requester) {
@@ -75,6 +79,7 @@ export function createAuthApi(call: Requester) {
     logoutAll: (options?: RequestOptions) => call(authEndpoints.logoutAll, { options }),
     me: (options?: RequestOptions) => call(authEndpoints.me, { options }),
     listSessions: (options?: RequestOptions) => call(authEndpoints.listSessions, { options }),
+    loginHistory: (options?: RequestOptions) => call(authEndpoints.loginHistory, { options }),
     revokeSession: (sessionId: string, options?: RequestOptions) =>
       call(authEndpoints.revokeSession, { params: { sessionId }, options }),
     forgotPassword: (body: z.input<typeof forgotPasswordRequestSchema>, options?: RequestOptions) =>

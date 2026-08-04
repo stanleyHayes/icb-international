@@ -11,9 +11,9 @@ import { get, post, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
 
 export const productsEndpoints = {
-  list: get('/products', z.array(productSchema)),
-  rates: get('/products/rates', rateTableSchema),
-  get: get('/products/:productCode', productSchema),
+  list: get('/products', z.array(productSchema), { auth: false }),
+  rates: get('/products/rates', rateTableSchema, { auth: false }),
+  get: get('/products/:productCode', productSchema, { auth: false }),
   listFxRates: get('/fx/rates', z.array(fxRateSchema)),
   createFxQuote: post('/fx/quotes', fxQuoteSchema, {
     body: fxQuoteRequestSchema,

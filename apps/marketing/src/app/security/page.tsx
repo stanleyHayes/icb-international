@@ -1,14 +1,27 @@
 import { Card, CardBody } from '@icb/ui';
-import { Fingerprint, KeyRound, Lock, ShieldAlert, ShieldCheck, Siren } from 'lucide-react';
+import {
+  ArrowRight,
+  Fingerprint,
+  KeyRound,
+  Landmark,
+  Lock,
+  ShieldAlert,
+  ShieldCheck,
+  Siren,
+} from 'lucide-react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 import { PageHeader, Prose, Section } from '@/components/page-header';
+import { breadcrumbJsonLd, JsonLd } from '@/lib/seo/json-ld';
+import { pageMetadata } from '@/lib/seo/metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Security centre',
   description:
     'How ICB protects your account: rotating sessions, step-up authentication, enforced card controls, and an immutable audit trail.',
-};
+  path: '/security',
+});
 
 const CONTROLS = [
   {
@@ -43,9 +56,30 @@ const CONTROLS = [
   },
 ] as const;
 
+const GUIDES = [
+  {
+    href: '/security/fraud-awareness',
+    icon: ShieldAlert,
+    title: 'Fraud awareness',
+    body: 'The five scams that reach our customers most, the warning sign each carries, and exactly what to do in the first ten minutes.',
+  },
+  {
+    href: '/security/deposit-protection',
+    icon: Landmark,
+    title: 'Deposit protection',
+    body: 'What the 250,000-per-depositor protection covers, what it does not, and how quickly it pays out if the worst happens.',
+  },
+] as const;
+
 export default function SecurityPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'Home', path: '/' },
+          { name: 'Security centre', path: '/security' },
+        ])}
+      />
       <PageHeader
         eyebrow="Security centre"
         title="What we do, and what we ask of you"
@@ -95,9 +129,43 @@ export default function SecurityPage() {
           <h2>Deposit protection</h2>
           <p>
             Eligible deposits are protected up to 250,000 per depositor. Protection covers the
-            total across all your ICB accounts, not each one separately.
+            total across all your ICB accounts, not each one separately.{' '}
+            <Link
+              href="/security/deposit-protection"
+              className="font-medium text-[var(--icb-primary)] hover:underline"
+            >
+              How deposit protection works
+            </Link>
+            .
           </p>
         </Prose>
+      </Section>
+
+      <Section title="Guides" tone="subtle">
+        <div className="grid gap-5 md:grid-cols-2">
+          {GUIDES.map((guide) => (
+            <Link key={guide.href} href={guide.href} className="group block">
+              <Card className="h-full transition-shadow group-hover:shadow-[var(--shadow-md)]">
+                <CardBody className="pt-6">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
+                    <guide.icon size={20} />
+                  </div>
+                  <h3 className="mt-4 flex items-center gap-2 text-base font-semibold">
+                    {guide.title}
+                    <ArrowRight
+                      size={16}
+                      aria-hidden="true"
+                      className="text-[var(--icb-text-subtle)] transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+                    />
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                    {guide.body}
+                  </p>
+                </CardBody>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </Section>
     </>
   );

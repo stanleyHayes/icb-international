@@ -24,6 +24,8 @@ import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
 import type { DeviceContext } from './application/auth.types.js';
 import { ChangePasswordService } from './application/change-password.service.js';
 import { EmailVerificationService } from './application/email-verification.service.js';
+import type { LoginHistoryEntry } from './application/login-history.service.js';
+import { LoginHistoryService } from './application/login-history.service.js';
 import { PasswordResetService } from './application/password-reset.service.js';
 import { SessionManagerService } from './application/session-manager.service.js';
 import type { AccessTokenClaims } from './application/token.service.js';
@@ -44,11 +46,18 @@ export class AuthSecurityController {
     private readonly passwordReset: PasswordResetService,
     private readonly changePassword: ChangePasswordService,
     private readonly emailVerification: EmailVerificationService,
+    private readonly loginHistory: LoginHistoryService,
   ) {}
 
   @Get('sessions')
   listSessions(@CurrentUser() user: AccessTokenClaims): Promise<Session[]> {
     return this.sessions.list(user.sub, user.sessionId);
+  }
+
+  /** The customer's own sign-in history, read from the audit trail (N7). */
+  @Get('login-history')
+  listLoginHistory(@CurrentUser() user: AccessTokenClaims): Promise<LoginHistoryEntry[]> {
+    return this.loginHistory.list(user.sub);
   }
 
   @Delete('sessions/:sessionId')

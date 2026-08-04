@@ -1,16 +1,26 @@
+import { z } from 'zod';
+
 import {
+  attachmentUploadRequestSchema,
+  callbackCompleteRequestSchema,
+  callbackRequestSchema,
+  callbackViewSchema,
   createTicketRequestSchema,
+  inboxQuerySchema,
   replyToTicketRequestSchema,
+  satisfactionRequestSchema,
+  staffCallbackQuerySchema,
+  staffTicketViewSchema,
   supportMessageSchema,
   supportTicketSchema,
+  uploadSignatureSchema,
 } from '../../../src/index.js';
 import { idSchema } from '../../../src/common/primitives.js';
-import { cursorQuerySchema } from '../../../src/common/pagination.js';
-import { PAGE_SCHEMAS } from '../components.js';
 import { STATUS, TAG } from '../constants.js';
 import { defineOperations, success } from '../spec.js';
 
 const TICKET_ID = { ticketId: idSchema } as const;
+const CALLBACK_ID = { callbackId: idSchema } as const;
 
 export const supportOperations = defineOperations([
   {
@@ -19,8 +29,7 @@ export const supportOperations = defineOperations([
     tag: TAG.support,
     operationId: 'listTickets',
     summary: 'The customer’s support tickets',
-    query: cursorQuerySchema,
-    response: success(STATUS.ok, 'A cursor page of tickets.', PAGE_SCHEMAS.SupportTicketPage),
+    response: success(STATUS.ok, 'The customer’s tickets.', z.array(supportTicketSchema)),
   },
   {
     method: 'post',
@@ -49,8 +58,7 @@ export const supportOperations = defineOperations([
     operationId: 'listTicketMessages',
     summary: 'The secure-message thread',
     pathParams: TICKET_ID,
-    query: cursorQuerySchema,
-    response: success(STATUS.ok, 'A cursor page of messages.', PAGE_SCHEMAS.SupportMessagePage),
+    response: success(STATUS.ok, 'The thread, oldest first.', z.array(supportMessageSchema)),
     errors: [{ status: STATUS.notFound }],
   },
   {
@@ -66,5 +74,88 @@ export const supportOperations = defineOperations([
       { status: STATUS.notFound },
       { status: STATUS.conflict, description: 'The ticket is closed.' },
     ],
+  },
+  {
+    method: 'post',
+    path: '/support/tickets/{ticketId}/satisfaction',
+    tag: TAG.support,
+    operationId: 'rateTicketSatisfaction',
+    summary: 'Rate a resolved ticket (CSAT)',
+    pathParams: TICKET_ID,
+    request: satisfactionRequestSchema,
+    response: success(STATUS.ok, 'The ticket with the rating recorded.', supportTicketSchema),
+    errors: [
+      { status: STATUS.notFound },
+      { status: STATUS.conflict, description: 'The ticket is not resolved, or already rated.' },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/support/attachments/upload-signature',
+    tag: TAG.support,
+    operationId: 'signSupportAttachmentUpload',
+    summary: 'Mint a signed direct-to-storage upload for a message attachment',
+    request: attachmentUploadRequestSchema,
+    idempotent: true,
+    response: success(STATUS.ok, 'The signed upload payload.', uploadSignatureSchema),
+    errors: [{ status: STATUS.unprocessable }],
+  },
+  {
+    method: 'post',
+    path: '/support/callbacks',
+    tag: TAG.support,
+    operationId: 'requestCallback',
+    summary: 'Ask for a call back from the support team',
+    request: callbackRequestSchema,
+    idempotent: true,
+    response: success(STATUS.created, 'The requested callback.', callbackViewSchema),
+    errors: [{ status: STATUS.unprocessable }],
+  },
+  {
+    method: 'get',
+    path: '/support/callbacks',
+    tag: TAG.support,
+    operationId: 'listCallbacks',
+    summary: 'The customer’s callbacks',
+    response: success(STATUS.ok, 'The customer’s callbacks.', z.array(callbackViewSchema)),
+  },
+  {
+    method: 'get',
+    path: '/support/staff/inbox',
+    tag: TAG.support,
+    operationId: 'listSupportInbox',
+    summary: 'The support work queue, most overdue first (staff)',
+    query: inboxQuerySchema,
+    response: success(STATUS.ok, 'Tickets awaiting staff attention.', z.array(staffTicketViewSchema)),
+  },
+  {
+    method: 'get',
+    path: '/support/staff/callbacks',
+    tag: TAG.support,
+    operationId: 'listStaffCallbacks',
+    summary: 'The callback work queue (staff)',
+    query: staffCallbackQuerySchema,
+    response: success(STATUS.ok, 'Callbacks awaiting a call.', z.array(callbackViewSchema)),
+  },
+  {
+    method: 'post',
+    path: '/support/staff/callbacks/{callbackId}/complete',
+    tag: TAG.support,
+    operationId: 'completeCallback',
+    summary: 'Mark a callback as done (staff)',
+    pathParams: CALLBACK_ID,
+    request: callbackCompleteRequestSchema,
+    response: success(STATUS.ok, 'The completed callback.', callbackViewSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
+  },
+  {
+    method: 'post',
+    path: '/support/staff/callbacks/{callbackId}/cancel',
+    tag: TAG.support,
+    operationId: 'cancelCallback',
+    summary: 'Cancel a pending callback (staff)',
+    pathParams: CALLBACK_ID,
+    response: success(STATUS.ok, 'The cancelled callback.', callbackViewSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
   },
 ]);

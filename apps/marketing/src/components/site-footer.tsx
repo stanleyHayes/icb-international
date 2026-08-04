@@ -2,6 +2,8 @@ import { IcbMark } from '@icb/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 
+import { productRoute } from '@/lib/routes';
+
 interface FooterColumn {
   heading: string;
   links: readonly { href: Route; label: string }[];
@@ -11,19 +13,30 @@ const COLUMNS: readonly FooterColumn[] = [
   {
     heading: 'Personal',
     links: [
-      { href: '/personal', label: 'Current accounts' },
-      { href: '/personal#savings', label: 'Savings' },
-      { href: '/personal#cards', label: 'Debit cards' },
-      { href: '/personal#loans', label: 'Personal loans' },
+      { href: productRoute('/personal/current'), label: 'Current accounts' },
+      { href: productRoute('/personal/savings'), label: 'Savings' },
+      { href: productRoute('/personal/deposits'), label: 'Fixed deposits' },
+      { href: productRoute('/personal/cards'), label: 'Debit cards' },
+      { href: productRoute('/personal/loans'), label: 'Personal loans' },
+      { href: productRoute('/personal/mortgages'), label: 'Mortgages' },
     ],
   },
   {
     heading: 'Business',
     links: [
-      { href: '/business', label: 'Business current' },
-      { href: '/business#payments', label: 'Payments' },
-      { href: '/business#trade', label: 'Trade finance' },
-      { href: '/business#lending', label: 'Business lending' },
+      { href: productRoute('/business/business-current'), label: 'Business current' },
+      { href: productRoute('/business/merchant-services'), label: 'Merchant services' },
+      { href: productRoute('/business/trade-finance'), label: 'Trade finance' },
+      { href: productRoute('/business/payroll'), label: 'Payroll' },
+      { href: productRoute('/business/business-loans'), label: 'Business loans' },
+    ],
+  },
+  {
+    heading: 'Wealth',
+    links: [
+      { href: productRoute('/wealth/investments'), label: 'Investment accounts' },
+      { href: productRoute('/wealth/fx'), label: 'Foreign exchange' },
+      { href: productRoute('/wealth/private-banking'), label: 'Private banking' },
     ],
   },
   {
@@ -33,6 +46,12 @@ const COLUMNS: readonly FooterColumn[] = [
       { href: '/rates', label: 'Rates & fees' },
       { href: '/security', label: 'Security centre' },
       { href: '/support', label: 'Help & support' },
+      { href: '/tools', label: 'Calculators & tools' },
+      { href: '/security/fraud-awareness', label: 'Fraud awareness' },
+      { href: '/security/deposit-protection', label: 'Deposit protection' },
+      { href: '/careers', label: 'Careers' },
+      { href: '/newsroom', label: 'Newsroom' },
+      { href: '/contact', label: 'Contact us' },
     ],
   },
   {
@@ -42,6 +61,7 @@ const COLUMNS: readonly FooterColumn[] = [
       { href: '/legal/privacy', label: 'Privacy' },
       { href: '/legal/cookies', label: 'Cookies' },
       { href: '/legal/accessibility', label: 'Accessibility' },
+      { href: '/complaints', label: 'Complaints' },
     ],
   },
 ];
@@ -72,7 +92,7 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
             {COLUMNS.map((column) => (
               <div key={column.heading}>
                 <h2 className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-navy-300)] uppercase">

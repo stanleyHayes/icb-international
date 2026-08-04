@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "noEmit": true,
+    "paths": {
+      "@icb/contracts/openapi": ["../../packages/contracts/scripts/openapi/routes/index.ts"],
+      "@icb/contracts/openapi/spec": ["../../packages/contracts/scripts/openapi/spec.ts"],
+      "@icb/contracts/openapi/routes/*": ["../../packages/contracts/scripts/openapi/routes/*.ts"]
+    }
+  },
+  "include": ["src/**/*", "test/contract/**/*", "../../packages/contracts/scripts/openapi/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

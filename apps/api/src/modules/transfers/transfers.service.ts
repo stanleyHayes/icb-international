@@ -10,11 +10,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 
 import { NotFoundError } from '../../common/errors/index.js';
+import { MetricsService } from '../../common/observability/metrics.service.js';
 import { buildCursorPage } from '../../common/pagination/cursor.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
 import { AccountsService } from '../accounts/accounts.service.js';
 import { TransferNotCancellableError } from './domain/transfer-errors.js';
 import { CANCELLABLE_STATUSES } from './domain/transfers.constants.js';
+import type { StepUpProof } from './application/transfer-step-up.service.js';
 import { timelineEntry } from './infrastructure/transfer.factory.js';
 import {
   toTransferDetail,
@@ -39,10 +41,15 @@ export class TransfersService {
     private readonly orchestrator: TransferOrchestrator,
     private readonly accounts: AccountsService,
     private readonly clock: ClockService,
+    private readonly metrics: MetricsService,
   ) {}
 
-  async create(customerId: string, request: CreateTransferRequest): Promise<TransferDetail> {
-    const doc = await this.orchestrator.initiate(customerId, request);
+  async create(
+    customerId: string,
+    request: CreateTransferRequest,
+    proof?: StepUpProof,
+  ): Promise<TransferDetail> {
+    const doc = await this.orchestrator.initiate(customerId, request, proof);
     return this.get(customerId, doc._id);
   }
 
@@ -91,6 +98,7 @@ export class TransfersService {
         },
       },
     );
+    this.metrics.transferOutcome(row.rail, 'cancelled');
     return this.get(customerId, transferId);
   }
 

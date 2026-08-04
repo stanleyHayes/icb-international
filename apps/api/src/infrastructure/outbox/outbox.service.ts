@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { ClientSession, Model } from 'mongoose';
 
 import { DomainError } from '../../common/errors/index.js';
+import { currentCorrelationId } from '../../common/observability/correlation.context.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
 import { OUTBOX_STATES, OutboxEventDoc } from './outbox.schemas.js';
 
@@ -11,6 +12,8 @@ export interface OutboxEventInput {
   readonly payload: Record<string, unknown>;
   /** Defaults to now; pass a future instant to schedule a delayed event. */
   readonly availableAt?: Date;
+  /** Defaults to the correlation id in scope; pass explicitly when there is none. */
+  readonly correlationId?: string;
 }
 
 /**
@@ -34,6 +37,9 @@ export class OutboxService {
         {
           type: event.type,
           payload: event.payload,
+          // Stamped at write time, inside the same transaction as the state change: the
+          // correlation thread survives the hand-off to the drain however long that takes.
+          correlationId: event.correlationId ?? currentCorrelationId(),
           state: OUTBOX_STATES.Pending,
           attempts: 0,
           availableAt: event.availableAt ?? this.clock.now(),

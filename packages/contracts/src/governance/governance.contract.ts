@@ -88,7 +88,12 @@ export const decideApprovalRequestSchema = z.object({
   reason: z.string().min(4).max(1000),
 });
 
+export const approvalInboxQuerySchema = z.object({
+  status: approvalRequestSchema.shape.status.optional(),
+  kind: approvalRequestSchema.shape.kind.optional(),
+});
 
 export type StaffUser = z.infer<typeof staffUserSchema>;
 export type AuditEvent = z.infer<typeof auditEventSchema>;
 export type ApprovalRequest = z.infer<typeof approvalRequestSchema>;
+export type ApprovalInboxQuery = z.infer<typeof approvalInboxQuerySchema>;

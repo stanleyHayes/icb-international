@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
+import { endpointRegistry } from '../../../sdk/src/endpoints/index.js';
+import { type EndpointDef } from '../../../sdk/src/endpoint.js';
 import { toComponentName } from '../openapi/components.js';
 import { OPENAPI_OUTPUT_FILE, TAG } from '../openapi/constants.js';
 import { buildOpenApiDocument, renderOpenApiJson } from '../openapi/document.js';
@@ -52,6 +54,16 @@ interface TestDocument {
   };
 }
 
+interface BoundaryShape {
+  method: string;
+  path: string;
+  auth: boolean | undefined;
+  idempotent: boolean | undefined;
+  hasBody: boolean;
+  hasQuery: boolean;
+  hasResponse: boolean;
+}
+
 const document = buildOpenApiDocument() as unknown as TestDocument;
 const { paths } = document;
 
@@ -89,6 +101,65 @@ function resolveRef(ref: string): unknown {
     }, document);
 }
 
+function toSpecBoundaryShape(): BoundaryShape[] {
+  return ALL_OPERATIONS.map((operation) => ({
+    method: operation.method,
+    path: operation.path,
+    auth: operation.auth,
+    idempotent: operation.idempotent,
+    hasBody: operation.request !== undefined,
+    hasQuery: operation.query !== undefined,
+    hasResponse: operation.response.schema !== undefined,
+  }));
+}
+
+function toSdkBoundaryShape(): BoundaryShape[] {
+  const namespaces = Object.values(endpointRegistry) as Record<string, EndpointDef>[];
+  return namespaces.flatMap((namespace) =>
+    Object.values(namespace).map((endpoint) => ({
+      method: endpoint.method.toLowerCase(),
+      path: endpoint.path.replace(/:(\w+)/g, '{$1}'),
+      auth: endpoint.auth,
+      idempotent: endpoint.idempotent,
+      hasBody: endpoint.body !== undefined,
+      hasQuery: endpoint.query !== undefined,
+      hasResponse: endpoint.response !== undefined,
+    })),
+  );
+}
+
+function byOperationKey(item: Pick<BoundaryShape, 'method' | 'path'>): string {
+  return `${item.method} ${item.path}`;
+}
+
+function sortedKeys(map: ReadonlyMap<string, BoundaryShape>): string[] {
+  return [...map.keys()].sort((left, right) => left.localeCompare(right));
+}
+
+function expectMatchingBoundaryShape(
+  key: string,
+  sdk: BoundaryShape,
+  spec: BoundaryShape | undefined,
+) {
+  expect(spec, key).toBeDefined();
+  expect(spec?.auth ?? true, `${key} auth`).toBe(sdk.auth ?? true);
+  expect(spec?.idempotent ?? false, `${key} idempotent`).toBe(sdk.idempotent ?? false);
+  expect(spec?.hasBody, `${key} body`).toBe(sdk.hasBody);
+  expect(spec?.hasQuery, `${key} query`).toBe(sdk.hasQuery);
+  expect(spec?.hasResponse, `${key} response`).toBe(sdk.hasResponse);
+}
+
+function expectAlignedBoundaryShape() {
+  const sdkMap = new Map(toSdkBoundaryShape().map((item) => [byOperationKey(item), item]));
+  const specMap = new Map(toSpecBoundaryShape().map((item) => [byOperationKey(item), item]));
+
+  expect(sortedKeys(sdkMap)).toEqual(sortedKeys(specMap));
+
+  for (const [key, sdk] of sdkMap) {
+    expectMatchingBoundaryShape(key, sdk, specMap.get(key));
+  }
+}
+
 describe('document envelope', () => {
   it('declares OpenAPI 3.1 with info, server, and tags per bounded context', () => {
     expect(document.openapi).toMatch(/^3\.1\.\d+$/);
@@ -107,7 +178,10 @@ describe('document envelope', () => {
     expect(document.security).toEqual([{ bearerAuth: [] }]);
   });
 
-  it('serialises deterministically as parseable JSON with a trailing newline', async () => {
+  // Renders the whole document through prettier — twice, to prove determinism. That is real
+  // work measured at several seconds, so it carries its own budget rather than relying on
+  // vitest's 5s default, which it exceeds the moment the machine is under any other load.
+  it('serialises deterministically as parseable JSON with a trailing newline', { timeout: 30_000 }, async () => {
     const rendered = await renderOpenApiJson();
     expect(rendered.endsWith('}\n')).toBe(true);
     expect(() => JSON.parse(rendered) as unknown).not.toThrow();
@@ -148,16 +222,15 @@ describe('operations', () => {
     const moneyEndpoints: [string, string][] = [
       ['/transfers', 'post'],
       ['/transfers/bulk', 'post'],
-      ['/payments', 'post'],
+      ['/bills/{billId}/pay', 'post'],
       ['/accounts/{accountId}/close', 'post'],
-      ['/loan-applications', 'post'],
-      ['/loan-applications/{applicationId}/accept', 'post'],
+      ['/loans/applications', 'post'],
+      ['/loans/applications/{applicationId}/accept', 'post'],
       ['/loans/{loanId}/repayments', 'post'],
-      ['/savings/goals/{goalId}/contributions', 'post'],
+      ['/savings/goals/{goalId}/contribute', 'post'],
       ['/savings/deposits', 'post'],
       ['/savings/deposits/{depositId}/break', 'post'],
       ['/admin/postings', 'post'],
-      ['/admin/transactions/{transactionId}/reverse', 'post'],
     ];
     for (const [pathTemplate, method] of moneyEndpoints) {
       const operation = paths[pathTemplate]?.[method];
@@ -166,6 +239,10 @@ describe('operations', () => {
       );
       expect(header, `${method} ${pathTemplate}`).toMatchObject({ required: true });
     }
+  });
+
+  it('stays aligned with the SDK endpoint registry on path, method, and boundary flags', () => {
+    expectAlignedBoundaryShape();
   });
 });
 
@@ -220,7 +297,7 @@ describe('components', () => {
 });
 
 describe('committed artifact', () => {
-  it('docs/api/openapi.json matches a fresh generation (the --check contract)', async () => {
+  it('docs/api/openapi.json matches a fresh generation (the --check contract)', { timeout: 30_000 }, async () => {
     const committed = readFileSync(COMMITTED_FILE, 'utf8');
     expect(committed).toBe(await renderOpenApiJson());
   });

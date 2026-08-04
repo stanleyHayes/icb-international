@@ -1,60 +1,42 @@
-import { Card, CardBody, CardHeader } from '@icb/ui';
-import { LifeBuoy, Lock, MessageSquare, Phone, ShieldAlert } from 'lucide-react';
+import type { Dispute, SupportTicket } from '@icb/contracts';
+import { Card, CardBody, CardHeader, EmptyState } from '@icb/ui';
+import { LifeBuoy, Lock, MessageSquare } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { ChannelCards } from '@/features/support/channel-cards';
+import { DisputeList } from '@/features/support/dispute-list';
+import { TicketList } from '@/features/support/ticket-list';
+import { api } from '@/lib/api';
+
 export const metadata: Metadata = { title: 'Support' };
 
-const CHANNELS = [
-  {
-    icon: MessageSquare,
-    title: 'Secure message',
-    detail:
-      'Message us from inside your account. The thread carries your account context, so you never have to explain who you are or repeat a reference.',
-    action: 'Start a message',
-  },
-  {
-    icon: Phone,
-    title: 'Request a callback',
-    detail:
-      'We call you, so you never have to verify an inbound caller. Choose a window and we will ring within it.',
-    action: 'Request a callback',
-  },
-  {
-    icon: ShieldAlert,
-    title: 'Report fraud',
-    detail:
-      'Freeze the affected card first — it takes effect immediately — then tell us what happened. We assess provisional credit within 48 hours.',
-    action: 'Report fraud',
-  },
-] as const;
+const PREVIEW_COUNT = 3;
 
 const IMMEDIATE = [
-  {
-    label: 'Review recent activity',
-    href: '/transactions',
-    detail: 'Every posting on every account, newest first',
-  },
-  {
-    label: 'Check your balances',
-    href: '/accounts',
-    detail: 'Ledger, holds and available, side by side',
-  },
-  {
-    label: 'Sign out everywhere',
-    href: '/settings',
-    detail: 'Ends every session on every device at once',
-  },
+  { label: 'Review recent activity', href: '/transactions', detail: 'Every posting on every account, newest first' },
+  { label: 'Check your balances', href: '/accounts', detail: 'Ledger, holds and available, side by side' },
+  { label: 'Sign out everywhere', href: '/settings/security', detail: 'Ends every session on every device at once' },
 ] as const;
+
+function openSummary(count: number): string | undefined {
+  if (count === 0) return undefined;
+  return `${count} conversation${count === 1 ? '' : 's'} in progress.`;
+}
 
 /**
  * Support.
  *
- * Leads with the actions a worried customer needs in the first thirty seconds — freeze, sign
- * out, review — before it offers a channel to talk to someone. Somebody who thinks they have
- * been defrauded needs a button, not a contact form.
+ * Leads with what is already in flight — open messages and disputes — then the actions a
+ * worried customer needs in the first thirty seconds, then the channels to talk to someone.
  */
-export default function SupportPage() {
+export default async function SupportPage() {
+  const [tickets, disputes] = await Promise.all([
+    api<SupportTicket[]>('/support/tickets', { tags: ['support'] }),
+    api<{ items: Dispute[] }>('/disputes?limit=25', { tags: ['disputes'] }),
+  ]);
+  const open = tickets.filter((t) => t.status !== 'closed' && t.status !== 'resolved');
+
   return (
     <>
       <header>
@@ -64,7 +46,47 @@ export default function SupportPage() {
         </p>
       </header>
 
-      <Card className="mt-8">
+      <Card className="mt-8 overflow-hidden">
+        <CardHeader title="Your messages" description={openSummary(open.length)} />
+        {tickets.length > 0 ? (
+          <TicketList tickets={tickets.slice(0, PREVIEW_COUNT)} />
+        ) : (
+          <EmptyState
+            icon={<MessageSquare size={20} />}
+            title="No conversations yet"
+            description="When you message us, the whole thread stays here — no lost emails, no reference numbers to quote."
+          />
+        )}
+        <div className="flex gap-4 border-t border-[var(--icb-border)] px-5 py-3.5 text-sm font-medium">
+          <Link href="/support/tickets/new" className="text-[var(--icb-primary)] hover:underline">
+            Start a message
+          </Link>
+          {tickets.length > PREVIEW_COUNT ? (
+            <Link href="/support/tickets" className="text-[var(--icb-primary)] hover:underline">
+              View all {tickets.length}
+            </Link>
+          ) : null}
+        </div>
+      </Card>
+
+      {disputes.items.length > 0 ? (
+        <Card className="mt-6 overflow-hidden">
+          <CardHeader
+            title="Disputes"
+            description="Card transactions you have challenged, and where each case stands."
+          />
+          <DisputeList disputes={disputes.items.slice(0, PREVIEW_COUNT)} />
+          {disputes.items.length > PREVIEW_COUNT ? (
+            <div className="border-t border-[var(--icb-border)] px-5 py-3.5 text-sm font-medium">
+              <Link href="/support/disputes" className="text-[var(--icb-primary)] hover:underline">
+                View all disputes
+              </Link>
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
+
+      <Card className="mt-6">
         <CardHeader
           title="Act now"
           description="If you think your account is at risk, do these first. You can talk to us afterwards."
@@ -80,9 +102,7 @@ export default function SupportPage() {
                   <p className="text-sm font-medium">{item.label}</p>
                   <p className="mt-0.5 text-xs text-[var(--icb-text-subtle)]">{item.detail}</p>
                 </div>
-                <span aria-hidden="true" className="text-[var(--icb-text-subtle)]">
-                  →
-                </span>
+                <span aria-hidden="true" className="text-[var(--icb-text-subtle)]">→</span>
               </Link>
             </li>
           ))}
@@ -90,34 +110,14 @@ export default function SupportPage() {
       </Card>
 
       <section aria-labelledby="channels" className="mt-8">
-        <h2 id="channels" className="font-display text-xl font-bold tracking-[-0.02em]">
-          Talk to us
-        </h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          {CHANNELS.map((channel) => (
-            <Card key={channel.title}>
-              <CardBody className="pt-5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
-                  <channel.icon size={18} />
-                </div>
-                <h3 className="mt-3.5 text-base font-semibold">{channel.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                  {channel.detail}
-                </p>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+        <h2 id="channels" className="font-display text-xl font-bold tracking-[-0.02em]">Talk to us</h2>
+        <ChannelCards />
       </section>
 
       <Card className="mt-8">
         <CardBody className="pt-5">
           <div className="flex items-start gap-3">
-            <Lock
-              size={18}
-              className="mt-0.5 shrink-0 text-[var(--icb-accent)]"
-              aria-hidden="true"
-            />
+            <Lock size={18} className="mt-0.5 shrink-0 text-[var(--icb-accent)]" aria-hidden="true" />
             <div>
               <p className="text-sm font-medium">We will never ask for these</p>
               <p className="mt-1 text-sm leading-relaxed text-[var(--icb-text-muted)]">

@@ -6,11 +6,6 @@ import type { ProductLimitRow } from './domain/limit-matrix.js';
 import type { FeeDefinition } from './domain/fee-calculation.js';
 import type { EligibilityRules } from './domain/eligibility.js';
 
-/** Cache policy for the public rates table. */
-export const CACHE_NAMESPACE = 'products';
-export const RATE_TABLE_CACHE_KEY = 'rates:current';
-export const RATE_TABLE_TTL_SECONDS = 300;
-
 /** Seed defaults. The demo bank is USD-first; KYC floor is tier 1 for every product. */
 export const DEFAULT_CURRENCY = 'USD';
 export const BASE_KYC_LEVEL: KycLevel = 'tier_1';

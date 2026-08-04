@@ -151,6 +151,29 @@ export const cardQuerySchema = cursorQuerySchema.extend({
   kind: z.array(cardKindSchema).optional(),
 });
 
+// ---- Staff card operations (the `/admin/cards` surface) ---------------------
+
+/**
+ * A staff justification, always written to the audit trail. Shared by every staff action
+ * below — a freeze the customer cannot lift themselves is never made without one.
+ */
+const staffReasonSchema = z
+  .string()
+  .min(10, 'Give a reason of at least 10 characters — it is written to the audit trail')
+  .max(500);
+
+/** Staff block: a freeze the customer cannot lift themselves, always justified. */
+export const blockCardRequestSchema = z.object({ reason: staffReasonSchema });
+
+/** Staff reissue: the old PAN is retired and a replacement linked by `replacedCardId`. */
+export const reissueCardRequestSchema = z.object({
+  reason: z.enum(['lost', 'stolen', 'damaged', 'not_received', 'fraud']),
+  detail: staffReasonSchema,
+});
+
+/** Force-expire an open authorisation hold rather than waiting for it to lapse. */
+export const expireHoldRequestSchema = z.object({ reason: staffReasonSchema });
+
 export type CardSummary = z.infer<typeof cardSummarySchema>;
 export type CardDetail = z.infer<typeof cardDetailSchema>;
 export type CardSensitiveDetails = z.infer<typeof cardSensitiveDetailsSchema>;
@@ -159,3 +182,6 @@ export type CardLimits = z.infer<typeof cardLimitsSchema>;
 export type IssueCardRequest = z.infer<typeof issueCardRequestSchema>;
 export type ReportCardRequest = z.infer<typeof reportCardRequestSchema>;
 export type CardAuthorisation = z.infer<typeof cardAuthorisationSchema>;
+export type BlockCardRequest = z.infer<typeof blockCardRequestSchema>;
+export type ReissueCardRequest = z.infer<typeof reissueCardRequestSchema>;
+export type ExpireHoldRequest = z.infer<typeof expireHoldRequestSchema>;

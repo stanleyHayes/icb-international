@@ -77,6 +77,18 @@ export interface OffsetPage<TItem> {
   totalPages: number;
 }
 
+/**
+ * Builds the `{ items: [...] }` envelope the API returns for bounded, unpaginated lists
+ * (a customer's own bills, deposits, statements…), where paging would only add ceremony.
+ */
+export function itemsEnvelopeSchema<TItem extends z.ZodType>(
+  item: TItem,
+): z.ZodObject<{
+  items: z.ZodArray<TItem>;
+}> {
+  return z.object({ items: z.array(item) });
+}
+
 /** A closed date range filter, inclusive on both ends. */
 export const dateRangeSchema = z
   .object({

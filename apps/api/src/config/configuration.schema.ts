@@ -63,8 +63,21 @@ export const configurationSchema = z
      * `pnpm seed`, where a sweep firing mid-run races the shutdown that follows it.
      */
     BACKGROUND_JOBS_ENABLED: booleanish.default(true),
+
+    /**
+     * OpenTelemetry tracing. Off by default: the SDK and its instrumentations are only loaded
+     * when this is true, so a deployment without a collector pays nothing for the capability.
+     */
+    OTEL_ENABLED: booleanish.default(false),
+    OTEL_SERVICE_NAME: z.string().default('icb-api'),
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default('http://localhost:4318'),
     SIMULATION_ENABLED: booleanish.default(true),
     SIMULATION_SEED: z.string().default('icb-default-seed'),
+    INITIAL_ADMIN_EMAIL: z.email().default('root@icb.example'),
+    INITIAL_ADMIN_PASSWORD: z
+      .string()
+      .min(12, 'INITIAL_ADMIN_PASSWORD must be at least 12 characters')
+      .default('Staff!2345678'),
     ICB_SIMULATION_ACKNOWLEDGED: booleanish.default(false),
   })
   .refine(

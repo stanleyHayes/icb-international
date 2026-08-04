@@ -55,6 +55,7 @@ export const REDACT_PATHS: readonly string[] = [
   '*.signature',
   'dateOfBirth',
   '*.dateOfBirth',
+  '*.*.dateOfBirth',
   'nationalId',
   '*.nationalId',
   'documentNumber',

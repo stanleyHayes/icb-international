@@ -12,6 +12,7 @@ import { LoanDoc, LoanSchema } from './infrastructure/loan.schemas.js';
 import { LoansRepository } from './infrastructure/loans.repository.js';
 import { LoanApplicationsService } from './loan-applications.service.js';
 import { LoanDisbursementService } from './loan-disbursement.service.js';
+import { LoanDocumentsService } from './loan-documents.service.js';
 import { LoanRepaymentService } from './loan-repayment.service.js';
 import { LoanUnderwritingService } from './loan-underwriting.service.js';
 import { LoansAdminController } from './loans-admin.controller.js';
@@ -42,6 +43,7 @@ import { LoansService } from './loans.service.js';
     LoanApplicationsService,
     LoanUnderwritingService,
     LoanDisbursementService,
+    LoanDocumentsService,
     LoanRepaymentService,
   ],
   exports: [LoansService, LoanApplicationsService, LoanRepaymentService],

@@ -3,6 +3,7 @@ import { firstValueFrom, of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CORRELATION_ID_HEADER, ENVIRONMENT_HEADER } from '../observability/correlation.constants.js';
+import { currentCorrelationId } from '../observability/correlation.context.js';
 import { CorrelationInterceptor } from './correlation.interceptor.js';
 
 interface Fixture {
@@ -45,5 +46,14 @@ describe('CorrelationInterceptor', () => {
 
     const names: unknown[] = f.reply.header.mock.calls.map((call) => call[0] as unknown);
     expect(names).toContain(ENVIRONMENT_HEADER);
+  });
+
+  // Last on purpose: `enterWith` binds the store to the test's own async resource, so this
+  // must not run before a test that expects an empty scope.
+  it('binds the correlation id to the async scope for downstream code to find', async () => {
+    const f = fixture('corr-scoped');
+    await firstValueFrom(new CorrelationInterceptor().intercept(f.context, f.handler));
+
+    expect(currentCorrelationId()).toBe('corr-scoped');
   });
 });

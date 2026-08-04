@@ -1,11 +1,16 @@
 import type { Metadata } from 'next';
 
 import { PageHeader, Prose, Section } from '@/components/page-header';
+import { breadcrumbJsonLd, JsonLd } from '@/lib/seo/json-ld';
+import { pageMetadata } from '@/lib/seo/metadata';
 
-export const metadata: Metadata = {
+import { LeadershipSection, SustainabilitySection } from './sections';
+
+export const metadata: Metadata = pageMetadata({
   title: 'About ICB',
   description: 'ICB International Commercial Bank — how the bank is built and what it stands on.',
-};
+  path: '/about',
+});
 
 const FIGURES = [
   { value: '15', label: 'currencies held and settled' },
@@ -17,6 +22,12 @@ const FIGURES = [
 export default function AboutPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'Home', path: '/' },
+          { name: 'About ICB', path: '/about' },
+        ])}
+      />
       <PageHeader
         eyebrow="About"
         title="A bank is a ledger with a licence"
@@ -88,6 +99,9 @@ export default function AboutPage() {
           </p>
         </Prose>
       </Section>
+
+      <LeadershipSection />
+      <SustainabilitySection />
     </>
   );
 }

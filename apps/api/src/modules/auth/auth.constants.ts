@@ -87,3 +87,17 @@ export const AUDIT_ACTIONS = {
   StepUpRequested: 'auth.step_up_requested',
   StepUpVerified: 'auth.step_up_verified',
 } as const;
+
+/**
+ * The audit actions that count as a login event for the customer's own login history:
+ * a successful sign-in, a failed one against their credential, and a recovery-code sign-in
+ * (which the customer should treat as noteworthy rather than routine).
+ */
+export const LOGIN_HISTORY_ACTIONS: readonly string[] = [
+  AUDIT_ACTIONS.Login,
+  AUDIT_ACTIONS.LoginFailed,
+  AUDIT_ACTIONS.RecoveryCodeUsed,
+];
+
+/** How many entries the login-history endpoint returns — one screen of recent activity. */
+export const LOGIN_HISTORY_LIMIT = 25;

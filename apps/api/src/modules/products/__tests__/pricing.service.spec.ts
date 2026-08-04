@@ -2,7 +2,7 @@ import { fromMinorUnits } from '@icb/money';
 import type { Model } from 'mongoose';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ConflictError } from '../../../common/errors/index.js';
+import { ConflictError, NotFoundError } from '../../../common/errors/index.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { FeeNotFoundError, NoEffectiveRateError } from '../domain/product-errors.js';
 import type { FeeRow, ProductDoc } from '../infrastructure/product.schemas.js';
@@ -109,6 +109,23 @@ describe('addRateChange', () => {
 
     await expect(service.addRateChange('ICB-SAVINGS', change)).rejects.toThrow(ConflictError);
     expect(model.findOneAndUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe('rateScheduleFor', () => {
+  it('returns the stored schedule, including changes not yet in force', async () => {
+    const future = { effectiveFrom: new Date('2026-12-01T00:00:00.000Z'), rate: 5.0 };
+    const past = { effectiveFrom: new Date('2026-07-01T00:00:00.000Z'), rate: 4.5 };
+    const { service } = setup(productDoc({ rateSchedule: [past, future] }));
+
+    await expect(service.rateScheduleFor('ICB-SAVINGS')).resolves.toEqual([past, future]);
+  });
+
+  it('propagates the catalogue miss for an unknown product', async () => {
+    const { service, catalogue } = setup();
+    catalogue.documentFor.mockRejectedValue(new NotFoundError('Product', 'NOPE'));
+
+    await expect(service.rateScheduleFor('NOPE')).rejects.toThrow(NotFoundError);
   });
 });
 

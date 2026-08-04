@@ -1,22 +1,23 @@
-import { z } from 'zod';
-
 import {
+  itemsEnvelopeSchema,
   loanApplicationRequestSchema,
   loanApplicationSchema,
   loanDetailSchema,
+  loanDocumentUploadRequestSchema,
   loanProductSchema,
-  loanQuerySchema,
   loanQuoteRequestSchema,
   loanQuoteSchema,
+  loanSchema,
   makeRepaymentRequestSchema,
   payoffQuoteSchema,
+  uploadSignatureSchema,
 } from '../../../src/index.js';
 import { idSchema } from '../../../src/common/primitives.js';
-import { PAGE_SCHEMAS } from '../components.js';
 import { STATUS, TAG } from '../constants.js';
 import { defineOperations, success } from '../spec.js';
 
 const LOAN_ID = { loanId: idSchema } as const;
+const APPLICATION_ID = { applicationId: idSchema } as const;
 
 export const loansOperations = defineOperations([
   {
@@ -25,11 +26,15 @@ export const loansOperations = defineOperations([
     tag: TAG.lending,
     operationId: 'listLoanProducts',
     summary: 'Loan products the customer can apply for',
-    response: success(STATUS.ok, 'Available loan products.', z.array(loanProductSchema)),
+    response: success(
+      STATUS.ok,
+      'Available loan products.',
+      itemsEnvelopeSchema(loanProductSchema),
+    ),
   },
   {
     method: 'post',
-    path: '/loans/quotes',
+    path: '/loans/quote',
     tag: TAG.lending,
     operationId: 'quoteLoan',
     summary: 'Indicative quote with a full amortisation schedule',
@@ -39,7 +44,7 @@ export const loansOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/loan-applications',
+    path: '/loans/applications',
     tag: TAG.lending,
     operationId: 'applyForLoan',
     summary: 'Submit a loan application',
@@ -59,34 +64,49 @@ export const loansOperations = defineOperations([
   },
   {
     method: 'get',
-    path: '/loan-applications',
+    path: '/loans/applications',
     tag: TAG.lending,
     operationId: 'listLoanApplications',
     summary: 'The customer’s applications',
-    query: loanQuerySchema,
     response: success(
       STATUS.ok,
-      'A cursor page of applications.',
-      PAGE_SCHEMAS.LoanApplicationPage,
+      'All applications, newest first.',
+      itemsEnvelopeSchema(loanApplicationSchema),
     ),
   },
   {
     method: 'get',
-    path: '/loan-applications/{applicationId}',
+    path: '/loans/applications/{applicationId}',
     tag: TAG.lending,
     operationId: 'getLoanApplication',
     summary: 'Application status with decision and offer',
-    pathParams: { applicationId: idSchema },
+    pathParams: APPLICATION_ID,
     response: success(STATUS.ok, 'The application.', loanApplicationSchema),
     errors: [{ status: STATUS.notFound }],
   },
   {
     method: 'post',
-    path: '/loan-applications/{applicationId}/accept',
+    path: '/loans/applications/{applicationId}/documents',
+    tag: TAG.lending,
+    operationId: 'uploadLoanDocument',
+    summary: 'A direct-upload grant for a supporting document',
+    pathParams: APPLICATION_ID,
+    request: loanDocumentUploadRequestSchema,
+    idempotent: true,
+    response: success(
+      STATUS.created,
+      'The signed upload grant; bytes go straight to the asset store.',
+      uploadSignatureSchema,
+    ),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'post',
+    path: '/loans/applications/{applicationId}/accept',
     tag: TAG.lending,
     operationId: 'acceptLoanOffer',
     summary: 'Accept an approved offer, triggering disbursement',
-    pathParams: { applicationId: idSchema },
+    pathParams: APPLICATION_ID,
     idempotent: true,
     response: success(STATUS.ok, 'The application after acceptance.', loanApplicationSchema),
     errors: [
@@ -100,8 +120,7 @@ export const loansOperations = defineOperations([
     tag: TAG.lending,
     operationId: 'listLoans',
     summary: 'The customer’s loans',
-    query: loanQuerySchema,
-    response: success(STATUS.ok, 'A cursor page of loans.', PAGE_SCHEMAS.LoanPage),
+    response: success(STATUS.ok, 'All loans.', itemsEnvelopeSchema(loanSchema)),
   },
   {
     method: 'get',

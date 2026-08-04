@@ -5,6 +5,7 @@ import {
   authTokensSchema,
   changePasswordRequestSchema,
   forgotPasswordRequestSchema,
+  loginHistoryEntrySchema,
   loginRequestSchema,
   loginResponseSchema,
   mfaChallengeSchema,
@@ -105,7 +106,7 @@ export const authOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/auth/password/forgot',
+    path: '/auth/forgot-password',
     tag: TAG.auth,
     operationId: 'forgotPassword',
     summary: 'Request a password-reset email',
@@ -115,7 +116,7 @@ export const authOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/auth/password/reset',
+    path: '/auth/reset-password',
     tag: TAG.auth,
     operationId: 'resetPassword',
     summary: 'Reset the password with a reset token',
@@ -126,7 +127,7 @@ export const authOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/auth/password/change',
+    path: '/auth/change-password',
     tag: TAG.auth,
     operationId: 'changePassword',
     summary: 'Change the current password',
@@ -136,7 +137,7 @@ export const authOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/auth/email/verify',
+    path: '/auth/verify-email',
     tag: TAG.auth,
     operationId: 'verifyEmail',
     summary: 'Verify an email address with its token',
@@ -169,12 +170,14 @@ export const authOperations = defineOperations([
     errors: [INVALID_TOKEN],
   },
   {
-    method: 'delete',
-    path: '/auth/totp',
+    method: 'post',
+    path: '/auth/totp/disable',
     tag: TAG.auth,
     operationId: 'disableTotp',
     summary: 'Disable TOTP (requires step-up)',
+    request: totpConfirmRequestSchema,
     response: success(STATUS.noContent, 'TOTP disabled.'),
+    errors: [INVALID_TOKEN],
   },
   {
     method: 'get',
@@ -183,6 +186,18 @@ export const authOperations = defineOperations([
     operationId: 'listSessions',
     summary: 'List active sessions',
     response: success(STATUS.ok, 'Active sessions, current one flagged.', z.array(sessionSchema)),
+  },
+  {
+    method: 'get',
+    path: '/auth/login-history',
+    tag: TAG.auth,
+    operationId: 'listLoginHistory',
+    summary: 'The customer’s own recent sign-in history',
+    response: success(
+      STATUS.ok,
+      'Recent sign-in events, newest first.',
+      z.array(loginHistoryEntrySchema),
+    ),
   },
   {
     method: 'delete',
@@ -195,10 +210,10 @@ export const authOperations = defineOperations([
     errors: [{ status: STATUS.notFound }],
   },
   {
-    method: 'delete',
-    path: '/auth/sessions',
+    method: 'post',
+    path: '/auth/logout-all',
     tag: TAG.auth,
-    operationId: 'revokeAllSessions',
+    operationId: 'logoutAll',
     summary: 'Sign out everywhere except the current session',
     response: success(STATUS.noContent, 'All other sessions revoked.'),
   },

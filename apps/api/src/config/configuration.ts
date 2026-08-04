@@ -58,8 +58,18 @@ export interface AppConfiguration {
     readonly enabled: boolean;
     readonly seed: string;
   };
+  readonly seed: {
+    readonly initialAdminEmail: string;
+    readonly initialAdminPassword: string;
+  };
   /** False in CLI runs, so periodic sweeps never race a short-lived process's shutdown. */
   readonly backgroundJobs: { readonly enabled: boolean };
+  /** OpenTelemetry tracing; the SDK is only loaded when `enabled`. See instrumentation.ts. */
+  readonly otel: {
+    readonly enabled: boolean;
+    readonly serviceName: string;
+    readonly exporterEndpoint: string;
+  };
 }
 
 function formatIssues(error: unknown): string {
@@ -99,7 +109,16 @@ export function loadConfiguration(source: NodeJS.ProcessEnv): AppConfiguration {
     media: mediaSection(raw),
     bank: bankSection(raw),
     simulation: { enabled: raw.SIMULATION_ENABLED, seed: raw.SIMULATION_SEED },
+    seed: {
+      initialAdminEmail: raw.INITIAL_ADMIN_EMAIL,
+      initialAdminPassword: raw.INITIAL_ADMIN_PASSWORD,
+    },
     backgroundJobs: { enabled: raw.BACKGROUND_JOBS_ENABLED },
+    otel: {
+      enabled: raw.OTEL_ENABLED,
+      serviceName: raw.OTEL_SERVICE_NAME,
+      exporterEndpoint: raw.OTEL_EXPORTER_OTLP_ENDPOINT,
+    },
   };
 }
 

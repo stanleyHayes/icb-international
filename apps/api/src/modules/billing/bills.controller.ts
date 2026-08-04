@@ -18,6 +18,7 @@ import {
 } from '@nestjs/common';
 
 import { CurrentCustomer } from '../../common/decorators/current-user.decorator.js';
+import { Idempotent } from '../../common/decorators/idempotent.decorator.js';
 import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
 import { BillPaymentsService } from './bill-payments.service.js';
 import { BillsService } from './bills.service.js';
@@ -76,6 +77,7 @@ export class BillsController {
   }
 
   @Post(':billId/pay')
+  @Idempotent()
   async pay(
     @CurrentCustomer() customerId: string,
     @Param('billId') billId: string,

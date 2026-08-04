@@ -10,14 +10,32 @@ import {
   type TransferQuote,
   type TransferSummary,
 } from '@icb/contracts';
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post, Query } from '@nestjs/common';import { Throttle } from '@nestjs/throttler';
 
-import { CurrentCustomer } from '../../common/decorators/current-user.decorator.js';
+import {
+  CurrentCustomer,
+  CurrentUser,
+} from '../../common/decorators/current-user.decorator.js';
 import { Idempotent } from '../../common/decorators/idempotent.decorator.js';
+import { STEP_UP_TOKEN_HEADER } from '../../common/decorators/require-step-up.decorator.js';
+import {
+  MONEY_MOVEMENT_THROTTLE_LIMIT,
+  THROTTLE_WINDOW_MS,
+} from '../../common/guards/throttle.constants.js';
 import { ZodValidationPipe, zodBody } from '../../common/pipes/zod-validation.pipe.js';
+import type { AccessTokenClaims } from '../auth/application/token.service.js';
 import { BulkTransfersService } from './application/bulk-transfers.service.js';
 import { TransferQuotesService } from './application/transfer-quotes.service.js';
 import { TransfersService } from './transfers.service.js';
+
+/**
+ * Money-moving routes get the tight ceiling: ten creations per minute per customer. Ordinary
+ * use is a handful of transfers a day; a higher rate is a script, not a person. Quotes and
+ * cancels stay on the global limit — they post nothing.
+ */
+const MONEY_MOVEMENT_THROTTLE = {
+  default: { limit: MONEY_MOVEMENT_THROTTLE_LIMIT, ttl: THROTTLE_WINDOW_MS },
+};
 
 /**
  * Customer money movement.
@@ -46,6 +64,7 @@ export class TransfersController {
 
   @Post('bulk')
   @Idempotent()
+  @Throttle(MONEY_MOVEMENT_THROTTLE)
   async createBulk(
     @CurrentCustomer() customerId: string,
     @Body(zodBody(bulkTransferRequestSchema))
@@ -56,12 +75,15 @@ export class TransfersController {
 
   @Post()
   @Idempotent()
+  @Throttle(MONEY_MOVEMENT_THROTTLE)
   async create(
     @CurrentCustomer() customerId: string,
+    @CurrentUser() user: AccessTokenClaims,
+    @Headers(STEP_UP_TOKEN_HEADER) stepUpToken: string | undefined,
     @Body(zodBody(createTransferRequestSchema))
     body: ReturnType<typeof createTransferRequestSchema.parse>,
   ): Promise<TransferDetail> {
-    return this.transfers.create(customerId, body);
+    return this.transfers.create(customerId, body, { userId: user.sub, token: stepUpToken });
   }
 
   @Get()

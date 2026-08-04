@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import {
+  accountBalancesSchema,
   accountDetailSchema,
   accountSummarySchema,
   balanceHistoryQuerySchema,
@@ -33,6 +34,10 @@ export const accountsOperations = defineOperations([
     tag: TAG.accounts,
     operationId: 'openAccount',
     summary: 'Open a new account',
+    // The handler carries `@Idempotent()`: a retried open must replay the first account, never
+    // open a second. The SDK already declared it; the document did not, so the published
+    // contract understated a guarantee the API actually makes.
+    idempotent: true,
     request: openAccountRequestSchema,
     response: success(STATUS.created, 'The opened account.', accountDetailSchema),
     errors: [
@@ -82,9 +87,9 @@ export const accountsOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/accounts/{accountId}/status',
+    path: '/admin/accounts/{accountId}/status',
     tag: TAG.accounts,
-    operationId: 'setAccountStatus',
+    operationId: 'adminSetAccountStatus',
     summary: 'Freeze, unfreeze, or dormancy-mark (staff)',
     pathParams: ACCOUNT_ID,
     request: setAccountStatusRequestSchema,
@@ -93,14 +98,24 @@ export const accountsOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/accounts/{accountId}/overdraft',
+    path: '/admin/accounts/{accountId}/overdraft',
     tag: TAG.accounts,
-    operationId: 'setOverdraftLimit',
+    operationId: 'adminSetOverdraftLimit',
     summary: 'Set the overdraft limit (staff)',
     pathParams: ACCOUNT_ID,
     request: setOverdraftRequestSchema,
     response: success(STATUS.ok, 'The updated account.', accountDetailSchema),
     errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
+  },
+  {
+    method: 'get',
+    path: '/accounts/{accountId}/balances',
+    tag: TAG.accounts,
+    operationId: 'getAccountBalances',
+    summary: 'Ledger, available, and held balances',
+    pathParams: ACCOUNT_ID,
+    response: success(STATUS.ok, 'The current balances.', accountBalancesSchema),
+    errors: [{ status: STATUS.notFound }],
   },
   {
     method: 'get',

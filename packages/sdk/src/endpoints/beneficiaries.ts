@@ -18,20 +18,20 @@ export const beneficiariesEndpoints = {
   }),
   create: post('/beneficiaries', beneficiarySchema, {
     body: createBeneficiaryRequestSchema,
-    idempotent: true,
   }),
+  get: get('/beneficiaries/:beneficiaryId', beneficiarySchema),
   update: patch('/beneficiaries/:beneficiaryId', beneficiarySchema, {
     body: updateBeneficiaryRequestSchema,
   }),
   remove: del('/beneficiaries/:beneficiaryId'),
-  getVerification: get('/beneficiaries/:beneficiaryId/verification', beneficiaryVerificationSchema),
+  getVerification: get('/beneficiaries/:beneficiaryId/verify', beneficiaryVerificationSchema),
   sendVerificationDeposits: post(
-    '/beneficiaries/:beneficiaryId/verification/deposits',
+    '/beneficiaries/:beneficiaryId/verify/send',
     beneficiaryVerificationSchema,
     { idempotent: true },
   ),
   confirmVerification: post(
-    '/beneficiaries/:beneficiaryId/verification/confirm',
+    '/beneficiaries/:beneficiaryId/verify/confirm',
     beneficiaryVerificationSchema,
     { body: verifyBeneficiaryRequestSchema, idempotent: true },
   ),
@@ -43,6 +43,8 @@ export function createBeneficiariesApi(call: Requester) {
       call(beneficiariesEndpoints.list, { query, options }),
     create: (body: z.input<typeof createBeneficiaryRequestSchema>, options?: RequestOptions) =>
       call(beneficiariesEndpoints.create, { body, options }),
+    get: (beneficiaryId: string, options?: RequestOptions) =>
+      call(beneficiariesEndpoints.get, { params: { beneficiaryId }, options }),
     update: (
       beneficiaryId: string,
       body: z.input<typeof updateBeneficiaryRequestSchema>,

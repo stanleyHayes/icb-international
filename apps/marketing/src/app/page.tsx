@@ -1,4 +1,5 @@
 import { ArrowRight, Lock } from 'lucide-react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { BalancePreview } from '@/components/balance-preview';
@@ -6,6 +7,18 @@ import { CallToActionSection } from '@/components/call-to-action-section';
 import { RateStrip } from '@/components/rate-strip';
 import { TransparencySection } from '@/components/transparency-section';
 import { WhyIcbSection } from '@/components/why-icb-section';
+import { JsonLd, organizationJsonLd } from '@/lib/seo/json-ld';
+import { pageMetadata } from '@/lib/seo/metadata';
+
+export const metadata: Metadata = {
+  ...pageMetadata({
+    title: 'Banking, exactly.',
+    description:
+      'Banking built on a real double-entry core. Current accounts, savings, cards, lending and international payments — with every posting traceable to the cent.',
+    path: '/',
+  }),
+  title: { absolute: 'ICB — International Commercial Bank' },
+};
 
 const NUMBERS = [
   { value: '15', label: 'currencies held' },
@@ -17,6 +30,7 @@ const NUMBERS = [
 export default function HomePage() {
   return (
     <>
+      <JsonLd data={organizationJsonLd()} />
       <section className="relative overflow-hidden border-b border-[var(--icb-border)]">
         <div
           aria-hidden="true"

@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 
 import { toMoneyDto } from '../../modules/accounts/infrastructure/account.mapper.js';
+import { MetricsService } from '../../common/observability/metrics.service.js';
 import { glRef } from '../../modules/ledger/domain/account-ref.js';
 import { GL_SUSPENSE } from '../../modules/ledger/domain/chart-of-accounts.js';
 import { AccountBalanceDoc } from '../../modules/ledger/infrastructure/ledger.schemas.js';
@@ -54,6 +55,7 @@ interface StepTotals {
 export class EndOfDayService {
   private readonly logger = new Logger(EndOfDayService.name);
 
+  // eslint-disable-next-line max-params -- every collaborator is load-bearing; a bag of unrelated infrastructure would satisfy the count and hurt the reading.
   constructor(
     private readonly value: ValueSteps,
     private readonly records: RecordSteps,
@@ -61,6 +63,7 @@ export class EndOfDayService {
     @InjectModel(AccountBalanceDoc.name) private readonly balances: Model<AccountBalanceDoc>,
     private readonly store: EodReportStore,
     private readonly clock: ClockService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async run(businessDate?: string): Promise<EndOfDayOutcome> {
@@ -72,23 +75,31 @@ export class EndOfDayService {
 
     this.logger.log({ businessDate: context.businessDate }, 'End of day started');
 
-    const totals = await this.runSteps(context);
-    const integrity = await this.integrity.verify();
-    const suspenseZeroed = await this.isSuspenseFlat();
+    // Observed even when a step throws: a failed run's duration is exactly the signal an
+    // operator needs, and `finally` records it without swallowing the error.
+    let balanced = false;
+    try {
+      const totals = await this.runSteps(context);
+      const integrity = await this.integrity.verify();
+      const suspenseZeroed = await this.isSuspenseFlat();
 
-    const report: EndOfDayReport = {
-      businessDate: context.businessDate,
-      ...totals,
-      ledgerBalanced: integrity.balanced,
-      suspenseZeroed,
-      durationMs: this.clock.epochMs() - startedAt,
-      completedAt: this.clock.now().toISOString(),
-    };
+      const report: EndOfDayReport = {
+        businessDate: context.businessDate,
+        ...totals,
+        ledgerBalanced: integrity.balanced,
+        suspenseZeroed,
+        durationMs: this.clock.epochMs() - startedAt,
+        completedAt: this.clock.now().toISOString(),
+      };
 
-    await this.store.save(report);
-    this.report(report, integrity);
+      await this.store.save(report);
+      this.report(report, integrity);
 
-    return { report, integrity, exitCode: report.ledgerBalanced && suspenseZeroed ? 0 : 1 };
+      balanced = report.ledgerBalanced && suspenseZeroed;
+      return { report, integrity, exitCode: balanced ? 0 : 1 };
+    } finally {
+      this.metrics.endOfDayRun(this.clock.epochMs() - startedAt, balanced);
+    }
   }
 
   /** The ordered pipeline. Each step is idempotent, so the whole sequence is. */

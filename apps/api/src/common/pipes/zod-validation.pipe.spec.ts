@@ -43,4 +43,33 @@ describe('ZodValidationPipe', () => {
     const pipe = zodBody(schema);
     expect(pipe.transform({ amount: 1, reference: 'x' })).toEqual({ amount: 1, reference: 'x' });
   });
+
+  it('coerces a single querystring value into a one-element array for array fields', () => {
+    const querySchema = z.object({
+      type: z.array(z.enum(['internal', 'on_us'])).optional(),
+      status: z.array(z.string()).default([]),
+      reference: z.string().optional(),
+    });
+    const pipe = new ZodValidationPipe(querySchema);
+
+    // Fastify yields a scalar for `?type=x` and an array for `?type=x&type=y`; both parse.
+    expect(pipe.transform({ type: 'internal', reference: 'r' })).toEqual({
+      type: ['internal'],
+      status: [],
+      reference: 'r',
+    });
+    expect(pipe.transform({ type: ['internal', 'on_us'] })).toEqual({
+      type: ['internal', 'on_us'],
+      status: [],
+    });
+  });
+
+  it('still rejects a value that is invalid even as an array element', () => {
+    const querySchema = z.object({ type: z.array(z.enum(['internal', 'on_us'])).optional() });
+    const pipe = new ZodValidationPipe(querySchema);
+
+    expect(() => pipe.transform({ type: 'pigeon' })).toThrow(
+      expect.objectContaining({ code: 'VALIDATION_FAILED' }) as Error,
+    );
+  });
 });

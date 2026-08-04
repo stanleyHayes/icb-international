@@ -61,6 +61,18 @@ export class CardReader {
   }
 
   async list(customerId: string, query: CardQuery): Promise<CursorPage<CardSummary>> {
+    return this.listScoped(customerId, query);
+  }
+
+  /** The staff console's list: the same page shape with no ownership scope. */
+  async listAll(query: CardQuery): Promise<CursorPage<CardSummary>> {
+    return this.listScoped(null, query);
+  }
+
+  private async listScoped(
+    customerId: string | null,
+    query: CardQuery,
+  ): Promise<CursorPage<CardSummary>> {
     const rows = await this.cards
       .find(buildFilter(customerId, query))
       // ULIDs sort lexicographically by creation time, so `_id` alone is a stable cursor.
@@ -79,8 +91,11 @@ export class CardReader {
   }
 }
 
-function buildFilter(customerId: string, query: CardQuery): Record<string, unknown> {
-  const filter: Record<string, unknown> = { customerId };
+function buildFilter(customerId: string | null, query: CardQuery): Record<string, unknown> {
+  const filter: Record<string, unknown> = {};
+  if (customerId) {
+    filter['customerId'] = customerId;
+  }
 
   if (query.accountId) {
     filter['accountId'] = query.accountId;

@@ -86,6 +86,18 @@ describe('arithmetic', () => {
     expect(sum([], 'USD')).toEqual(zero('USD'));
   });
 
+  /**
+   * Negative zero is arithmetically equal to zero but `Object.is` treats it as a distinct value,
+   * so an un-normalised -0 balance would compare unequal to a 0 balance — in `toBe`, as a `Map`
+   * key, and in `includes`. Both of these expressions produce it in plain JavaScript.
+   */
+  it('never produces negative zero', () => {
+    expect(Object.is(multiply(usd(-100), 0).minorUnits, -0)).toBe(false);
+    expect(Object.is(fromMinorUnits(-0, 'USD').minorUnits, -0)).toBe(false);
+    expect(multiply(usd(-100), 0).minorUnits).toBe(0);
+    expect(subtract(usd(-100), usd(-100))).toEqual(zero('USD'));
+  });
+
   it('takes a percentage', () => {
     expect(percentage(usd(10_000), 2.5).minorUnits).toBe(250);
   });

@@ -12,6 +12,7 @@ import { TransferOrchestrator } from '../transfer-orchestrator.js';
 import { TransferPreparationService } from '../transfer-preparation.service.js';
 import type { TransferExecution } from '../transfer-pipeline.types.js';
 import type { RailTransferUseCase } from '../use-cases/rail-transfer.use-case.js';
+import { metricsStub } from '../../../../common/observability/__tests__/metrics.stub.js';
 
 const NOW = new Date('2026-08-03T10:00:00.000Z');
 const session = { id: 'txn' } as unknown as ClientSession;
@@ -108,7 +109,7 @@ function setup(order: string[]) {
     model as never,
     accounts as never,
     destinations,
-    { redeem: vi.fn() } as never,
+    { confirm: vi.fn(), assertHighValueStepUp: vi.fn().mockResolvedValue(undefined) } as never,
     fraud,
     clock,
   );
@@ -119,6 +120,7 @@ function setup(order: string[]) {
     standingOrders as never,
     transactionManager as never,
     outbox as never,
+    metricsStub(),
   );
   return { model, accounts, beneficiaries, fraud, fraudCheck, useCase, executeMock, standingOrders, outbox, orchestrator };
 }

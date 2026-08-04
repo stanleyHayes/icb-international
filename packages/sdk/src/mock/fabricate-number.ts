@@ -17,10 +17,25 @@ interface Bounds {
  * refinement-guarded schemas (e.g. `positiveMoneySchema`) validate without special-casing.
  */
 export function generateNumber(def: Def, ctx: FabricateContext): number {
-  const isInt = def.format === 'safeint';
+  const isInt = isInteger(def);
   const bounds = resolveBounds(def.checks, isInt, ctx.hint);
   if (isInt) return ctx.faker.number.int(bounds);
   return ctx.faker.number.float({ ...bounds, fractionDigits: FLOAT_FRACTION_DIGITS });
+}
+
+/**
+ * Integer-ness reaches Zod 4 by two routes and the mock has to honour both.
+ *
+ * `z.int()` sets `format: 'safeint'` on the def; `z.number().int()` leaves the format undefined
+ * and files the constraint as a `number_format` *check* instead. Reading only the def meant the
+ * second spelling fabricated a float, which then failed the very schema it was generated from —
+ * a mock consumer would build against data the real API rejects.
+ */
+function isInteger(def: Def): boolean {
+  if (def.format === 'safeint') return true;
+  return def.checks.some(
+    (check) => check.check === 'number_format' && check['format'] === 'safeint',
+  );
 }
 
 function resolveBounds(checks: Check[], isInt: boolean, hint: string | undefined): Bounds {

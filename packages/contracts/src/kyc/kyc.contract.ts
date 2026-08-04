@@ -31,6 +31,12 @@ export const kycTierLimitsSchema = z.object({
   internationalAllowed: z.boolean(),
 });
 
+/** What `GET /kyc/limits` returns: the limits in force today, plus the full tier ladder. */
+export const kycLimitsResponseSchema = z.object({
+  current: kycTierLimitsSchema,
+  tiers: z.array(kycTierLimitsSchema),
+});
+
 export const kycDocumentSchema = z.object({
   id: idSchema,
   type: kycDocumentTypeSchema,
@@ -134,6 +140,7 @@ export const kycQueueQuerySchema = offsetQuerySchema.extend({
 });
 
 export type KycTierLimits = z.infer<typeof kycTierLimitsSchema>;
+export type KycLimitsResponse = z.infer<typeof kycLimitsResponseSchema>;
 export type KycDocument = z.infer<typeof kycDocumentSchema>;
 export type KycCheck = z.infer<typeof kycCheckSchema>;
 export type KycCase = z.infer<typeof kycCaseSchema>;

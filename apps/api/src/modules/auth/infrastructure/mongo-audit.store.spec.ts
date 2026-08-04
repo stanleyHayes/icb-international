@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { AUDIT_OUTCOMES } from '../application/audit.port.js';
-import type { AuditEventDoc } from './auth.schemas.js';
+import type { SecurityEventDoc } from './auth.schemas.js';
 import { MongoAuditStore } from './mongo-audit.store.js';
 
 const NOW = new Date('2026-08-02T12:00:00.000Z');
@@ -23,7 +23,7 @@ function setup(headHash: string | null) {
   };
   const clock = new ClockService();
   clock.freeze(NOW);
-  const store = new MongoAuditStore(events as unknown as Model<AuditEventDoc>, clock);
+  const store = new MongoAuditStore(events as unknown as Model<SecurityEventDoc>, clock);
   return { events, store };
 }
 

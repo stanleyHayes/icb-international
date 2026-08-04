@@ -9,7 +9,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 
-import { NotFoundError, ValidationError } from '../../../common/errors/index.js';
+import { ValidationError } from '../../../common/errors/index.js';
 import { CONFIG, type AppConfiguration } from '../../../config/configuration.js';
 import { newId } from '../../../infrastructure/database/identifier.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
@@ -18,15 +18,9 @@ import { assertRailCompatible, resolveRail } from '../domain/rail-resolver.js';
 import {
   destinationFingerprint,
   signTransferQuote,
-  verifyTransferQuote,
   type SignedTransferQuoteTerms,
 } from '../domain/quote-signature.js';
 import { feesFor, totalFees, type FeeLine } from '../domain/transfer-fees.js';
-import {
-  TransferQuoteAlreadyUsedError,
-  TransferQuoteExpiredError,
-  TransferQuoteSignatureInvalidError,
-} from '../domain/transfer-errors.js';
 import {
   APPROVAL_THRESHOLD_MAJOR_UNITS,
   STEP_UP_THRESHOLD_MAJOR_UNITS,
@@ -35,7 +29,6 @@ import {
 import {
   thresholdMinorUnits,
   toQuoteContract,
-  toRedeemedQuote,
   type RedeemedTransferQuote,
 } from '../infrastructure/transfer-quote.mapper.js';
 import {
@@ -64,8 +57,8 @@ interface PersistInput {
  * Transfer quotes: what a transfer would cost, committed to for five minutes.
  *
  * A quote fixes the amounts in both directions, the fee, the rail and the arrival estimate, and
- * signs all of it. Redemption is a conditional update, so two confirms race and one loses —
- * the price the customer was shown is the price they get, exactly once.
+ * signs all of it — the price the customer was shown is the price they get. Issuing lives here;
+ * spending (redemption, binding checks, step-up) lives in `TransferQuoteRedemptionService`.
  */
 @Injectable()
 export class TransferQuotesService {
@@ -187,85 +180,7 @@ export class TransferQuotesService {
     };
   }
 
-  /** Spend the quote — the conditional update makes it single-use under a double confirm. */
-  async redeem(
-    customerId: string,
-    quoteId: string,
-    binding: { fromAccountId: string; destination: TransferDestination },
-  ): Promise<RedeemedTransferQuote> {
-    const doc = await this.quotes.findOne({ _id: quoteId, customerId }).lean();
-    if (!doc) {
-      throw new NotFoundError('Transfer quote', quoteId);
-    }
-    await this.assertLive(doc);
-    this.assertSignature(doc);
-    this.assertBinding(doc, binding);
-
-    const redeemed = await this.quotes.findOneAndUpdate(
-      {
-        _id: quoteId,
-        customerId,
-        status: TRANSFER_QUOTE_STATUSES.ISSUED,
-        expiresAt: { $gt: this.clock.now() },
-      },
-      { $set: { status: TRANSFER_QUOTE_STATUSES.REDEEMED, redeemedAt: this.clock.now() } },
-      { new: true },
-    ).lean();
-
-    if (!redeemed) {
-      throw new TransferQuoteAlreadyUsedError(quoteId);
-    }
-    return toRedeemedQuote(doc);
-  }
-
-  /** Expiry is recorded when it is noticed, so the collection reflects what actually happened. */
-  private async assertLive(doc: TransferQuoteDoc): Promise<void> {
-    if (doc.status === TRANSFER_QUOTE_STATUSES.REDEEMED) {
-      throw new TransferQuoteAlreadyUsedError(doc._id);
-    }
-    if (doc.expiresAt.getTime() <= this.clock.epochMs()) {
-      await this.quotes.updateOne(
-        { _id: doc._id, status: TRANSFER_QUOTE_STATUSES.ISSUED },
-        { $set: { status: TRANSFER_QUOTE_STATUSES.EXPIRED } },
-      );
-      throw new TransferQuoteExpiredError(doc._id, doc.expiresAt);
-    }
-  }
-
-  private assertSignature(doc: TransferQuoteDoc): void {
-    const terms: SignedTransferQuoteTerms = {
-      quoteId: doc._id,
-      customerId: doc.customerId,
-      fromAccountId: doc.fromAccountId,
-      rail: doc.rail,
-      destinationKey: doc.destinationKey,
-      debitMinorUnits: doc.debit.minorUnits,
-      debitCurrency: doc.debit.currency,
-      creditMinorUnits: doc.credit.minorUnits,
-      creditCurrency: doc.credit.currency,
-      feeMinorUnits: doc.feeMinorUnits,
-      fxRate: doc.fxRate,
-      expiresAtMs: doc.expiresAt.getTime(),
-    };
-    if (!verifyTransferQuote(this.key(), terms, doc.signature)) {
-      throw new TransferQuoteSignatureInvalidError(doc._id);
-    }
-  }
-
-  /** A quote pays only the destination it was issued for. */
-  private assertBinding(
-    doc: TransferQuoteDoc,
-    binding: { fromAccountId: string; destination: TransferDestination },
-  ): void {
-    const destinationMatches =
-      doc.destinationKey === destinationFingerprint(binding.destination);
-    if (doc.fromAccountId !== binding.fromAccountId || !destinationMatches) {
-      throw new ValidationError('This quote does not match the transfer being made', [
-        { path: 'quoteId', message: 'The quote was issued for a different account or payee' },
-      ]);
-    }
-  }
-
+  /** Spend-time behaviour — redemption, binding, step-up — lives in TransferQuoteRedemptionService. */
   private key(): string {
     return this.config.crypto.fieldEncryptionKey;
   }

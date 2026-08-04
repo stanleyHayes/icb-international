@@ -34,6 +34,16 @@ export const beneficiariesOperations = defineOperations([
     errors: [{ status: STATUS.unprocessable }],
   },
   {
+    method: 'get',
+    path: '/beneficiaries/{beneficiaryId}',
+    tag: TAG.beneficiaries,
+    operationId: 'getBeneficiary',
+    summary: 'Payee detail with verification state',
+    pathParams: BENEFICIARY_ID,
+    response: success(STATUS.ok, 'The beneficiary.', beneficiarySchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
     method: 'patch',
     path: '/beneficiaries/{beneficiaryId}',
     tag: TAG.beneficiaries,
@@ -56,11 +66,12 @@ export const beneficiariesOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/beneficiaries/{beneficiaryId}/verification/deposits',
+    path: '/beneficiaries/{beneficiaryId}/verify/send',
     tag: TAG.beneficiaries,
     operationId: 'sendVerificationDeposits',
     summary: 'Send the two micro-deposits (simulated)',
     pathParams: BENEFICIARY_ID,
+    idempotent: true,
     response: success(
       STATUS.ok,
       'Verification state after dispatch.',
@@ -70,12 +81,13 @@ export const beneficiariesOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/beneficiaries/{beneficiaryId}/verification/confirm',
+    path: '/beneficiaries/{beneficiaryId}/verify/confirm',
     tag: TAG.beneficiaries,
     operationId: 'confirmVerificationDeposits',
     summary: 'Confirm the two micro-deposit amounts',
     pathParams: BENEFICIARY_ID,
     request: verifyBeneficiaryRequestSchema,
+    idempotent: true,
     response: success(
       STATUS.ok,
       'Verification state after the attempt.',
@@ -86,5 +98,15 @@ export const beneficiariesOperations = defineOperations([
       { status: STATUS.conflict, description: 'Attempts exhausted; verification is locked.' },
       { status: STATUS.unprocessable, description: 'The amounts do not match.' },
     ],
+  },
+  {
+    method: 'get',
+    path: '/beneficiaries/{beneficiaryId}/verify',
+    tag: TAG.beneficiaries,
+    operationId: 'getBeneficiaryVerification',
+    summary: 'Micro-deposit verification status',
+    pathParams: BENEFICIARY_ID,
+    response: success(STATUS.ok, 'The current verification state.', beneficiaryVerificationSchema),
+    errors: [{ status: STATUS.notFound }],
   },
 ]);

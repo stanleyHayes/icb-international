@@ -1,55 +1,58 @@
-import type { CursorPage, TransactionSummary } from '@icb/contracts';
-import { Card, EmptyState } from '@icb/ui';
-import { Receipt } from 'lucide-react';
+import type { AccountSummary, CursorPage, TransactionSummary } from '@icb/contracts';
+import { Card } from '@icb/ui';
 import type { Metadata } from 'next';
 
-import { TransactionList } from '@/components/transaction-list';
+import { ExportDialog } from '@/features/transactions/export-dialog';
+import { InfiniteTransactionList } from '@/features/transactions/infinite-transaction-list';
+import { TRANSACTION_PAGE_SIZE, buildTransactionsQuery, type RawSearchParams } from '@/features/transactions/query';
+import { TransactionFilters } from '@/features/transactions/transaction-filters';
 import { api } from '@/lib/api';
 
 export const metadata: Metadata = { title: 'Transactions' };
 
+/**
+ * The whole ledger: searchable, filterable, endless.
+ *
+ * Filters live in the URL, so a filtered view can be shared or bookmarked and the back button
+ * behaves the way a customer expects. The first page is server-rendered with the filters
+ * applied; the infinite list picks up from its cursor.
+ */
 export default async function TransactionsPage({
   searchParams,
-}: Readonly<{
-  searchParams: Promise<{ q?: string; direction?: string }>;
-}>) {
-  const params = await searchParams;
-  const query = new URLSearchParams({ limit: '50' });
-  if (params.q) query.set('q', params.q);
-  if (params.direction === 'debit' || params.direction === 'credit') {
-    query.set('direction', params.direction);
-  }
+}: Readonly<{ searchParams: Promise<RawSearchParams> }>) {
+  const raw = await searchParams;
+  const queryString = buildTransactionsQuery(raw, TRANSACTION_PAGE_SIZE);
 
-  const page = await api<CursorPage<TransactionSummary>>(`/transactions?${query.toString()}`, {
-    tags: ['transactions'],
-  });
+  const [page, accountsResponse] = await Promise.all([
+    api<CursorPage<TransactionSummary>>(`/transactions?${queryString}`, { tags: ['transactions'] }),
+    api<{ items: AccountSummary[] }>('/accounts', { tags: ['accounts'] }),
+  ]);
 
   return (
     <>
-      <header>
-        <h1 className="font-display text-3xl font-bold tracking-[-0.02em]">Transactions</h1>
-        <p className="mt-1.5 text-sm text-[var(--icb-text-muted)]">
-          Every posting across your accounts, newest first.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-[-0.02em]">Transactions</h1>
+          <p className="mt-1.5 text-sm text-[var(--icb-text-muted)]">
+            Every posting across your accounts, newest first.
+          </p>
+        </div>
+        <ExportDialog accounts={accountsResponse.items} />
       </header>
 
-      <Card className="mt-8 overflow-hidden">
-        {page.items.length > 0 ? (
-          <TransactionList transactions={page.items} />
-        ) : (
-          <EmptyState
-            icon={<Receipt size={20} />}
-            title="No transactions found"
-            description="Nothing matches this view yet."
-          />
-        )}
-      </Card>
+      <div className="mt-6">
+        <TransactionFilters accounts={accountsResponse.items} />
+      </div>
 
-      {page.hasMore ? (
-        <p className="mt-4 text-center text-sm text-[var(--icb-text-subtle)]">
-          Showing the most recent {page.items.length} transactions.
-        </p>
-      ) : null}
+      <Card className="mt-6 overflow-hidden">
+        <InfiniteTransactionList
+          key={queryString}
+          initialTransactions={page.items}
+          initialCursor={page.nextCursor}
+          initialHasMore={page.hasMore}
+          queryString={queryString}
+        />
+      </Card>
     </>
   );
 }

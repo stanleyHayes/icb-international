@@ -36,6 +36,7 @@ export const transfersOperations = defineOperations([
     operationId: 'quoteTransfer',
     summary: 'Price a transfer before committing (single-use, expiring quote)',
     request: transferQuoteRequestSchema,
+    idempotent: true,
     response: success(
       STATUS.created,
       'The quote, including fees, FX, and step-up flags.',
@@ -81,6 +82,7 @@ export const transfersOperations = defineOperations([
     summary: 'Cancel a scheduled or pending transfer',
     pathParams: { transferId: idSchema },
     request: cancelTransferRequestSchema,
+    idempotent: true,
     response: success(STATUS.ok, 'The cancelled transfer.', transferDetailSchema),
     errors: [
       { status: STATUS.notFound },
@@ -136,7 +138,6 @@ export const transfersOperations = defineOperations([
     tag: TAG.transfers,
     operationId: 'listStandingOrders',
     summary: 'Recurring transfers, optionally per account',
-    query: z.object({ accountId: idSchema.optional() }),
     response: success(STATUS.ok, 'Active and ended standing orders.', z.array(standingOrderSchema)),
   },
   {
@@ -146,7 +147,6 @@ export const transfersOperations = defineOperations([
     operationId: 'cancelStandingOrder',
     summary: 'Cancel a standing order',
     pathParams: { standingOrderId: idSchema },
-    request: cancelTransferRequestSchema,
     response: success(STATUS.ok, 'The cancelled standing order.', standingOrderSchema),
     errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
   },

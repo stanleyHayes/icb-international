@@ -1,0 +1,45 @@
+# Docker build context for the ICB monorepo.
+#
+# Everything here is either irrelevant to the image, actively harmful (host node_modules
+# overwriting the Linux-installed tree with macOS binaries), or a secret that must never
+# appear in an image layer (.env files).
+
+.git
+.github
+.impeccable
+.raven
+.turbo
+
+# Dependencies are installed inside the image with --frozen-lockfile. Copying the host
+# tree over it would inject platform-specific binaries (argon2, lightningcss) built for
+# the developer's machine into a Linux image.
+**/node_modules
+
+# Build outputs are rebuilt inside the image; Next standalone tracing breaks if a stale
+# host .next is copied in underneath it.
+**/dist
+**/.next
+**/out
+**/*.tsbuildinfo
+
+# Secrets. NEXT_PUBLIC_* values are passed as build args instead of via .env files.
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+# Local state that has no business in an image.
+storage
+backups
+coverage
+**/coverage
+*.log
+.DS_Store
+
+# Docs and tests are not needed to run the apps.
+docs
+**/__tests__
+**/*.spec.ts
+**/*.test.ts
+playwright.config.ts

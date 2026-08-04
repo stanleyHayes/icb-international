@@ -1,11 +1,14 @@
 import { type AuthTokens } from '@icb/contracts';
 
-import { DEFAULT_BASE_URL } from './constants.js';import { createAccountsApi, type AccountsApi } from './endpoints/accounts.js';
+import { DEFAULT_BASE_URL } from './constants.js';
+import { createAccountsApi, type AccountsApi } from './endpoints/accounts.js';
 import { createAdminApi, type AdminApi } from './endpoints/admin.js';
 import { createAmlApi, type AmlApi } from './endpoints/aml.js';
 import { createAuthApi, type AuthApi } from './endpoints/auth.js';
 import { createBeneficiariesApi, type BeneficiariesApi } from './endpoints/beneficiaries.js';
+import { createBudgetsApi, type BudgetsApi } from './endpoints/budgets.js';
 import { createCardsApi, type CardsApi } from './endpoints/cards.js';
+import { createContentApi, type ContentApi } from './endpoints/content.js';
 import { createCustomersApi, type CustomersApi } from './endpoints/customers.js';
 import { createDisputesApi, type DisputesApi } from './endpoints/disputes.js';
 import { createDocumentsApi, type DocumentsApi } from './endpoints/documents.js';
@@ -19,6 +22,7 @@ import { createRiskApi, type RiskApi } from './endpoints/risk.js';
 import { createSavingsApi, type SavingsApi } from './endpoints/savings.js';
 import { createSimulationApi, type SimulationApi } from './endpoints/simulation.js';
 import { createSupportApi, type SupportApi } from './endpoints/support.js';
+import { createSystemApi, type SystemApi } from './endpoints/system.js';
 import { createTransactionsApi, type TransactionsApi } from './endpoints/transactions.js';
 import { createTransfersApi, type TransfersApi } from './endpoints/transfers.js';
 import { type CredentialsMode } from './http.js';
@@ -48,6 +52,7 @@ export interface IcbClient {
   transactions: TransactionsApi;
   transfers: TransfersApi;
   beneficiaries: BeneficiariesApi;
+  budgets: BudgetsApi;
   cards: CardsApi;
   loans: LoansApi;
   savings: SavingsApi;
@@ -56,12 +61,14 @@ export interface IcbClient {
   aml: AmlApi;
   disputes: DisputesApi;
   products: ProductsApi;
+  content: ContentApi;
   documents: DocumentsApi;
   notifications: NotificationsApi;
   support: SupportApi;
   governance: GovernanceApi;
   admin: AdminApi;
   simulation: SimulationApi;
+  system: SystemApi;
 }
 
 /**
@@ -97,6 +104,7 @@ function buildNamespaces(call: Requester): IcbClient {
     transactions: createTransactionsApi(call),
     transfers: createTransfersApi(call),
     beneficiaries: createBeneficiariesApi(call),
+    budgets: createBudgetsApi(call),
     cards: createCardsApi(call),
     loans: createLoansApi(call),
     savings: createSavingsApi(call),
@@ -105,11 +113,13 @@ function buildNamespaces(call: Requester): IcbClient {
     aml: createAmlApi(call),
     disputes: createDisputesApi(call),
     products: createProductsApi(call),
+    content: createContentApi(call),
     documents: createDocumentsApi(call),
     notifications: createNotificationsApi(call),
     support: createSupportApi(call),
     governance: createGovernanceApi(call),
     admin: createAdminApi(call),
     simulation: createSimulationApi(call),
+    system: createSystemApi(call),
   };
 }

@@ -1,0 +1,89 @@
+services:
+  - type: web
+    name: icb-api
+    env: node
+    plan: starter
+    rootDir: .
+    autoDeploy: true
+    healthCheckPath: /health/ready
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter "./packages/**" build && pnpm --filter @icb/api build
+    startCommand: node apps/api/dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_PORT
+        value: "10000"
+      - key: LOG_LEVEL
+        value: info
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: icb-redis
+          property: connectionString
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: COOKIE_SECRET
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ICB_SIMULATION_ACKNOWLEDGED
+        value: "true"
+      - key: SIMULATION_ENABLED
+        value: "true"
+      - key: SIMULATION_SEED
+        value: icb-default-seed
+      - key: INITIAL_ADMIN_EMAIL
+        sync: false
+      - key: INITIAL_ADMIN_PASSWORD
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: ICB <no-reply@icb.example>
+      - key: EMAIL_REPLY_TO
+        value: support@icb.example
+      - key: RESEND_WEBHOOK_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: icb
+      - key: CLOUDINARY_SIGNED_URL_TTL_SECONDS
+        value: "300"
+      - key: BANK_NAME
+        value: ICB International Commercial Bank
+      - key: BANK_BIC
+        value: ICBKGHAC
+      - key: BANK_COUNTRY
+        value: GH
+      - key: BANK_SORT_CODE
+        value: 60-16-13
+      - key: BASE_CURRENCY
+        value: USD
+      - key: BUSINESS_TIMEZONE
+        value: UTC
+      - key: OTEL_ENABLED
+        value: "false"
+      - key: OTEL_SERVICE_NAME
+        value: icb-api
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
+      - key: BACKGROUND_JOBS_ENABLED
+        value: "true"
+
+  - type: redis
+    name: icb-redis
+    plan: starter
+    maxmemoryPolicy: noeviction

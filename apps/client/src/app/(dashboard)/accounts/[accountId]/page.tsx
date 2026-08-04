@@ -1,19 +1,16 @@
-import type { AccountDetail, CursorPage, TransactionSummary } from '@icb/contracts';
-import {
-  Amount,
-  Card,
-  CardBody,
-  CardHeader,
-  EmptyState,
-  StatusBadge,
-  formatDate,
-  groupIdentifier,
-} from '@icb/ui';
-import { ArrowLeftRight, ArrowLeft, Receipt } from 'lucide-react';
+import type { AccountDetail, AccountSummary, CursorPage, TransactionSummary } from '@icb/contracts';
+import { Amount, Card, CardBody, CardHeader, EmptyState, StatusBadge, formatDate } from '@icb/ui';
+import { ArrowLeft, ArrowLeftRight, Receipt } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { TransactionList } from '@/components/transaction-list';
+import { AccountActions } from '@/features/accounts/account-actions';
+import { AccountDetailsSheet } from '@/features/accounts/account-details-sheet';
+import { BalanceHistoryCard } from '@/features/accounts/balance-history-card';
+import { NicknameEditor } from '@/features/accounts/nickname-editor';
+import { StandingOrdersCard } from '@/features/accounts/standing-orders-card';
+import { StatementsCard } from '@/features/accounts/statements-card';
 import { api } from '@/lib/api';
 
 type Params = Promise<{ accountId: string }>;
@@ -35,12 +32,17 @@ export async function generateMetadata({
 export default async function AccountDetailPage({ params }: Readonly<{ params: Params }>) {
   const { accountId } = await params;
 
-  const [account, transactions] = await Promise.all([
+  const [account, accountsResponse, transactions] = await Promise.all([
     api<AccountDetail>(`/accounts/${accountId}`, { tags: ['accounts'] }),
+    api<{ items: AccountSummary[] }>('/accounts', { tags: ['accounts'] }),
     api<CursorPage<TransactionSummary>>(`/transactions?accountId=${accountId}&limit=25`, {
       tags: ['transactions'],
     }),
   ]);
+
+  const sweepCandidates = accountsResponse.items.filter(
+    (candidate) => candidate.id !== account.id && candidate.status === 'active',
+  );
 
   return (
     <>
@@ -54,21 +56,29 @@ export default async function AccountDetailPage({ params }: Readonly<{ params: P
 
       <header className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-[-0.02em]">
+          <h1 className="flex items-center gap-1 font-display text-3xl font-bold tracking-[-0.02em]">
             {account.nickname ?? account.productName}
+            <NicknameEditor
+              accountId={account.id}
+              currentNickname={account.nickname}
+              fallbackName={account.productName}
+            />
           </h1>
           <p className="mt-1.5 flex items-center gap-2 text-sm text-[var(--icb-text-muted)]">
             {account.productName}
             <StatusBadge status={account.status} />
           </p>
         </div>
-        <Link
-          href={`/transfer?from=${account.id}`}
-          className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"
-        >
-          <ArrowLeftRight size={16} />
-          Transfer
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <AccountDetailsSheet account={account} />
+          <Link
+            href={`/transfer?from=${account.id}`}
+            className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"
+          >
+            <ArrowLeftRight size={16} />
+            Transfer
+          </Link>
+        </div>
       </header>
 
       <section aria-labelledby="balances" className="mt-8">
@@ -76,16 +86,8 @@ export default async function AccountDetailPage({ params }: Readonly<{ params: P
           Balances
         </h2>
         <div className="grid gap-4 sm:grid-cols-3">
-          <BalanceTile
-            label="Ledger balance"
-            hint="Everything that has posted"
-            value={account.balances.ledger}
-          />
-          <BalanceTile
-            label="On hold"
-            hint="Authorised, not yet posted"
-            value={account.balances.holds}
-          />
+          <BalanceTile label="Ledger balance" hint="Everything that has posted" value={account.balances.ledger} />
+          <BalanceTile label="On hold" hint="Authorised, not yet posted" value={account.balances.holds} />
           <BalanceTile
             label="Available"
             hint="Ledger − holds + overdraft"
@@ -96,12 +98,17 @@ export default async function AccountDetailPage({ params }: Readonly<{ params: P
       </section>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+        <BalanceHistoryCard accountId={account.id} />
+        <TermsCard account={account} />
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <Card className="overflow-hidden">
           <CardHeader
             title="Activity"
             action={
               <Link
-                href="/transactions"
+                href={`/transactions?account=${account.id}`}
                 className="text-sm font-medium text-[var(--icb-primary)] hover:underline"
               >
                 All transactions
@@ -119,56 +126,52 @@ export default async function AccountDetailPage({ params }: Readonly<{ params: P
           )}
         </Card>
 
-        <AccountSidebar account={account} />
+        <Card>
+          <CardHeader title="Manage account" />
+          <CardBody className="pt-0">
+            <AccountActions account={account} sweepCandidates={sweepCandidates} />
+            <p className="mt-3 text-xs text-[var(--icb-text-subtle)]">
+              Freezing pauses all movement on the account while it is reviewed. Closing is
+              permanent.
+            </p>
+          </CardBody>
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <StatementsCard accountId={account.id} />
+        <StandingOrdersCard accountId={account.id} />
       </div>
     </>
   );
 }
 
-/** Identifiers and terms. Split out so the page body stays readable. */
-function AccountSidebar({ account }: Readonly<{ account: AccountDetail }>) {
+/** Rates, overdraft and statement cadence — the terms that explain the numbers. */
+function TermsCard({ account }: Readonly<{ account: AccountDetail }>) {
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader
-          title="Account details"
-          description="Share these to receive a payment into this account."
-        />
-        <CardBody className="pt-0">
-          <dl className="space-y-3 font-mono text-sm">
-            <DetailRow label="Account number" value={account.identifiers.number} />
-            <DetailRow label="Sort code" value={account.identifiers.sortCode} />
-            <DetailRow label="IBAN" value={groupIdentifier(account.identifiers.iban)} />
-            <DetailRow label="SWIFT / BIC" value={account.identifiers.bic} />
-            <DetailRow label="Currency" value={account.currency} />
-          </dl>
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardHeader title="Terms" />
-        <CardBody className="pt-0">
-          <dl className="space-y-3 text-sm">
-            <DetailRow
-              label="Interest rate"
-              value={account.interestRate === null ? '—' : `${account.interestRate}% AER`}
-            />
-            <DetailRow
-              label="Arranged overdraft"
-              value={
-                account.balances.overdraftLimit.minorUnits === 0 ? (
-                  'None'
-                ) : (
-                  <Amount value={account.balances.overdraftLimit} size="sm" />
-                )
-              }
-            />
-            <DetailRow label="Statement day" value={`${account.statementDay} of the month`} />
-            <DetailRow label="Opened" value={formatDate(account.openedAt, 'medium')} />
-          </dl>
-        </CardBody>
-      </Card>
-    </div>
+    <Card>
+      <CardHeader title="Terms" />
+      <CardBody className="pt-0">
+        <dl className="space-y-3 text-sm">
+          <DetailRow
+            label="Interest rate"
+            value={account.interestRate === null ? '—' : `${account.interestRate}% AER`}
+          />
+          <DetailRow
+            label="Arranged overdraft"
+            value={
+              account.balances.overdraftLimit.minorUnits === 0 ? (
+                'None'
+              ) : (
+                <Amount value={account.balances.overdraftLimit} size="sm" />
+              )
+            }
+          />
+          <DetailRow label="Statement day" value={`${account.statementDay} of the month`} />
+          <DetailRow label="Opened" value={formatDate(account.openedAt, 'medium')} />
+        </dl>
+      </CardBody>
+    </Card>
   );
 }
 
@@ -198,10 +201,7 @@ function BalanceTile({
   );
 }
 
-function DetailRow({
-  label,
-  value,
-}: Readonly<{ label: string; value: React.ReactNode }>) {
+function DetailRow({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-[var(--icb-border)] pb-3 last:border-0 last:pb-0">
       <dt className="shrink-0 font-sans text-[var(--icb-text-subtle)]">{label}</dt>

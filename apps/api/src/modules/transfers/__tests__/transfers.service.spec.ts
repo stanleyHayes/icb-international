@@ -5,6 +5,7 @@ import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { TransferNotCancellableError } from '../domain/transfer-errors.js';
 import type { TransferDoc } from '../infrastructure/transfer.schemas.js';
 import { TransfersService } from '../transfers.service.js';
+import { metricsStub } from '../../../common/observability/__tests__/metrics.stub.js';
 
 const NOW = new Date('2026-08-04T10:00:00.000Z');
 
@@ -61,6 +62,7 @@ function setup(row: TransferDoc | null) {
     { initiate: vi.fn() } as never,
     accounts as never,
     clock,
+    metricsStub(),
   );
   return { model, service };
 }

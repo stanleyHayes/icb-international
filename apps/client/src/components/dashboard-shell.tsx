@@ -14,30 +14,36 @@ import {
   Receipt,
   ReceiptText,
   Settings,
+  ShieldCheck,
+  TrendingUp,
+  Users,
   Wallet,
   X,
 } from 'lucide-react';
-import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 
 import { logoutAction } from '@/features/auth/actions';
+import type { Route } from 'next';
 
 const PRIMARY_NAV = [
   { href: '/', label: 'Overview', icon: LayoutDashboard },
   { href: '/accounts', label: 'Accounts', icon: Wallet },
   { href: '/transactions', label: 'Transactions', icon: Receipt },
   { href: '/transfer', label: 'Transfer', icon: ArrowLeftRight },
+  { href: '/beneficiaries', label: 'Payees', icon: Users },
   { href: '/cards', label: 'Cards', icon: CreditCard },
   { href: '/bills', label: 'Bills', icon: ReceiptText },
   { href: '/loans', label: 'Loans', icon: Landmark },
   { href: '/savings', label: 'Savings', icon: PiggyBank },
   { href: '/documents', label: 'Documents', icon: FileText },
+  { href: '/insights', label: 'Insights', icon: TrendingUp },
 ] as const;
 
 const SECONDARY_NAV = [
   { href: '/support', label: 'Support', icon: LifeBuoy },
+  { href: '/account/security', label: 'Security', icon: ShieldCheck },
   { href: '/settings', label: 'Settings', icon: Settings },
 ] as const;
 
@@ -184,7 +190,8 @@ function NavLink({
   pathname,
   onNavigate,
 }: Readonly<{
-  href: string;
+  // A Route: `pathname.startsWith(href)` below still works, and <Link> needs the narrower type.
+  href: Route;
   label: string;
   icon: typeof Wallet;
   pathname: string;
@@ -194,7 +201,7 @@ function NavLink({
 
   return (
     <Link
-      href={href as Route}
+      href={href}
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={cn(

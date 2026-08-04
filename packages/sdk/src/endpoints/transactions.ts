@@ -6,6 +6,8 @@ import {
   downloadLinkSchema,
   exportTransactionsRequestSchema,
   isoDateSchema,
+  merchantsAnalyticsSchema,
+  recurringAnalyticsSchema,
   spendByCategorySchema,
   transactionDetailSchema,
   transactionQuerySchema,
@@ -21,6 +23,8 @@ const spendQuerySchema = spendByCategorySchema.pick({ currency: true }).extend({
 });
 
 const cashflowQuerySchema = cashflowSchema.pick({ currency: true, granularity: true });
+
+const currencyOnlyQuerySchema = spendByCategorySchema.pick({ currency: true });
 
 export const transactionsEndpoints = {
   list: get('/transactions', cursorPageSchema(transactionSummarySchema), {
@@ -38,6 +42,12 @@ export const transactionsEndpoints = {
     query: spendQuerySchema,
   }),
   cashflow: get('/transactions/analytics/cashflow', cashflowSchema, { query: cashflowQuerySchema }),
+  merchants: get('/transactions/analytics/merchants', merchantsAnalyticsSchema, {
+    query: spendQuerySchema,
+  }),
+  recurring: get('/transactions/analytics/recurring', recurringAnalyticsSchema, {
+    query: currencyOnlyQuerySchema,
+  }),
 };
 
 export function createTransactionsApi(call: Requester) {
@@ -57,6 +67,10 @@ export function createTransactionsApi(call: Requester) {
       call(transactionsEndpoints.spendByCategory, { query, options }),
     cashflow: (query: z.input<typeof cashflowQuerySchema>, options?: RequestOptions) =>
       call(transactionsEndpoints.cashflow, { query, options }),
+    merchants: (query: z.input<typeof spendQuerySchema>, options?: RequestOptions) =>
+      call(transactionsEndpoints.merchants, { query, options }),
+    recurring: (query: z.input<typeof currencyOnlyQuerySchema>, options?: RequestOptions) =>
+      call(transactionsEndpoints.recurring, { query, options }),
   };
 }
 

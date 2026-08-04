@@ -8,9 +8,12 @@ import { RatesService } from './rates.service.js';
 /**
  * The customer-facing catalogue, matching `packages/sdk/src/endpoints/products.ts`.
  *
- * `GET /products/rates` is the one public route: the marketing site has no token, so it is
- * opted out of the global auth guard and served from a short-TTL cache. It is declared before
- * `:productCode` so "rates" is never captured as a code.
+ * Every route here is public, because all of it is marketing material: what the bank sells and
+ * on what terms. The marketing site carries no token, and the published contract declares these
+ * three `auth: false` — an authenticated catalogue would 401 every visitor and every integrator
+ * following the spec.
+ *
+ * `rates` is declared before `:productCode` so it is never captured as a product code.
  */
 @Controller('products')
 export class ProductsController {
@@ -19,6 +22,7 @@ export class ProductsController {
     private readonly rates: RatesService,
   ) {}
 
+  @Public()
   @Get()
   async list(): Promise<Product[]> {
     return this.products.list();
@@ -30,6 +34,7 @@ export class ProductsController {
     return this.rates.getRateTable();
   }
 
+  @Public()
   @Get(':productCode')
   async detail(@Param('productCode') productCode: string): Promise<Product> {
     return this.products.getByCode(productCode);

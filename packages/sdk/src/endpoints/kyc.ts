@@ -1,11 +1,10 @@
-import { z } from 'zod';
+import { type z } from 'zod';
 import {
   attachDocumentRequestSchema,
   kycCaseSchema,
   kycDecisionRequestSchema,
-  kycDocumentSchema,
+  kycLimitsResponseSchema,
   kycQueueQuerySchema,
-  kycTierLimitsSchema,
   offsetPageSchema,
   submitKycRequestSchema,
   uploadSignatureRequestSchema,
@@ -16,33 +15,33 @@ import { get, post, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
 
 export const kycEndpoints = {
-  tiers: get('/kyc/tiers', z.array(kycTierLimitsSchema)),
-  currentCase: get('/kyc/me', kycCaseSchema.nullable()),
-  createUploadSignature: post('/kyc/uploads/signature', uploadSignatureSchema, {
+  currentCase: get('/kyc/case', kycCaseSchema),
+  limits: get('/kyc/limits', kycLimitsResponseSchema),
+  createUploadSignature: post('/kyc/upload-signature', uploadSignatureSchema, {
     body: uploadSignatureRequestSchema,
     idempotent: true,
   }),
-  attachDocument: post('/kyc/documents', kycDocumentSchema, {
+  attachDocument: post('/kyc/documents', kycCaseSchema, {
     body: attachDocumentRequestSchema,
     idempotent: true,
   }),
-  submit: post('/kyc/submissions', kycCaseSchema, {
+  submit: post('/kyc/submit', kycCaseSchema, {
     body: submitKycRequestSchema,
     idempotent: true,
   }),
-  adminQueue: get('/admin/kyc/cases', offsetPageSchema(kycCaseSchema), {
+  adminQueue: get('/kyc/queue', offsetPageSchema(kycCaseSchema), {
     query: kycQueueQuerySchema,
   }),
-  adminGetCase: get('/admin/kyc/cases/:caseId', kycCaseSchema),
-  adminDecide: post('/admin/kyc/cases/:caseId/decision', kycCaseSchema, {
+  adminGetCase: get('/kyc/cases/:caseId', kycCaseSchema),
+  adminDecide: post('/kyc/cases/:caseId/decision', kycCaseSchema, {
     body: kycDecisionRequestSchema,
   }),
 };
 
 export function createKycApi(call: Requester) {
   return {
-    tiers: (options?: RequestOptions) => call(kycEndpoints.tiers, { options }),
     currentCase: (options?: RequestOptions) => call(kycEndpoints.currentCase, { options }),
+    limits: (options?: RequestOptions) => call(kycEndpoints.limits, { options }),
     createUploadSignature: (
       body: z.input<typeof uploadSignatureRequestSchema>,
       options?: RequestOptions,

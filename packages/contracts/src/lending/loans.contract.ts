@@ -201,6 +201,21 @@ export const makeRepaymentRequestSchema = z.object({
   kind: z.enum(['scheduled', 'extra', 'payoff']).default('scheduled'),
 });
 
+/**
+ * A direct-upload grant request for a document supporting an application. The bytes go from
+ * the browser to the asset store without passing through the API — the same upload-signature
+ * flow KYC uses; `label` is what the underwriter sees on the application.
+ */
+export const loanDocumentUploadRequestSchema = z.object({
+  label: z.string().min(1).max(80),
+  filename: z.string().min(1).max(255),
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']),
+  sizeBytes: z
+    .int()
+    .positive()
+    .max(15 * 1024 * 1024),
+});
+
 export const loanQuerySchema = cursorQuerySchema.extend({
   status: z.array(loanStatusSchema).optional(),
   inArrearsOnly: z.coerce.boolean().optional(),
@@ -219,3 +234,4 @@ export type PayoffQuote = z.infer<typeof payoffQuoteSchema>;
 export type LoanArrears = z.infer<typeof loanArrearsSchema>;
 export type ScorecardFactor = z.infer<typeof scorecardFactorSchema>;
 export type MakeRepaymentRequest = z.infer<typeof makeRepaymentRequestSchema>;
+export type LoanDocumentUploadRequest = z.infer<typeof loanDocumentUploadRequestSchema>;

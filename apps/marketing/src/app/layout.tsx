@@ -41,8 +41,14 @@ export const metadata: Metadata = {
     title: 'ICB — International Commercial Bank',
     description: 'Banking, exactly. Every posting traceable to the cent.',
   },
-  icons: { icon: '/favicon.svg', apple: '/icon.svg' },
-  robots: { index: true, follow: true },
+  // Both declared explicitly. An `icons` object switches off Next's file-based detection,
+  // so naming only the favicon left apple-icon.tsx served at /apple-icon but never linked —
+  // and iOS ignores SVG apple-touch-icons, which is what this pointed at before.
+  icons: { icon: '/favicon.svg', apple: '/apple-icon' },
+  robots:
+    process.env.NODE_ENV === 'production'
+      ? { index: true, follow: true, googleBot: { index: true, follow: true } }
+      : { index: false, follow: false, googleBot: { index: false, follow: false } },
 };
 
 export const viewport: Viewport = {

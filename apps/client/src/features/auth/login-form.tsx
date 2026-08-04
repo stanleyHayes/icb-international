@@ -38,7 +38,6 @@ export function LoginForm() {
           type="email"
           autoComplete="email"
           required
-          defaultValue="demo@icb.example"
           aria-invalid={Boolean(state.fieldErrors['email']) || undefined}
           aria-describedby={state.fieldErrors['email'] ? `${emailId}-error` : undefined}
           className="mt-1.5 h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-sm outline-none focus:border-[var(--icb-primary)]"
@@ -62,7 +61,6 @@ export function LoginForm() {
             type={revealed ? 'text' : 'password'}
             autoComplete="current-password"
             required
-            defaultValue="Demo!2345678"
             aria-invalid={Boolean(state.fieldErrors['password']) || undefined}
             className="h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 pr-11 text-sm outline-none focus:border-[var(--icb-primary)]"
           />
@@ -85,6 +83,12 @@ export function LoginForm() {
 
       <p className="text-center text-xs text-[var(--icb-text-subtle)]">
         Protected by rotating session tokens and device binding.
+      </p>
+
+      <p className="text-center text-xs">
+        <a href="/recover" className="text-[var(--icb-primary)] hover:underline">
+          Locked out? Recover your account
+        </a>
       </p>
     </form>
   );

@@ -2,7 +2,9 @@ import type { TransferQuote, TransferRail } from '@icb/contracts';
 import { fromMinorUnits, getMinorUnitFactor, type CurrencyCode, type Money } from '@icb/money';
 
 import { toMoneyDto } from '../../accounts/infrastructure/account.mapper.js';
+import type { SignedTransferQuoteTerms } from '../domain/quote-signature.js';
 import type { FeeLine } from '../domain/transfer-fees.js';
+import { STEP_UP_THRESHOLD_MAJOR_UNITS } from '../domain/transfers.constants.js';
 import type { TransferQuoteDoc } from './transfer-quote.schemas.js';
 
 /** What redeeming a quote hands to the pipeline — the exact terms the customer confirmed. */
@@ -79,4 +81,32 @@ function fxDetail(doc: TransferQuoteDoc): TransferQuote['fx'] {
 /** A major-unit threshold expressed in the currency's minor units. */
 export function thresholdMinorUnits(majorUnits: number, currency: CurrencyCode): number {
   return majorUnits * getMinorUnitFactor(currency);
+}
+
+/** The exact terms the signature covers, rebuilt from a stored document for re-verification. */
+export function toSignedQuoteTerms(doc: TransferQuoteDoc): SignedTransferQuoteTerms {
+  return {
+    quoteId: doc._id,
+    customerId: doc.customerId,
+    fromAccountId: doc.fromAccountId,
+    rail: doc.rail,
+    destinationKey: doc.destinationKey,
+    debitMinorUnits: doc.debit.minorUnits,
+    debitCurrency: doc.debit.currency,
+    creditMinorUnits: doc.credit.minorUnits,
+    creditCurrency: doc.credit.currency,
+    feeMinorUnits: doc.feeMinorUnits,
+    fxRate: doc.fxRate,
+    expiresAtMs: doc.expiresAt.getTime(),
+  };
+}
+
+/** The high-value rule the issue-time contract flags with the same computation. */
+export function quoteRequiresStepUp(doc: TransferQuoteDoc): boolean {
+  const totalMinorUnits = doc.feeMinorUnits + doc.debit.minorUnits;
+  const threshold = thresholdMinorUnits(
+    STEP_UP_THRESHOLD_MAJOR_UNITS,
+    doc.debit.currency as CurrencyCode,
+  );
+  return totalMinorUnits >= threshold;
 }

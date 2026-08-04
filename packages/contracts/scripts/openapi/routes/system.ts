@@ -1,11 +1,10 @@
-import { z } from 'zod';
-
+import {
+  ledgerIntegrityReportSchema,
+  liveHealthSchema,
+  readinessHealthSchema,
+} from '../../../src/index.js';
 import { STATUS, TAG } from '../constants.js';
 import { defineOperations, success } from '../spec.js';
-
-const healthStatusSchema = z.object({
-  status: z.enum(['ok', 'ready', 'degraded']),
-});
 
 export const systemOperations = defineOperations([
   {
@@ -15,7 +14,7 @@ export const systemOperations = defineOperations([
     operationId: 'healthCheck',
     summary: 'Liveness probe',
     auth: false,
-    response: success(STATUS.ok, 'The process is alive.', healthStatusSchema),
+    response: success(STATUS.ok, 'The process is alive.', liveHealthSchema),
   },
   {
     method: 'get',
@@ -24,7 +23,16 @@ export const systemOperations = defineOperations([
     operationId: 'readinessCheck',
     summary: 'Readiness probe — database and cache reachable',
     auth: false,
-    response: success(STATUS.ok, 'The service can take traffic.', healthStatusSchema),
+    response: success(STATUS.ok, 'The service can take traffic.', readinessHealthSchema),
     errors: [{ status: STATUS.serviceUnavailable, description: 'A required dependency is down.' }],
+  },
+  {
+    method: 'get',
+    path: '/health/ledger',
+    tag: TAG.system,
+    operationId: 'ledgerHealthCheck',
+    summary: 'Cached ledger-integrity health for operators and probes',
+    auth: false,
+    response: success(STATUS.ok, 'The latest ledger integrity report.', ledgerIntegrityReportSchema),
   },
 ]);

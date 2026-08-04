@@ -26,7 +26,11 @@ function assertSafeMinorUnits(minorUnits: number): void {
 /** Construct from integer minor units. The primary constructor — prefer it everywhere. */
 export function fromMinorUnits(minorUnits: number, currency: CurrencyCode): Money {
   assertSafeMinorUnits(minorUnits);
-  return Object.freeze({ minorUnits, currency });
+  // `+ 0` collapses -0 to 0 and leaves every other value alone. Negative zero is arithmetically
+  // equal to zero but `Object.is` — and therefore `toBe`, `Map` keys, and `includes` — treats it
+  // as a distinct value, so a balance of -0 would compare unequal to a balance of 0. It arises
+  // routinely: `negate(zero)` and `multiply(anythingNegative, 0)` both produce it.
+  return Object.freeze({ minorUnits: minorUnits + 0, currency });
 }
 
 /** A zero amount in the given currency. */

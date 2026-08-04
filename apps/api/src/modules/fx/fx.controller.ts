@@ -37,10 +37,11 @@ export class FxController {
     private readonly tiers: CustomerTierReader,
   ) {}
 
+  /** A bare array, not `{ items }`: the board is a fixed set of pairs, never paginated. */
   @Get('rates')
-  async list(@CurrentCustomer() customerId: string): Promise<{ items: FxRate[] }> {
+  async list(@CurrentCustomer() customerId: string): Promise<FxRate[]> {
     const spreadBps = await this.tiers.spreadBpsFor(customerId);
-    return { items: await this.rates.list(spreadBps) };
+    return this.rates.list(spreadBps);
   }
 
   /**
@@ -63,7 +64,9 @@ export class FxController {
     };
   }
 
-  @Post('quote')
+  // `quotes`, plural, to match the published contract and the SDK — which were both calling a
+  // path this controller did not serve, so every SDK quote request 404'd.
+  @Post('quotes')
   async quote(
     @CurrentCustomer() customerId: string,
     @Body(zodBody(fxQuoteRequestSchema))
@@ -72,7 +75,7 @@ export class FxController {
     return this.quotes.issue(customerId, body);
   }
 
-  @Get('quote/:quoteId')
+  @Get('quotes/:quoteId')
   async getQuote(
     @CurrentCustomer() customerId: string,
     @Param('quoteId') quoteId: string,

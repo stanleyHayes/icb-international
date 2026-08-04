@@ -13,6 +13,13 @@ const STORAGE_DIRECTORY = 'storage';
 const WILDCARD_HOST = '0.0.0.0';
 
 /**
+ * The route prefix the local delivery endpoint answers on, under the API's global `v1`
+ * prefix. Signed links are minted pointing here; without it they would miss the global
+ * prefix and 404.
+ */
+const LOCAL_DELIVERY_PATH_PREFIX = '/v1/media/delivery';
+
+/**
  * Binds Cloudinary when credentials are configured, and the filesystem store when they are not.
  *
  * Both implement the same port and both produce refs that satisfy `assetRefSchema`, so a
@@ -45,13 +52,22 @@ function cloudinaryStore(config: AppConfiguration, clock: ClockService): AssetSt
 function localStore(config: AppConfiguration, clock: ClockService): AssetStore {
   return new LocalAssetStore(
     {
-      rootDir: join(process.cwd(), STORAGE_DIRECTORY),
+      rootDir: localStorageRootDir(),
       baseUrl: localBaseUrl(config),
       rootFolder: config.media.folder,
+      deliveryPathPrefix: LOCAL_DELIVERY_PATH_PREFIX,
       deliveryUrlTtlSeconds: config.media.signedUrlTtlSeconds,
     },
     { now: () => clock.epochMs() },
   );
+}
+
+/**
+ * Where the local store persists uploads. Exported for the delivery endpoint, which reads the
+ * same directory back when a signed link is presented.
+ */
+export function localStorageRootDir(): string {
+  return join(process.cwd(), STORAGE_DIRECTORY);
 }
 
 /** A link must be reachable, and nothing can connect to the wildcard bind address. */

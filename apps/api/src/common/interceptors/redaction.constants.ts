@@ -12,6 +12,7 @@ export const SENSITIVE_KEYS: readonly string[] = [
   'token',
   'authorization',
   'dob',
+  'dateofbirth',
   'nationalid',
 ];
 

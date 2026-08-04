@@ -1,10 +1,12 @@
-import { z } from 'zod';
-
 import {
   documentSchema,
+  documentUploadRequestSchema,
   downloadLinkSchema,
   generateStatementRequestSchema,
+  issueLetterRequestSchema,
+  itemsEnvelopeSchema,
   statementSchema,
+  uploadSignatureSchema,
 } from '../../../src/index.js';
 import { idSchema } from '../../../src/common/primitives.js';
 import { STATUS, TAG } from '../constants.js';
@@ -13,26 +15,30 @@ import { defineOperations, success } from '../spec.js';
 export const documentsOperations = defineOperations([
   {
     method: 'get',
-    path: '/documents/statements',
+    path: '/statements',
     tag: TAG.documents,
     operationId: 'listStatements',
-    summary: 'Generated statements, optionally per account',
-    query: z.object({ accountId: idSchema.optional() }),
-    response: success(STATUS.ok, 'Statements, newest period first.', z.array(statementSchema)),
+    summary: 'Generated statements',
+    response: success(
+      STATUS.ok,
+      'Statements, newest period first.',
+      itemsEnvelopeSchema(statementSchema),
+    ),
   },
   {
     method: 'post',
-    path: '/documents/statements',
+    path: '/statements/generate',
     tag: TAG.documents,
     operationId: 'generateStatement',
     summary: 'Generate a statement for an arbitrary period',
     request: generateStatementRequestSchema,
-    response: success(STATUS.accepted, 'The generated statement.', statementSchema),
+    idempotent: true,
+    response: success(STATUS.created, 'The generated statement.', statementSchema),
     errors: [{ status: STATUS.unprocessable }],
   },
   {
     method: 'get',
-    path: '/documents/statements/{statementId}/download',
+    path: '/statements/{statementId}/download',
     tag: TAG.documents,
     operationId: 'downloadStatement',
     summary: 'A short-lived signed download URL',
@@ -46,7 +52,7 @@ export const documentsOperations = defineOperations([
     tag: TAG.documents,
     operationId: 'listDocuments',
     summary: 'Tax documents, letters, and contracts',
-    response: success(STATUS.ok, 'All documents.', z.array(documentSchema)),
+    response: success(STATUS.ok, 'All documents.', itemsEnvelopeSchema(documentSchema)),
   },
   {
     method: 'get',
@@ -57,5 +63,31 @@ export const documentsOperations = defineOperations([
     pathParams: { documentId: idSchema },
     response: success(STATUS.ok, 'The signed download link.', downloadLinkSchema),
     errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'post',
+    path: '/documents/upload-signature',
+    tag: TAG.documents,
+    operationId: 'createDocumentUploadSignature',
+    summary: 'A direct-upload grant for a customer-supplied document',
+    request: documentUploadRequestSchema,
+    idempotent: true,
+    response: success(
+      STATUS.created,
+      'The signed upload grant; bytes go straight to the asset store.',
+      uploadSignatureSchema,
+    ),
+    errors: [{ status: STATUS.unprocessable }],
+  },
+  {
+    method: 'post',
+    path: '/documents/letters',
+    tag: TAG.documents,
+    operationId: 'issueLetter',
+    summary: 'Issue a balance confirmation or banker’s reference',
+    request: issueLetterRequestSchema,
+    idempotent: true,
+    response: success(STATUS.created, 'The issued letter, filed as a document.', documentSchema),
+    errors: [{ status: STATUS.unprocessable }],
   },
 ]);

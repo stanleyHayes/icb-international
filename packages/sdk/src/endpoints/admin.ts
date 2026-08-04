@@ -1,59 +1,62 @@
-import { z } from 'zod';
+import { type z } from 'zod';
 import {
-  dashboardSchema,
-  isoDateSchema,
+  approvalRequestSchema,
+  type cursorQuerySchema,
+  type expireHoldRequestSchema,
+  itemsEnvelopeSchema,
+  kpiSchema,
+  ledgerIntegrityReportSchema,
   manualPostingRequestSchema,
   monitorEntrySchema,
-  monitorQuerySchema,
-  offsetPageSchema,
-  reconciliationSchema,
-  reverseTransactionRequestSchema,
   systemHealthSchema,
-  transactionDetailSchema,
   trialBalanceSchema,
 } from '@icb/contracts';
 
 import { get, post, type Requester } from '../endpoint.js';
 import { type RequestOptions } from '../http.js';
+import { adminCardsEndpoints, createAdminCardsApi } from './admin-cards.js';
 
-const reconciliationQuerySchema = z.object({ date: isoDateSchema.optional() });
-
-export const adminEndpoints = {
-  dashboard: get('/admin/dashboard', dashboardSchema),
-  monitor: get('/admin/monitor', offsetPageSchema(monitorEntrySchema), {
-    query: monitorQuerySchema,
-  }),
-  manualPosting: post('/admin/postings', transactionDetailSchema, {
+const adminCoreEndpoints = {
+  kpis: get('/admin/kpis', itemsEnvelopeSchema(kpiSchema)),
+  monitor: get('/admin/monitor', itemsEnvelopeSchema(monitorEntrySchema)),
+  ledgerIntegrity: get('/admin/ledger-integrity', ledgerIntegrityReportSchema),
+  manualPosting: post('/admin/postings', approvalRequestSchema, {
     body: manualPostingRequestSchema,
     idempotent: true,
   }),
-  reverseTransaction: post('/admin/transactions/:transactionId/reversal', transactionDetailSchema, {
-    body: reverseTransactionRequestSchema,
-    idempotent: true,
-  }),
-  trialBalance: get('/admin/ledger/trial-balance', trialBalanceSchema),
-  reconciliation: get('/admin/ledger/reconciliation', reconciliationSchema, {
-    query: reconciliationQuerySchema,
-  }),
+  trialBalance: get('/admin/trial-balance', trialBalanceSchema),
   health: get('/admin/health', systemHealthSchema),
 };
 
+export const adminEndpoints = { ...adminCoreEndpoints, ...adminCardsEndpoints };
+
 export function createAdminApi(call: Requester) {
   return {
-    dashboard: (options?: RequestOptions) => call(adminEndpoints.dashboard, { options }),
-    monitor: (query?: z.input<typeof monitorQuerySchema>, options?: RequestOptions) =>
-      call(adminEndpoints.monitor, { query, options }),
+    kpis: (options?: RequestOptions) => call(adminEndpoints.kpis, { options }),
+    monitor: (options?: RequestOptions) => call(adminEndpoints.monitor, { options }),
+    ledgerIntegrity: (options?: RequestOptions) =>
+      call(adminEndpoints.ledgerIntegrity, { options }),
     manualPosting: (body: z.input<typeof manualPostingRequestSchema>, options?: RequestOptions) =>
       call(adminEndpoints.manualPosting, { body, options }),
-    reverseTransaction: (
-      transactionId: string,
-      body: z.input<typeof reverseTransactionRequestSchema>,
-      options?: RequestOptions,
-    ) => call(adminEndpoints.reverseTransaction, { params: { transactionId }, body, options }),
     trialBalance: (options?: RequestOptions) => call(adminEndpoints.trialBalance, { options }),
-    reconciliation: (query?: z.input<typeof reconciliationQuerySchema>, options?: RequestOptions) =>
-      call(adminEndpoints.reconciliation, { query, options }),
     health: (options?: RequestOptions) => call(adminEndpoints.health, { options }),
+    ...createAdminCardsApi(call),
+    listCardAuthorisations: (
+      cardId: string,
+      query?: z.input<typeof cursorQuerySchema>,
+      options?: RequestOptions,
+    ) => call(adminCardsEndpoints.listCardAuthorisations, { params: { cardId }, query, options }),
+    expireAuthorisation: (
+      cardId: string,
+      authorisationId: string,
+      body: z.input<typeof expireHoldRequestSchema>,
+      options?: RequestOptions,
+    ) =>
+      call(adminCardsEndpoints.expireAuthorisation, {
+        params: { cardId, authorisationId },
+        body,
+        options,
+      }),
   };
 }
 

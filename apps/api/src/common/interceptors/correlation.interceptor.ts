@@ -9,6 +9,7 @@ import type { Observable } from 'rxjs';
 
 import { newId } from '../../infrastructure/database/identifier.js';
 import { CORRELATION_ID_HEADER, ENVIRONMENT_HEADER } from '../observability/correlation.constants.js';
+import { enterWithCorrelation } from '../observability/correlation.context.js';
 
 /**
  * Stamps every request with a correlation id and echoes it back.
@@ -30,6 +31,11 @@ export class CorrelationInterceptor implements NestInterceptor {
     request.headers[CORRELATION_ID_HEADER] = correlationId;
     void reply.header(CORRELATION_ID_HEADER, correlationId);
     void reply.header(ENVIRONMENT_HEADER, process.env['NODE_ENV'] ?? 'development');
+
+    // `enterWith`, not `run`: Nest subscribes to the returned observable after this method
+    // returns, so wrapping `next.handle()` in `run` would end the context before the handler
+    // executes. The store rides the request's async resource, which outlives this call.
+    enterWithCorrelation(correlationId);
 
     return next.handle();
   }

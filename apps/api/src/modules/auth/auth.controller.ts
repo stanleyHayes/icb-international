@@ -10,11 +10,13 @@ import {
   type RegisterRequest,
 } from '@icb/contracts';
 import { Body, Controller, Get, HttpCode, Inject, Post, Req, Res } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { DomainError } from '../../common/errors/domain.error.js';
+import { AUTH_THROTTLE_LIMIT, THROTTLE_WINDOW_MS } from '../../common/guards/throttle.constants.js';
 import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
 import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
 import { AuthService } from './auth.service.js';
@@ -29,6 +31,12 @@ interface MfaVerifyResponse {
   tokens: AuthTokens;
   user: AuthenticatedUser;
 }
+
+/**
+ * Pre-auth credential endpoints get the tight auth ceiling: five attempts per minute per IP.
+ * Credential stuffing and MFA guessing need volume; a human needs two or three tries.
+ */
+const AUTH_THROTTLE = { default: { limit: AUTH_THROTTLE_LIMIT, ttl: THROTTLE_WINDOW_MS } };
 
 /**
  * Pre-auth flows: registration, login, MFA completion, and the refresh/logout cycle.
@@ -49,6 +57,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @Throttle(AUTH_THROTTLE)
   register(
     @Body(zodBody(registerRequestSchema)) body: RegisterRequest,
     @Req() request: FastifyRequest,
@@ -59,6 +68,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(200)
+  @Throttle(AUTH_THROTTLE)
   async login(
     @Body(zodBody(loginRequestSchema)) body: LoginRequest,
     @Req() request: FastifyRequest,
@@ -75,6 +85,7 @@ export class AuthController {
   @Public()
   @Post('mfa/verify')
   @HttpCode(200)
+  @Throttle(AUTH_THROTTLE)
   async verifyMfa(
     @Body(zodBody(mfaVerifyRequestSchema)) body: MfaVerifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
@@ -87,6 +98,7 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @HttpCode(200)
+  @Throttle(AUTH_THROTTLE)
   async refresh(
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,

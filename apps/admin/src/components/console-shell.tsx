@@ -1,43 +1,39 @@
 'use client';
 
 import { IcbMark, cn, initialsOf } from '@icb/ui';
-import { Activity, BookOpen, LayoutDashboard, LogOut, ShieldCheck, Users } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
+import { navForRoles } from '@/components/console-nav';
 import { logoutAction } from '@/features/auth/actions';
-
-const NAV = [
-  { href: '/', label: 'Operations', icon: LayoutDashboard },
-  { href: '/ledger', label: 'Trial balance', icon: BookOpen },
-  { href: '/monitor', label: 'Monitor', icon: Activity },
-  { href: '/customers', label: 'Customers', icon: Users },
-  { href: '/kyc', label: 'KYC queue', icon: ShieldCheck },
-] as const;
 
 interface ShellUser {
   firstName: string;
   lastName: string;
   email: string;
+  roles: string[];
 }
 
 /**
  * The console shell.
  *
  * Visually distinct from the customer dashboard on purpose: staff frequently have both open, and
- * a dark chrome makes it impossible to mistake one for the other mid-task.
+ * a dark chrome makes it impossible to mistake one for the other mid-task. The sidebar is
+ * RBAC-aware — an operator sees exactly the sections their roles can open, nothing more.
  */
 export function ConsoleShell({
   user,
   children,
 }: Readonly<{ user: ShellUser; children: ReactNode }>) {
   const pathname = usePathname();
+  const groups = navForRoles(user.roles);
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[240px_1fr]">
       <aside className="flex flex-col bg-[var(--icb-navy-950)] text-[var(--icb-navy-100)] lg:sticky lg:top-0 lg:h-dvh">
-        <div className="flex h-[72px] items-center gap-2.5 px-5">
+        <div className="flex h-[72px] shrink-0 items-center gap-2.5 px-5">
           <IcbMark className="h-8 w-8 text-white" id="console" />
           <span className="flex flex-col leading-none">
             <span className="font-display text-lg leading-none font-extrabold text-white">ICB</span>
@@ -47,29 +43,39 @@ export function ConsoleShell({
           </span>
         </div>
 
-        <nav aria-label="Console" className="flex-1 space-y-0.5 px-3 py-2">
-          {NAV.map((item) => {
-            const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={active ? 'page' : undefined}
-                className={cn(
-                  'flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium transition-colors',
-                  active
-                    ? 'bg-white/10 text-white'
-                    : 'text-[var(--icb-navy-200)] hover:bg-white/5 hover:text-white',
-                )}
-              >
-                <item.icon size={17} className="shrink-0" />
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav aria-label="Console" className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
+          {groups.map((group) => (
+            <div key={group.label}>
+              <p className="px-3 pb-1 text-[0.6rem] font-semibold tracking-[0.14em] text-[var(--icb-navy-400)] uppercase">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const active =
+                    item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        'flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium transition-colors',
+                        active
+                          ? 'bg-white/10 text-white'
+                          : 'text-[var(--icb-navy-200)] hover:bg-white/5 hover:text-white',
+                      )}
+                    >
+                      <item.icon size={17} className="shrink-0" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        <div className="border-t border-white/10 p-3">
+        <div className="shrink-0 border-t border-white/10 p-3">
           <div className="flex items-center gap-3 px-2 py-2">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--icb-accent)] text-xs font-semibold text-[var(--icb-navy-900)]">
               {initialsOf(user.firstName, user.lastName, user.email)}

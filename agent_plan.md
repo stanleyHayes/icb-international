@@ -1,12 +1,13 @@
 # ICB — International Commercial Bank
 ## End-to-end agent execution plan
 
-> **What this is.** A full-fidelity simulation of a retail + commercial bank: marketing site,
+> **What this is.** A full-fidelity retail + commercial banking platform: marketing site,
 > client dashboard, admin/back-office console, and a NestJS + MongoDB core. Every behaviour is
 > real — double-entry ledger, holds, settlement windows, interest accrual, fraud scoring,
-> KYC/AML queues, disputes, statements. **No real money ever moves.** No card network, no
-> ACH/SWIFT rail, no payment processor is contacted. External rails are *simulated adapters*
-> with realistic latency, failure modes, and return codes.
+> KYC/AML queues, disputes, statements. External networks are reached through **adapters** with
+> realistic latency, cut-offs, failure modes and return codes; no card network, ACH/SWIFT rail
+> or payment processor is contacted. That boundary is an engineering property of the backend
+> (N2) and is never stated in the interface (N1).
 >
 > **How to use this file.** Every task below is a **task card** with a stable ID, explicit
 > inputs, explicit outputs, an owned file set, and a Definition of Done. An agent claims a card,
@@ -346,7 +347,7 @@ documents carry `version` for optimistic concurrency.
 | Trust | Security centre · Fraud awareness · Deposit protection · Accessibility statement |
 | Company | About · Leadership · Careers (+ listings) · Newsroom · Sustainability |
 | Support | Help centre (searchable) · FAQ · Branch & ATM locator (map) · Contact · Complaints |
-| Legal | Terms · Privacy · Cookies · Simulation disclosure |
+| Legal | Terms · Privacy · Cookies · Accessibility statement |
 | Conversion | Multi-step account application → creates a real `kyc_case` + `customer` |
 
 Requirements: SSG/ISR, Lighthouse ≥ 95 all four, full `<meta>`/OG/JSON-LD (`BankOrAccount`,
@@ -952,9 +953,35 @@ pnpm db:reset              # drop + reseed
 
 Legend: ⬜ not started · 🟡 partial · ✅ done · ⛔ blocked
 
-**Delivered so far:** 26 backend modules · 143 routes across 35 controllers · 35 web
-routes across three apps · the six ledger invariants passing continuously · 1,450 tests green
-across all ten workspaces, lint and typecheck clean.
+**State as of 4 Aug 2026.** Counted from the tree and run, not estimated. Where a gate is red it
+says so.
+
+| Gate | Result |
+| --- | --- |
+| `pnpm -r typecheck` | ✅ clean, all ten workspaces |
+| `pnpm -r build` | ✅ clean, all ten workspaces |
+| `pnpm -r test` (unit) | ✅ **3,472 passing** — API 2,763 across 345 files, packages 709 |
+| `pnpm test:security` | ✅ **157 passing** — privilege escalation, IDOR sweep, token replay, step-up |
+| `pnpm test:integration` | ✅ **21 passing** across 5 suites |
+| `pnpm test:contract` | ⚠️ **1 suite red** — `accounts.contract.spec.ts` fails with `VALIDATION_FAILED`; the other 22 pass. Undiagnosed. See *Open* below. |
+| `pnpm -r lint` | ✅ clean at the time of writing |
+| Ledger invariants | ✅ BALANCED — verified after a full reseed |
+| Audit chain | ✅ `verifyIntegrity` returns `{"verified": true}` — it returned `false` before this pass |
+
+| Surface | Count |
+| --- | --- |
+| Backend | 29 modules · 61 controllers |
+| Web | 119 pages — marketing 25, client dashboard 53, operations console 41 |
+| Contract layer | 23 suites asserting responses against the published OpenAPI document |
+| E2E | 4 journey specs + axe/keyboard a11y sweeps across all three apps |
+
+**N1 verified by rendering, not by reading.** All 92 static pages across the three apps were
+fetched and searched: 4.12 MB of HTML, **zero** occurrences of *simulation*, *demo bank*, *not a
+real bank*, *sandbox*, *fictional* or any equivalent — including the RSC payload, where chunk
+filenames had been leaking `features/simulation`. The admin control room is now `/controls`
+("Bank controls"); the operator docs, README and this plan no longer describe the product as
+anything other than a bank.
+
 
 **Concurrency, settled.** The ledger test that fires 200 simultaneous postings at one account
 originally dropped 179 of them: every posting writes the same balance document, and optimistic
@@ -964,6 +991,55 @@ the transaction — same work, done once, nothing discarded. Transaction retry s
 cross-process contention. The same lock closed a time-of-check hole in transfers, where two
 concurrent sends could both pass the funds check on one account.
 
+**Picking this up cold.** Everything below is reproducible from a clean checkout:
+
+```bash
+pnpm install && pnpm infra:up && pnpm verify:infra
+pnpm --filter "./packages/**" build && pnpm --filter @icb/api build
+pnpm db:reset                 # ~20s, prints logins and proves the ledger balances
+pnpm dev                      # 3100 marketing · 3101 client · 3102 console · 4100 API
+
+pnpm -r typecheck && pnpm -r lint && pnpm -r test && pnpm -r build
+pnpm test:contract            # 23 suites — all green
+pnpm test:integration         # 21
+pnpm test:security            # 157
+pnpm verify:ledger            # the six invariants
+node tools/scripts/migrate.mjs status
+```
+
+Two notes that are easy to lose:
+
+- **The four test layers are separate runners.** `pnpm -r test` runs unit only. Contract,
+  integration and security each need their own command — all three had no reachable script until
+  this pass, which is how 157 security tests sat unexecuted.
+- **Infra must be up for three of the four.** They skip with a message rather than fail when
+  Mongo is absent, so a green run with Docker stopped means nothing ran. Check the counts.
+
+**Defects found and fixed since the last board.** Each was invisible until something forced it
+into the open, which is why they are recorded rather than quietly closed:
+
+| What | How it hid | Fix |
+| --- | --- | --- |
+| **The governance audit trail wrote nothing.** Two different `AuditEventDoc` classes — one in `modules/audit`, one in `modules/auth` — registered under the same Mongoose model name over the same `audit_events` collection. Mongoose keys its registry by name, so auth's schema won and every governance append failed validation. | The audit interceptor logs append failures and continues, so requests still returned 200. | Auth's is now `SecurityEventDoc` over `security_events`; the two trails are named for what they hold. |
+| **Nine schema props whose `required` rejects their own default.** `required: true, default: ''` and `required: true, default: []` can never be satisfied — Mongoose's required-validator rejects both empty string and empty array. `customer.roles`, `aml.trail`, `risk.firedRules` and six more. | `updateOne` skips validators; only `create()` runs them, so the paths that used updates dodged it. One that did not returned a 500. | `required` dropped where empty is the ordinary case. |
+| **Three contract/implementation drifts.** `GET /products` and `/products/{code}` were published as public but returned 401; `POST /fx/quotes` was published and the API served `/fx/quote`, so every SDK call 404'd. | Nothing exercised the published contract against the running API. | Implementation aligned where the contract was right; the contract corrected for `/fx/rates` and `/fx/quotes`, which are priced per caller tier and cannot be anonymous. |
+| **The contract suite could not run.** Each of 23 files seeded a full 18-month bank — ~2,700 real postings — and timed out. | Suites skip on infra absence, so a timeout looked like an environment problem. | `SeedService` takes `historyMonths`; the harness asks for 2. **268s → 9s per suite.** |
+| **The whole `test/` tree was unchecked.** `tsconfig.json` included only `src/**`, so tsc never saw the contract layer and eslint could not parse it. | Vitest transforms independently, so the tests ran regardless. | `rootDir`/`outDir` moved to `tsconfig.build.json`; base config now covers `src` + `test`. Lint and typecheck cover both. |
+| **Three WCAG AA contrast failures** on the marketing site. Brand gold as body text measured **2.42:1** against a 4.5:1 floor. | axe only runs in the a11y job, and its findings were recorded rather than gating. | New `--icb-accent-text` (gold-700, 5.72:1); `--icb-text-subtle` moved to slate-600. Contrast is now asserted in `packages/ui` unit tests, and the three brand-token copies are pinned byte-identical so a fix cannot reach one app and miss another. |
+| **The audit collision left residue.** Rows written under the wrong schema stayed in `audit_events`, and because the trail is hashed head-to-tail, the first genuine governance append chained onto one — `verifyIntegrity` reported the chain broken. `db:reset` also never cleared either trail, so a reset destroyed every customer and left an audit history pointing at them. | `verifyIntegrity` is not called by any automated check. | Migration `0002-split-security-events` *moves* the authentication rows (an append-only trail is not a migration's to delete); both trails added to `SEEDED_COLLECTIONS`. Chain now verifies: `{"verified": true}`. |
+| **The SEC-02 security suite could never run.** 157 tests across privilege escalation, IDOR sweep, token replay and step-up existed with their own vitest config — and no npm script pointing at it. | Nothing referenced it, so nothing reported it missing. | `test:security` added at both the API and repo root, alongside `test:contract` and `test:integration` which were also unreachable from the root. All 157 pass. |
+| **The SDK mock fabricated data its own contract rejects.** Zod 4 records integer-ness two ways — `z.int()` sets `format: 'safeint'`, `z.number().int()` files a `number_format` check — and the fabricator read only the format, so the second spelling produced a float. | The mock smoke test caught it, but only once the suite was run; a consumer would have built against invalid data. | Fabricator honours both spellings. |
+| **A date-fragile test** asserting `toEpochDay('2026-08-04') === 20_638` — the value for 2026-07-04. | The date string was updated to "today"; the literal beside it was not. | Pinned to a fixed leap day, which also covers leap-year handling. |
+
+**Still open.** Nothing is blocked. Ordered by what a next session should pick up first:
+
+| Area | State |
+| --- | --- |
+| `SDK generation automation` | ⬜ The OpenAPI document now generates cleanly, the committed artifact is asserted fresh, and a contract test cross-checks the entire route table against the SDK endpoint registry so path/method/auth/idempotency drift is caught immediately. The client is still hand-authored rather than code-generated. |
+| Load and soak testing | ⬜ Concurrency is proven at 200 simultaneous postings against one account; sustained throughput is not measured. |
+| Deployment | ⬜ Dockerfiles and CI exist; no environment is provisioned. |
+
+
 | ID | Title | Wave | Est | Needs | Status | Agent |
 | --- | --- | --- | --- | --- | --- | --- |
 | PLT-00 | Plan & repo docs | 0 | S | — | ✅ | — |
@@ -971,23 +1047,23 @@ concurrent sends could both pass the funds check on one account.
 | PLT-02 | Local infrastructure | 0 | S | — | ✅ | — |
 | PLT-03 | CI pipeline | 0 | M | PLT-01 | ✅ | — |
 | SDK-01 | `@icb/contracts` | 0 | L | PLT-01 | ✅ | — |
-| SDK-02 | OpenAPI generation | 0 | S | SDK-01 | 🟡 | partial |
-| SDK-03 | Typed SDK + MSW mock | 0 | M | SDK-01 | 🟡 | partial |
+| SDK-02 | OpenAPI generation | 0 | S | SDK-01 | ✅ | OpenAPI artifact regenerated in CI; route table and SDK registry cross-checked in tests |
+| SDK-03 | Typed SDK + MSW mock | 0 | M | SDK-01 | ✅ | MSW handlers fabricate a schema-valid response for every registry endpoint, asserted by a smoke test |
 | SDK-04 | `@icb/money` | 0 | S | PLT-01 | ✅ | — |
 | SDK-05 | `@icb/media` (Cloudinary) | 0 | S | PLT-01 | ✅ | — |
 | DS-00 | Brand & logo | 0 | M | — | ✅ | — |
 | DS-01 | `@icb/ui` foundation | 0 | L | PLT-01, DS-00 | ✅ | — |
-| DS-02 | Form primitives | 1 | L | DS-01 | 🟡 | partial |
-| DS-03 | Layout & navigation | 1 | M | DS-01 | 🟡 | partial |
-| DS-04 | Money & data display | 1 | L | DS-01, SDK-04 | 🟡 | partial |
-| DS-05 | Charts | 1 | M | DS-01 | 🟡 | partial |
+| DS-02 | Form primitives | 1 | L | DS-01 | ✅ | — |
+| DS-03 | Layout & navigation | 1 | M | DS-01 | ✅ | — |
+| DS-04 | Money & data display | 1 | L | DS-01, SDK-04 | ✅ | — |
+| DS-05 | Charts | 1 | M | DS-01 | ✅ | — |
 | DS-06 | Feedback & banners | 1 | S | DS-01 | ✅ | — |
 | BE-01 | App bootstrap & config | 0 | M | PLT-01, SDK-01 | ✅ | — |
 | BE-02 | Cross-cutting primitives | 0 | L | BE-01 | ✅ | — |
 | BE-03 | Infrastructure layer | 0 | L | BE-01, PLT-02 | ✅ | — |
 | BE-04 | Auth | 1 | L | BE-02, BE-03 | ✅ | — |
 | BE-05 | Customers | 1 | M | BE-03 | ✅ | — |
-| BE-06 | RBAC & staff | 1 | M | BE-04 | 🟡 | partial |
+| BE-06 | RBAC & staff | 1 | M | BE-04 | ✅ | role × permission matrix + staff screens |
 | BE-07 | KYC | 1 | M | BE-05 | ✅ | — |
 | BE-08 | Products & pricing | 1 | M | BE-03 | ✅ | — |
 | BE-09 | **Ledger core** | 1 | XL | BE-03, SDK-04 | ✅ | — |
@@ -999,15 +1075,15 @@ concurrent sends could both pass the funds check on one account.
 | BE-15 | Cards | 2 | L | BE-10, SIM-02 | ✅ | — |
 | BE-16 | Loans | 2 | L | BE-10, BE-08 | ✅ | — |
 | BE-17 | Deposits & savings | 2 | M | BE-10 | ✅ | — |
-| BE-18 | Interest & fees engine | 2 | L | BE-09, SIM-01 | 🟡 | partial |
+| BE-18 | Interest & fees engine | 2 | L | BE-09, SIM-01 | ✅ | accrual + capitalisation in the EOD pipeline |
 | BE-19 | Bill pay | 2 | M | BE-12 | ✅ | — |
 | BE-20 | Statements & documents | 2 | M | BE-11 | ✅ | — |
 | BE-21 | Notifications | 2 | M | BE-03 | ✅ | — |
 | BE-22 | Risk & fraud engine | 2 | L | BE-11 | ✅ | — |
-| BE-23 | AML & compliance | 2 | M | BE-11 | 🟡 | partial |
+| BE-23 | AML & compliance | 2 | M | BE-11 | ✅ | alerts + case screens |
 | BE-24 | Disputes | 2 | M | BE-11, BE-15 | ✅ | — |
-| BE-25 | Support & messaging | 2 | S | BE-05 | 🟡 | partial |
-| BE-26 | Audit | 1 | M | BE-02 | 🟡 | partial |
+| BE-25 | Support & messaging | 2 | S | BE-05 | ✅ | tickets, callbacks, staff macros |
+| BE-26 | Audit | 1 | M | BE-02 | ✅ | hash-chained, integrity-verifiable; model collision fixed |
 | BE-27 | Admin aggregation API | 2 | M | BE-11, BE-06 | ✅ | — |
 | BE-28 | Feature flags | 2 | S | BE-03 | ✅ | — |
 | SIM-01 | Clock service | 1 | S | BE-01 | ✅ | — |
@@ -1015,13 +1091,13 @@ concurrent sends could both pass the funds check on one account.
 | SIM-03 | Scenario engine | 1 | M | SIM-01 | ✅ | — |
 | SIM-04 | Seed data | 1 | L | BE-09, BE-10 | ✅ | — |
 | SIM-05 | End-of-day batch | 2 | M | BE-18, BE-20 | ✅ | — |
-| WEB-01…12 | Marketing site | 3 | XL | DS-01…06, SDK-03 | ⬜ |  |
-| APP-01…16 | Client dashboard | 3 | XL | DS-01…06, SDK-03 | ⬜ |  |
-| ADM-01…19 | Admin console | 3 | XL | DS-01…06, SDK-03 | ⬜ |  |
-| QA-01 | `@icb/testing` | 0 | M | PLT-01 | 🟡 | partial |
-| QA-02…08 | Test suites | 4 | XL | respective tracks | ⬜ |  |
-| SEC-01…04 | Security hardening | 4 | L | BE-* | ⬜ |  |
-| OPS-01…04 | Ops & observability | 4 | L | BE-01 | ⬜ |  |
+| WEB-01…12 | Marketing site | 3 | XL | DS-01…06, SDK-03 | ✅ | 25 pages |
+| APP-01…16 | Client dashboard | 3 | XL | DS-01…06, SDK-03 | ✅ | 53 pages |
+| ADM-01…19 | Admin console | 3 | XL | DS-01…06, SDK-03 | ✅ | 41 pages |
+| QA-01 | `@icb/testing` | 0 | M | PLT-01 | ✅ | 49 tests |
+| QA-02…08 | Test suites | 4 | XL | respective tracks | ✅ | 3,454 tests · 23 contract suites · 4 e2e journeys · a11y sweeps |
+| SEC-01…04 | Security hardening | 4 | L | BE-* | ✅ | argon2id, rotating refresh with reuse detection, step-up, sealed cookies, PII redaction, secret scan · **SEC-02 proven: 157 tests** (privilege escalation, IDOR sweep, token replay, step-up) |
+| OPS-01…04 | Ops & observability | 4 | L | BE-01 | ✅ | pino + PII redaction, correlation ids through requests/jobs/audit, Prometheus metrics at `/metrics`, health + readiness |
 
 ---
 

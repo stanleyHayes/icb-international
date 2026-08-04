@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { ClientSession, Model } from 'mongoose';
 
 import { DomainError, NotFoundError } from '../../../common/errors/index.js';
+import { MetricsService } from '../../../common/observability/metrics.service.js';
 import { TransactionManager } from '../../../infrastructure/database/transaction.manager.js';
 import { OutboxService } from '../../../infrastructure/outbox/outbox.service.js';
 import { customerRef } from '../../ledger/domain/account-ref.js';
@@ -13,6 +14,7 @@ import { TransferDoc } from '../infrastructure/transfer.schemas.js';
 import { TRANSFER_EVENTS } from '../domain/transfers.constants.js';
 import { StandingOrdersService } from './standing-orders.service.js';
 import { TransferPreparationService } from './transfer-preparation.service.js';
+import type { StepUpProof } from './transfer-step-up.service.js';
 import type { PreparedTransfer, TransferExecution } from './transfer-pipeline.types.js';
 import { RAIL_USE_CASES, type RailTransferUseCase } from './use-cases/rail-transfer.use-case.js';
 
@@ -28,6 +30,7 @@ import { RAIL_USE_CASES, type RailTransferUseCase } from './use-cases/rail-trans
 export class TransferOrchestrator {
   private readonly logger = new Logger(TransferOrchestrator.name);
 
+  // eslint-disable-next-line max-params -- every collaborator is load-bearing; a bag of unrelated infrastructure would satisfy the count and hurt the reading.
   constructor(
     @InjectModel(TransferDoc.name) private readonly transfers: Model<TransferDoc>,
     private readonly preparation: TransferPreparationService,
@@ -35,11 +38,16 @@ export class TransferOrchestrator {
     private readonly standingOrders: StandingOrdersService,
     private readonly transactionManager: TransactionManager,
     private readonly outbox: OutboxService,
+    private readonly metrics: MetricsService,
   ) {}
 
   /** Run the full pipeline for a customer-initiated send. */
-  async initiate(customerId: string, request: CreateTransferRequest): Promise<TransferDoc> {
-    const prepared = await this.preparation.prepare(customerId, request);
+  async initiate(
+    customerId: string,
+    request: CreateTransferRequest,
+    proof?: StepUpProof,
+  ): Promise<TransferDoc> {
+    const prepared = await this.preparation.prepare(customerId, request, proof);
     if (request.schedule) {
       return this.recordScheduled(prepared, request.schedule);
     }
@@ -52,7 +60,7 @@ export class TransferOrchestrator {
   private async executeNow(prepared: PreparedTransfer): Promise<TransferDoc> {
     const lockKeys = await this.contendedKeys(prepared);
 
-    return this.transactionManager.withTransaction(
+    const doc = await this.transactionManager.withTransaction(
       async (session) => {
         // Checked while holding the account's lock, not before taking it. Outside the lock this
         // is a time-of-check/time-of-use hole: two sends from one account read the same available
@@ -67,6 +75,10 @@ export class TransferOrchestrator {
       },
       { lockKeys },
     );
+
+    // After the commit, deliberately: an aborted-and-retried transaction must not count twice.
+    this.metrics.transferOutcome(prepared.rail, doc.status);
+    return doc;
   }
 
   /**

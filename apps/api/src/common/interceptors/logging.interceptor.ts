@@ -1,4 +1,5 @@
 import {
+  HttpException,
   Injectable,
   Logger,
   type CallHandler,
@@ -9,6 +10,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { performance } from 'node:perf_hooks';
 import { catchError, tap, type Observable } from 'rxjs';
 
+import { isDomainError } from '../errors/domain.error.js';
 import { CORRELATION_ID_HEADER } from '../observability/correlation.constants.js';
 import { redactPii } from './redact.js';
 
@@ -46,13 +48,26 @@ export class LoggingInterceptor implements NestInterceptor {
       }),
       catchError((error: unknown) => {
         this.logger.error(
-          { ...base, statusCode: reply.statusCode, durationMs: elapsedMs(started), err: error },
+          { ...base, statusCode: statusOf(error), durationMs: elapsedMs(started), err: error },
           'request failed',
         );
         throw error;
       }),
     );
   }
+}
+
+/**
+ * The exception filter runs after this interceptor, so on a failure `reply.statusCode` still
+ * shows the pre-handler default (201 on a POST) rather than the response the client gets. The
+ * filter's mapping is deterministic — a domain error's code fixes its status, a framework
+ * exception carries one, anything else is a 500 — so read the status from the error itself.
+ */
+function statusOf(error: unknown): number {
+  if (isDomainError(error)) {
+    return error.status;
+  }
+  return error instanceof HttpException ? error.getStatus() : 500;
 }
 
 function elapsedMs(started: number): number {

@@ -38,7 +38,7 @@ describe('permissionsForRoles', () => {
 
   it('grants super_admin every permission', () => {
     const granted = permissionsForRoles(['super_admin']);
-    expect(granted.has('simulation:control')).toBe(true);
+    expect(granted.has('controls:operate')).toBe(true);
     expect(granted.has('staff:manage')).toBe(true);
   });
 

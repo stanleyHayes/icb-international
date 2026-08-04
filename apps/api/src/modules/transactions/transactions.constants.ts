@@ -29,6 +29,12 @@ export const EXPORT_EXTENSIONS: Readonly<Record<ExportFormat, string>> = {
 /** Spend analytics defaults when the caller does not bound the window. */
 export const ANALYTICS_DEFAULT_PERIOD_DAYS = 30;
 
+/** How many merchants the leaderboard returns — the head of the list, not the tail. */
+export const MERCHANT_ANALYTICS_LIMIT = 10;
+
+/** Recurring-charge detection looks back this far: monthly charges need months of runway. */
+export const RECURRING_LOOKBACK_DAYS = 180;
+
 /** Cashflow always reports this many buckets, ending in the current one. */
 export const CASHFLOW_PERIOD_COUNT = 12;
 

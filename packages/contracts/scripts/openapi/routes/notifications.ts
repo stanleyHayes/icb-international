@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   notificationPreferenceSchema,
   notificationQuerySchema,
+  notificationSchema,
   updateNotificationPreferencesRequestSchema,
 } from '../../../src/index.js';
 import { idSchema } from '../../../src/common/primitives.js';
@@ -38,7 +39,7 @@ export const notificationsOperations = defineOperations([
     operationId: 'markNotificationRead',
     summary: 'Mark one notification as read',
     pathParams: { notificationId: idSchema },
-    response: success(STATUS.noContent, 'Marked as read.'),
+    response: success(STATUS.ok, 'The updated notification.', notificationSchema),
     errors: [{ status: STATUS.notFound }],
   },
   {

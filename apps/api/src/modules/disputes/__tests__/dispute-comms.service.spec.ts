@@ -28,8 +28,9 @@ consumers as unknown as OutboxConsumerService,
   return { consumers, handlers, notifications };
 }
 
+/** The watcher sweeps on a timer, outside any request, so its events carry no correlation id. */
 function event(type: string, payload: Record<string, unknown>): OutboxEvent {
-  return { id: 'evt-1', type, payload, attempts: 1 };
+  return { id: 'evt-1', type, payload, attempts: 1, correlationId: null };
 }
 
 describe('onApplicationBootstrap', () => {

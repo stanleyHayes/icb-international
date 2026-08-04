@@ -131,10 +131,13 @@ export const sessionSchema = z.object({
 export const stepUpRequestSchema = z.object({
   purpose: z.enum([
     'reveal_card',
+    'card_pan_reveal',
     'add_beneficiary',
     'high_value_transfer',
     'change_security_settings',
     'close_account',
+    'approval-decide',
+    'staff-manage',
   ]),
 });
 
@@ -148,6 +151,19 @@ export const stepUpTokenSchema = z.object({
   expiresAt: isoDateTimeSchema,
 });
 
+/**
+ * One sign-in event as the customer sees it on their security screen, read back out of the
+ * append-only audit trail. The wire keeps the greppable audit action name, e.g. `auth.login`.
+ */
+export const loginHistoryEntrySchema = z.object({
+  id: idSchema,
+  action: z.string(),
+  outcome: z.string(),
+  ipAddress: z.string().nullable(),
+  userAgent: z.string().nullable(),
+  occurredAt: isoDateTimeSchema,
+});
+
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
@@ -158,4 +174,5 @@ export type MfaVerifyRequest = z.infer<typeof mfaVerifyRequestSchema>;
 export type Session = z.infer<typeof sessionSchema>;
 export type StepUpRequest = z.infer<typeof stepUpRequestSchema>;
 export type StepUpToken = z.infer<typeof stepUpTokenSchema>;
+export type LoginHistoryEntry = z.infer<typeof loginHistoryEntrySchema>;
 export type RecoveryCodes = z.infer<typeof recoveryCodesSchema>;

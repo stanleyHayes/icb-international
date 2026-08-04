@@ -113,7 +113,7 @@ absent) · `@icb/sdk` · `@icb/testing`.
 | Products | cards (PAN encrypted at rest, controls enforced at authorisation, auth → hold → capture), loans (amortisation, explainable scorecard, arrears), savings goals and term deposits, bill pay, FX, products/pricing |
 | Servicing | notifications (**Resend**, with a recording transport offline), documents and statements (**Cloudinary**, PDF written from the ledger), beneficiaries with cooling-off and micro-deposit verification |
 | Risk | fraud rule engine with per-rule attribution, risk cases, disputes with provisional credit |
-| Operations | admin aggregation, customer directory, simulation control (clock, rails, scenarios, end-of-day, feature flags) |
+| Operations | admin aggregation, customer directory, bank controls (business date, rails, scenarios, end-of-day, feature flags) |
 
 **Apps** — marketing (12 routes, statically prerendered), customer dashboard (15 routes),
 operations console (8 routes). All server-rendered against the live API; the access token lives
@@ -126,9 +126,20 @@ replica-set integration job, a production build, and a secret scan.
 
 ### Honest gaps
 
-MFA enrolment, the maker-checker approvals inbox, AML case management, secure messaging, and
-several admin queues (loans, risk, disputes, simulation control room) have contracts and task
-cards but no screens yet. `agent_plan.md` marks each 🟡 or ⬜.
+MFA enrolment, the approvals inbox, AML cases, secure messaging and every admin queue now have
+screens. What is genuinely still open:
+
+- **Role-boundary proof.** The contract suite signs in holding every staff role, so it proves
+  response shape, not that each role is denied what it should be. `SEC-02` owns that.
+- **The legacy SDK surface is still hand-curated** for backward compatibility, but OpenAPI types
+  now generate automatically in `@icb/sdk/src/generated/openapi.types.ts` and drift is check-gated.
+  MSW handlers still do not exist.
+- **No load or soak testing.** Concurrency is proven at 200 simultaneous postings against a
+  single account; sustained throughput is unmeasured.
+- **No production environment is provisioned.** Dockerfiles, CI, and a Vercel-ready API entrypoint
+  exist, but release infrastructure/ownership is still open.
+
+`agent_plan.md` §14 carries the full board.
 
 ## Non-negotiables
 

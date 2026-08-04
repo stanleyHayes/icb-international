@@ -21,8 +21,15 @@ import {
 } from './domain/analytics.js';
 import { categoriseTransaction } from './domain/categoriser.js';
 import {
+  detectRecurring,
+  topCounterparties,
+  type CounterpartyRow,
+} from './domain/counterparty-analytics.js';
+import {
   ANALYTICS_DEFAULT_PERIOD_DAYS,
   CASHFLOW_PERIOD_COUNT,
+  MERCHANT_ANALYTICS_LIMIT,
+  RECURRING_LOOKBACK_DAYS,
   SETTLED_STATUSES,
 } from './transactions.constants.js';
 
@@ -36,6 +43,36 @@ export interface CashflowQuery {
   currency: string;
   granularity: Granularity;
 }
+
+export interface MerchantAnalyticsEntry {
+  name: string;
+  category: string;
+  total: ReturnType<typeof toMoneyDto>;
+  transactionCount: number;
+}
+
+export interface MerchantsAnalytics {
+  period: { from: string; to: string };
+  currency: SpendByCategory['currency'];
+  merchants: MerchantAnalyticsEntry[];
+}
+
+export interface RecurringAnalyticsEntry {
+  name: string;
+  category: string;
+  amount: ReturnType<typeof toMoneyDto>;
+  occurrences: number;
+  lastChargedAt: string;
+}
+
+export interface RecurringAnalytics {
+  window: { from: string; to: string };
+  currency: SpendByCategory['currency'];
+  recurring: RecurringAnalyticsEntry[];
+}
+
+/** A debit whose narrative is missing — grouped rather than dropped, so totals still add up. */
+const UNKNOWN_COUNTERPARTY = 'Other';
 
 /**
  * Spending insights over the ledger. Categories are not stored — they are derived per row by
@@ -115,6 +152,70 @@ export class TransactionAnalyticsService {
       override ??
       categoriseTransaction(row.transactionType, row.narrative ?? 'Transaction', row.direction)
     );
+  }
+
+  /** The top debit counterparties by total spend over a window — the merchant leaderboard. */
+  async merchants(customerId: string, query: SpendQuery): Promise<MerchantsAnalytics> {
+    const fallback = trailingWindow(this.clock.today(), ANALYTICS_DEFAULT_PERIOD_DAYS);
+    const window = { from: query.from ?? fallback.from, to: query.to ?? fallback.to };
+    const rows = await this.counterpartyRows(customerId, query.currency, window);
+    return {
+      period: window,
+      currency: query.currency as MerchantsAnalytics['currency'],
+      merchants: topCounterparties(rows, MERCHANT_ANALYTICS_LIMIT).map((merchant) => ({
+        name: merchant.name,
+        category: merchant.category,
+        total: toMoneyDto(merchant.minorUnits, query.currency),
+        transactionCount: merchant.transactionCount,
+      })),
+    };
+  }
+
+  /** Charges that repeat at a stable amount — the subscription detector. */
+  async recurring(customerId: string, query: SpendQuery): Promise<RecurringAnalytics> {
+    const window = trailingWindow(this.clock.today(), RECURRING_LOOKBACK_DAYS);
+    const rows = await this.counterpartyRows(customerId, query.currency, window);
+    return {
+      window,
+      currency: query.currency as RecurringAnalytics['currency'],
+      recurring: detectRecurring(rows).map((charge) => ({
+        name: charge.name,
+        category: charge.category,
+        amount: toMoneyDto(charge.minorUnits, query.currency),
+        occurrences: charge.occurrences,
+        lastChargedAt: charge.lastChargedAt,
+      })),
+    };
+  }
+
+  /** Settled debits in the window, folded to (counterparty, category) rows. */
+  private async counterpartyRows(
+    customerId: string,
+    currency: string,
+    window: { from: string; to: string },
+  ): Promise<CounterpartyRow[]> {
+    const refs = await this.customerAccountRefs(customerId);
+    if (refs.length === 0) return [];
+    const entries = await this.entries
+      .find({
+        accountRef: { $in: refs },
+        direction: 'debit',
+        currency,
+        transactionStatus: { $in: SETTLED_STATUSES },
+        valueDate: { $gte: window.from, $lte: window.to },
+      })
+      .lean();
+    const annotations = await this.annotations.getForTransactions(
+      customerId,
+      entries.map((row) => row.transactionId),
+    );
+    return entries.map((row) => ({
+      name: row.narrative ?? UNKNOWN_COUNTERPARTY,
+      category: this.categoryFor(row, annotations.get(row.transactionId)?.category ?? null),
+      minorUnits: row.minorUnits,
+      valueDate: row.valueDate,
+      bookedAt: row.bookedAt.toISOString(),
+    }));
   }
 
   /** Income/expense buckets for the trailing CASHFLOW_PERIOD_COUNT weeks or months. */

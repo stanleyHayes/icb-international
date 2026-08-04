@@ -1,21 +1,46 @@
 import type { AuthenticatedUser } from '@icb/contracts';
 import { Card, CardBody, CardHeader, StatusBadge, formatDate } from '@icb/ui';
-import { KeyRound, Mail, Smartphone } from 'lucide-react';
-import type { Metadata } from 'next';
+import { Bell, ChevronRight, KeyRound, Palette, Smartphone, User } from 'lucide-react';
+import type { Metadata, Route } from 'next';
+import Link from 'next/link';
 
-import { SignOutEverywhere } from '@/features/settings/sign-out-everywhere';
 import { api } from '@/lib/api';
 
 export const metadata: Metadata = { title: 'Settings' };
 
+const SECTIONS = [
+  {
+    href: '/settings/profile',
+    icon: User,
+    title: 'Profile',
+    detail: 'Your name, addresses, contact details and employment.',
+  },
+  {
+    href: '/settings/security',
+    icon: KeyRound,
+    title: 'Security',
+    detail: 'Password, two-factor authentication, sessions and your data.',
+  },
+  {
+    href: '/settings/notifications',
+    icon: Bell,
+    title: 'Notifications',
+    detail: 'Which events reach you, on which channel, and when to stay quiet.',
+  },
+  {
+    href: '/settings/preferences',
+    icon: Palette,
+    title: 'Preferences',
+    detail: 'Language, timezone, statement delivery and appearance.',
+  },
+] as const;
+
 /**
- * Profile and security.
- *
- * Security actions live beside the facts they act on: the sign-out control sits under the
- * session summary, not on a separate screen a worried customer has to go looking for.
+ * Settings overview: the state of the account at a glance, with each section one tap away.
+ * Editing happens in the sections, not here — an overview that also edits is neither.
  */
 export default async function SettingsPage() {
-  const user = await api<AuthenticatedUser>('/auth/me');
+  const user = await api<AuthenticatedUser>('/auth/me', { tags: ['profile'] });
 
   return (
     <>
@@ -26,7 +51,7 @@ export default async function SettingsPage() {
         </p>
       </header>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Your details" />
           <CardBody className="pt-0">
@@ -46,67 +71,63 @@ export default async function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader
-            title="Security"
-            description="Changes here take effect immediately across every device."
-          />
+          <CardHeader title="Security at a glance" />
           <CardBody className="pt-0">
-            <ul className="space-y-4">
-              <SecurityRow
-                icon={<KeyRound size={17} />}
-                title="Password"
-                detail="Argon2id hashed. We cannot read it, and neither can anyone who reaches our database."
-              />
-              <SecurityRow
-                icon={<Smartphone size={17} />}
-                title="Two-factor authentication"
-                detail={
-                  user.mfaEnabled
-                    ? 'Enabled. Required at sign-in and for sensitive actions.'
-                    : 'Not enabled. Sensitive actions still require re-authentication.'
-                }
-              />
-              <SecurityRow
-                icon={<Mail size={17} />}
-                title="Security alerts"
-                detail="We email you on a new-device sign-in, a password change, and any large or unusual transaction."
-              />
+            <ul className="space-y-4 text-sm">
+              <li className="flex items-start gap-3">
+                <KeyRound size={17} className="mt-0.5 shrink-0 text-[var(--icb-text-subtle)]" />
+                <p>
+                  <span className="font-medium">Password.</span>{' '}
+                  <span className="text-[var(--icb-text-muted)]">
+                    Argon2id hashed — we cannot read it, and neither can anyone who reaches our
+                    database.
+                  </span>
+                </p>
+              </li>
+              <li className="flex items-start gap-3">
+                <Smartphone size={17} className="mt-0.5 shrink-0 text-[var(--icb-text-subtle)]" />
+                <p>
+                  <span className="font-medium">Two-factor authentication.</span>{' '}
+                  <span className="text-[var(--icb-text-muted)]">
+                    {user.mfaEnabled
+                      ? 'Enabled. Required at sign-in and for sensitive actions.'
+                      : 'Not enabled — turn it on under Security.'}
+                  </span>
+                </p>
+              </li>
             </ul>
-
-            <div className="mt-6 border-t border-[var(--icb-border)] pt-5">
-              <p className="text-sm font-medium">Sign out everywhere</p>
-              <p className="mt-1 text-sm text-[var(--icb-text-muted)]">
-                Ends every session on every device, including this one. Use this if you think
-                someone else has access.
-              </p>
-              <SignOutEverywhere />
-            </div>
           </CardBody>
         </Card>
       </div>
 
-      <Card className="mt-6">
-        <CardHeader
-          title="How your session is protected"
-          description="Not a promise — the specific mechanism."
-        />
-        <CardBody className="pt-0">
-          <ul className="grid gap-4 text-sm text-[var(--icb-text-muted)] sm:grid-cols-2">
-            <li>
-              <strong className="text-[var(--icb-text)]">Tokens never reach your browser.</strong>{' '}
-              This dashboard renders on our server and holds your credentials in an encrypted
-              cookie only the server can open, so a script injected into the page has nothing to
-              steal.
-            </li>
-            <li>
-              <strong className="text-[var(--icb-text)]">Sessions rotate.</strong> Your session
-              token is replaced every time it is renewed. If an old one is ever presented, every
-              session in that family is revoked at once — because the only way that happens is
-              theft.
-            </li>
+      <nav aria-label="Settings sections" className="mt-6">
+        <Card className="overflow-hidden">
+          <ul className="divide-y divide-[var(--icb-border)]">
+            {SECTIONS.map((section) => (
+              <li key={section.href}>
+                <Link
+                  href={section.href as Route}
+                  className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-[var(--icb-bg-subtle)]"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]"
+                  >
+                    <section.icon size={17} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">{section.title}</span>
+                    <span className="mt-0.5 block text-xs text-[var(--icb-text-subtle)]">
+                      {section.detail}
+                    </span>
+                  </span>
+                  <ChevronRight size={16} className="shrink-0 text-[var(--icb-text-subtle)]" aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
           </ul>
-        </CardBody>
-      </Card>
+        </Card>
+      </nav>
     </>
   );
 }
@@ -117,26 +138,5 @@ function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode 
       <dt className="shrink-0 text-[var(--icb-text-subtle)]">{label}</dt>
       <dd className="text-right break-all">{value}</dd>
     </div>
-  );
-}
-
-function SecurityRow({
-  icon,
-  title,
-  detail,
-}: Readonly<{ icon: React.ReactNode; title: string; detail: string }>) {
-  return (
-    <li className="flex items-start gap-3">
-      <span
-        aria-hidden="true"
-        className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-bg-muted)] text-[var(--icb-text-muted)]"
-      >
-        {icon}
-      </span>
-      <div>
-        <p className="text-sm font-medium">{title}</p>
-        <p className="mt-0.5 text-sm text-[var(--icb-text-muted)]">{detail}</p>
-      </div>
-    </li>
   );
 }

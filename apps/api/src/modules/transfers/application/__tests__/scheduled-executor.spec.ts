@@ -6,6 +6,7 @@ import { ClockService } from '../../../../simulation/clock/clock.service.js';
 import { TRANSFER_EVENTS } from '../../domain/transfers.constants.js';
 import type { TransferDoc } from '../../infrastructure/transfer.schemas.js';
 import { ScheduledTransfersExecutor } from '../scheduled-transfers.executor.js';
+import { metricsStub } from '../../../../common/observability/__tests__/metrics.stub.js';
 
 const NOW = new Date('2026-08-10T09:00:00.000Z');
 const session = { id: 'txn' } as unknown as ClientSession;
@@ -83,6 +84,7 @@ function setup() {
     transactionManager as never,
     outbox as never,
     clock,
+    metricsStub(),
   );
   return { model, orchestrator, preparation, outbox, executor };
 }

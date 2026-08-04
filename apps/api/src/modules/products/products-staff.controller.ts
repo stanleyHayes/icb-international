@@ -55,6 +55,12 @@ export class ProductsStaffController {
     return this.products.update(productCode, body);
   }
 
+  /** The effective-dated schedule the admin console edits against. */
+  @Get(':productCode/rates')
+  async listRates(@Param('productCode') productCode: string): Promise<RateChange[]> {
+    return this.pricing.rateScheduleFor(productCode);
+  }
+
   /** Announce a rate change; it takes effect at `effectiveFrom`, which may be in the future. */
   @Post(':productCode/rates')
   @AuditAction('products.schedule-rate')

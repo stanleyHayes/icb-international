@@ -4,7 +4,9 @@ import type { Model } from 'mongoose';
 
 import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
 import { DomainError } from '../../common/errors/index.js';
+import { runWithCorrelation } from '../../common/observability/correlation.context.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
+import { newId } from '../database/identifier.js';
 import {
   OUTBOX_BASE_BACKOFF_MS,
   OUTBOX_BATCH_LIMIT,
@@ -102,8 +104,11 @@ export class OutboxDrainProcessor implements OnApplicationBootstrap, OnModuleDes
   }
 
   private async dispatch(event: OutboxEventDocument): Promise<void> {
+    // The event's own correlation id if it has one, a fresh one if it was published outside a
+    // request — either way, delivery logs join the thread that caused the event.
+    const correlationId = event.correlationId ?? newId();
     try {
-      await this.deliverToAll(event);
+      await runWithCorrelation(correlationId, () => this.deliverToAll(event));
       await this.events
         .updateOne(
           { _id: event._id },

@@ -87,6 +87,16 @@ export class CardIssuanceService {
     return this.reader.detail(card);
   }
 
+  /**
+   * The staff console's issue. The account id is the only thing the client supplies: the owning
+   * customer is resolved from the account itself, so a staff token never gets to say whose card
+   * this is — and the account still has to be spendable, exactly as on the customer's own path.
+   */
+  async issueAsStaff(request: IssueCardRequest): Promise<CardDetail> {
+    const account = await this.accounts.loadSpendable(request.accountId);
+    return this.issue(account.customerId, request);
+  }
+
   /** A replacement keeps the customer, account, kind and nickname; everything secret is new. */
   async reissue(previous: CardDoc): Promise<CardDoc> {
     return this.create({

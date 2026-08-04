@@ -5,6 +5,7 @@ import { firstValueFrom, of, throwError } from 'rxjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LoggingInterceptor } from './logging.interceptor.js';
+import { NotFoundError } from '../errors/domain-errors.js';
 import { REDACTED_VALUE } from './redaction.constants.js';
 
 interface Fixture {
@@ -64,5 +65,32 @@ describe('LoggingInterceptor', () => {
       firstValueFrom(new LoggingInterceptor().intercept(f.context, failing)),
     ).rejects.toBe(failure);
     expect(errorLog).toHaveBeenCalledOnce();
+  });
+
+  it('logs the status the exception filter will send, not the pre-handler default', async () => {
+    const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const f = fixture({});
+    const failure = new NotFoundError('Transfer', 'tr_1');
+    const failing: CallHandler = { handle: () => throwError(() => failure) };
+
+    await expect(
+      firstValueFrom(new LoggingInterceptor().intercept(f.context, failing)),
+    ).rejects.toBe(failure);
+
+    const [payload] = errorLog.mock.calls[0] as [{ statusCode: number }];
+    expect(payload.statusCode).toBe(404);
+  });
+
+  it('logs 500 for an error the filter cannot map', async () => {
+    const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const f = fixture({});
+    const failing: CallHandler = { handle: () => throwError(() => new Error('boom')) };
+
+    await expect(
+      firstValueFrom(new LoggingInterceptor().intercept(f.context, failing)),
+    ).rejects.toThrow('boom');
+
+    const [payload] = errorLog.mock.calls[0] as [{ statusCode: number }];
+    expect(payload.statusCode).toBe(500);
   });
 });

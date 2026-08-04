@@ -59,6 +59,24 @@ export class CardSecurityService {
   }
 
   /**
+   * Staff PIN reset. Nothing is set in its place — clearing the hash is the entire operation, and
+   * the customer chooses the new PIN themselves through the ordinary `setPin` path. Staff never
+   * see, choose, or transmit a PIN.
+   */
+  async clearPin(cardId: string): Promise<CardDetail> {
+    const card = await this.reader.loadById(cardId);
+    assertCardAmendable(card);
+
+    await this.cards.updateOne(
+      { _id: card._id },
+      { $set: { pinHash: null, pinSetAt: null } },
+    );
+
+    this.logger.log({ cardId: card._id }, 'Card PIN cleared by staff');
+    return this.reader.detail(card);
+  }
+
+  /**
    * The full card details, behind step-up.
    *
    * The response carries `hideAfter` so the client has an unambiguous deadline rather than its own
@@ -88,9 +106,10 @@ export class CardSecurityService {
   }
 
   /**
-   * A step-up token is accepted only when it verifies *and* belongs to the caller. Every failure —
-   * missing, malformed, expired, someone else's — returns the same STEP_UP_REQUIRED, so the header
-   * cannot be used to probe which tokens exist.
+   * A step-up token is accepted only when it verifies, belongs to the caller, *and* was minted
+   * for PAN reveal — a token issued for a high-value transfer must not open a card's secrets.
+   * Every failure — missing, malformed, expired, someone else's, wrong purpose — returns the
+   * same STEP_UP_REQUIRED, so the header cannot be used to probe which tokens exist.
    */
   private async assertStepUp(token: string | undefined, userId: string): Promise<void> {
     if (!token) {
@@ -99,10 +118,13 @@ export class CardSecurityService {
 
     try {
       const claims = await this.tokens.verifyStepUpToken(token);
-      if (claims.sub !== userId) {
+      if (claims.sub !== userId || claims.purpose !== PAN_REVEAL_PURPOSE) {
         throw new StepUpRequiredError(PAN_REVEAL_PURPOSE);
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof StepUpRequiredError) {
+        throw error;
+      }
       throw new StepUpRequiredError(PAN_REVEAL_PURPOSE);
     }
   }

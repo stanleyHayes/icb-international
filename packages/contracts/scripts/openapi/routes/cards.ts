@@ -61,10 +61,10 @@ export const cardsOperations = defineOperations([
     errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
   },
   {
-    method: 'post',
-    path: '/cards/{cardId}/reveal',
+    method: 'get',
+    path: '/cards/{cardId}/sensitive',
     tag: TAG.cards,
-    operationId: 'revealCard',
+    operationId: 'getCardSensitiveDetails',
     summary: 'Reveal PAN and CVV (requires a fresh step-up token)',
     pathParams: CARD_ID,
     response: success(
@@ -79,7 +79,7 @@ export const cardsOperations = defineOperations([
     ],
   },
   {
-    method: 'put',
+    method: 'patch',
     path: '/cards/{cardId}/controls',
     tag: TAG.cards,
     operationId: 'updateCardControls',
@@ -90,7 +90,7 @@ export const cardsOperations = defineOperations([
     errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
   },
   {
-    method: 'put',
+    method: 'patch',
     path: '/cards/{cardId}/limits',
     tag: TAG.cards,
     operationId: 'updateCardLimits',

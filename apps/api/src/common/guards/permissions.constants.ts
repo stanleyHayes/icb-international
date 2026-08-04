@@ -22,7 +22,7 @@ export const PERMISSIONS = [
   'disputes:manage',
   'staff:manage',
   'audit:read',
-  'simulation:control',
+  'controls:operate',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

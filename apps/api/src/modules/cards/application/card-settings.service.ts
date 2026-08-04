@@ -63,13 +63,23 @@ export class CardSettingsService {
     request: UpdateLimitsRequest,
   ): Promise<CardDetail> {
     const card = await this.reader.loadOwned(cardId, customerId);
+    return this.applyLimits(card, request);
+  }
+
+  /** The staff console's limits change: the same merge and coherence rules, no ownership scope. */
+  async updateLimitsAsStaff(cardId: string, request: UpdateLimitsRequest): Promise<CardDetail> {
+    const card = await this.reader.loadById(cardId);
+    return this.applyLimits(card, request);
+  }
+
+  private async applyLimits(card: CardDoc, request: UpdateLimitsRequest): Promise<CardDetail> {
     assertCardAmendable(card);
 
     const limits: CardLimitsDoc = mergeLimits(card.limits, request, card.currency);
     assertCoherentLimits(limits);
 
     await this.cards.updateOne({ _id: card._id }, { $set: { limits } });
-    return this.reader.detailOwned(cardId, customerId);
+    return this.reader.detail(card);
   }
 
   /**

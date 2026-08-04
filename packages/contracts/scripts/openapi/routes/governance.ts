@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import {
+  approvalInboxQuerySchema,
   approvalRequestSchema,
   auditIntegritySchema,
   auditQuerySchema,
@@ -9,7 +10,6 @@ import {
   staffUserSchema,
 } from '../../../src/index.js';
 import { idSchema } from '../../../src/common/primitives.js';
-import { offsetQuerySchema } from '../../../src/common/pagination.js';
 import { PAGE_SCHEMAS } from '../components.js';
 import { STATUS, TAG } from '../constants.js';
 import { defineOperations, success } from '../spec.js';
@@ -17,15 +17,25 @@ import { defineOperations, success } from '../spec.js';
 export const governanceOperations = defineOperations([
   {
     method: 'get',
-    path: '/governance/staff',
+    path: '/admin/staff',
     tag: TAG.governance,
     operationId: 'listStaffUsers',
     summary: 'Staff users and their roles (admin)',
     response: success(STATUS.ok, 'All staff users.', z.array(staffUserSchema)),
   },
   {
+    method: 'get',
+    path: '/admin/staff/{staffId}',
+    tag: TAG.governance,
+    operationId: 'getStaffUser',
+    summary: 'One staff user with roles and MFA state (admin)',
+    pathParams: { staffId: idSchema },
+    response: success(STATUS.ok, 'The staff user.', staffUserSchema),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
     method: 'post',
-    path: '/governance/staff',
+    path: '/admin/staff',
     tag: TAG.governance,
     operationId: 'createStaffUser',
     summary: 'Provision a staff user (admin)',
@@ -38,7 +48,7 @@ export const governanceOperations = defineOperations([
   },
   {
     method: 'get',
-    path: '/governance/audit',
+    path: '/admin/audit/events',
     tag: TAG.governance,
     operationId: 'searchAuditEvents',
     summary: 'Search the append-only audit trail (staff)',
@@ -47,7 +57,7 @@ export const governanceOperations = defineOperations([
   },
   {
     method: 'get',
-    path: '/governance/audit/integrity',
+    path: '/admin/audit/integrity',
     tag: TAG.governance,
     operationId: 'verifyAuditIntegrity',
     summary: 'Verify the audit hash chain (staff)',
@@ -55,20 +65,26 @@ export const governanceOperations = defineOperations([
   },
   {
     method: 'get',
-    path: '/governance/approvals',
+    path: '/admin/approvals',
     tag: TAG.governance,
     operationId: 'listApprovals',
     summary: 'The maker-checker inbox (staff)',
-    query: offsetQuerySchema,
-    response: success(
-      STATUS.ok,
-      'An offset page of approval requests.',
-      PAGE_SCHEMAS.ApprovalRequestPage,
-    ),
+    query: approvalInboxQuerySchema,
+    response: success(STATUS.ok, 'The approval queue.', z.array(approvalRequestSchema)),
+  },
+  {
+    method: 'get',
+    path: '/admin/approvals/{approvalId}',
+    tag: TAG.governance,
+    operationId: 'getApproval',
+    summary: 'One approval request with its payload and decision state',
+    pathParams: { approvalId: idSchema },
+    response: success(STATUS.ok, 'The approval request.', approvalRequestSchema),
+    errors: [{ status: STATUS.notFound }],
   },
   {
     method: 'post',
-    path: '/governance/approvals/{approvalId}/decision',
+    path: '/admin/approvals/{approvalId}/decision',
     tag: TAG.governance,
     operationId: 'decideApproval',
     summary: 'Approve or reject (four-eyes; self-approval blocked)',

@@ -1,12 +1,14 @@
 import type { AccountSummary, CursorPage, TransactionSummary } from '@icb/contracts';
-import { Amount, Button, Card, CardHeader, EmptyState, maskIdentifier } from '@icb/ui';
-import { ArrowLeftRight, Plus, Receipt } from 'lucide-react';
+import { Balance, Button, Card, CardHeader, EmptyState, maskIdentifier } from '@icb/ui';
+import { ArrowLeftRight, Plus, Receipt, Wallet } from 'lucide-react';
 import type { Metadata, Route } from 'next';
 import Link from 'next/link';
 
 import { CurrencyTotals, type CurrencyTotal } from '@/components/currency-totals';
 import { PrimaryAccountCard } from '@/components/primary-account-card';
 import { TransactionList } from '@/components/transaction-list';
+import { UpcomingPaymentsCard } from '@/features/accounts/upcoming-payments-card';
+import { SpendSummaryCard } from '@/features/transactions/spend-summary-card';
 import { api } from '@/lib/api';
 import { readSession } from '@/lib/session';
 
@@ -39,9 +41,14 @@ export default async function OverviewPage() {
             {session?.user.firstName}
           </h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link href="/transfer">
             <Button leadingIcon={<ArrowLeftRight size={16} />}>Move money</Button>
+          </Link>
+          <Link href="/bills">
+            <Button variant="secondary" leadingIcon={<Wallet size={16} />}>
+              Pay a bill
+            </Button>
           </Link>
           <Link href="/accounts">
             <Button variant="secondary" leadingIcon={<Plus size={16} />}>
@@ -96,18 +103,26 @@ export default async function OverviewPage() {
                       {maskIdentifier(account.identifiers.number)}
                     </p>
                   </div>
-                  <Amount value={account.balances.ledger} size="sm" />
+                  <Balance
+                    ledger={account.balances.ledger}
+                    available={account.balances.available}
+                    size="md"
+                    className="shrink-0 items-end text-right"
+                  />
                 </Link>
               </li>
             ))}
           </ul>
         </Card>
       </div>
+
+      <div className="mt-6 grid items-start gap-6 lg:grid-cols-2">
+        <UpcomingPaymentsCard />
+        {primary ? <SpendSummaryCard currency={primary.currency} /> : null}
+      </div>
     </>
   );
 }
-
-
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -129,4 +144,3 @@ function totalByCurrency(accounts: AccountSummary[]): CurrencyTotal[] {
 
   return [...totals.entries()].map(([currency, value]) => ({ currency, ...value }));
 }
-

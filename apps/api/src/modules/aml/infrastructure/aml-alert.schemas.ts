@@ -65,7 +65,11 @@ export class AmlAlertDoc {
   @Prop({ type: Number, default: null })
   matchScore!: number | null;
 
-  @Prop({ type: [String], required: true, default: [] })
+  // `default` without `required`: Mongoose's array required-validator rejects an empty
+  // array, so `required: true, default: []` can never be satisfied by its own default —
+  // and empty is the ordinary case here. It survives today only where the write goes
+  // through updateOne, which skips validators; a create() on this path would 500.
+  @Prop({ type: [String], default: [] })
   relatedTransactionIds!: string[];
 
   @Prop({ type: Number, default: null })
@@ -83,7 +87,7 @@ export class AmlAlertDoc {
   @Prop({ type: FiledReportSubSchema, default: null })
   filedReport!: FiledReportSub | null;
 
-  @Prop({ type: [TrailEntrySubSchema], required: true, default: [] })
+  @Prop({ type: [TrailEntrySubSchema], default: [] })
   trail!: TrailEntrySub[];
 
   @Prop({ type: Date, required: true, index: true })

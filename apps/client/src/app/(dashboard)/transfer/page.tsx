@@ -1,71 +1,110 @@
-import type { AccountSummary, TransferSummary } from '@icb/contracts';
-import { Amount, Card, CardBody, CardHeader, EmptyState, StatusBadge, formatDate } from '@icb/ui';
+import type { CursorPage, StandingOrder, TransferSummary, TransferTemplate } from '@icb/contracts';
+import { Card, CardHeader, EmptyState } from '@icb/ui';
 import { ArrowLeftRight } from 'lucide-react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
-import { TransferForm } from '@/features/transfer/transfer-form';
+import { RailGrid } from '@/features/transfer/rail-grid';
+import { TransferList } from '@/features/transfer/transfer-list';
 import { api } from '@/lib/api';
 
-export const metadata: Metadata = { title: 'Transfer' };
+export const metadata: Metadata = { title: 'Move money' };
 
-export default async function TransferPage() {
-  const [accountsResponse, transfersResponse] = await Promise.all([
-    api<{ items: AccountSummary[] }>('/accounts', { tags: ['accounts'] }),
-    api<{ items: TransferSummary[] }>('/transfers', { tags: ['transfers'] }),
+/**
+ * The transfers hub: pick a rail, then land on the priced flow. History, scheduled payments,
+ * templates and payees are one tap from here.
+ */
+export default async function TransferHubPage({
+  searchParams,
+}: Readonly<{ searchParams: Promise<{ from?: string }> }>) {
+  const { from } = await searchParams;
+  const fromQuery = from ? `&from=${from}` : '';
+
+  const [transfersPage, standingOrders, templates] = await Promise.all([
+    api<CursorPage<TransferSummary>>('/transfers?limit=8', { tags: ['transfers'] }),
+    api<StandingOrder[]>('/standing-orders', { tags: ['standing-orders'] }),
+    api<TransferTemplate[]>('/transfer-templates', { tags: ['transfer-templates'] }),
   ]);
+
+  const upcoming = transfersPage.items.filter((transfer) => transfer.status === 'scheduled');
 
   return (
     <>
       <header>
         <h1 className="font-display text-3xl font-bold tracking-[-0.02em]">Move money</h1>
         <p className="mt-1.5 text-sm text-[var(--icb-text-muted)]">
-          Between your own accounts, to another ICB customer, or to an external bank.
+          Choose how to send. You will always see the fee and arrival time before anything moves.
         </p>
       </header>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.15fr_1fr]">
-        <Card>
-          <CardHeader
-            title="New transfer"
-            description="You will see the rail, fee and arrival time before anything moves."
-          />
-          <CardBody>
-            <TransferForm accounts={accountsResponse.items} />
-          </CardBody>
-        </Card>
+      <RailGrid fromQuery={fromQuery} />
 
-        <Card>
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <Card className="overflow-hidden">
           <CardHeader title="Recent transfers" />
-          {transfersResponse.items.length > 0 ? (
-            <ul className="divide-y divide-[var(--icb-border)]">
-              {transfersResponse.items.slice(0, 8).map((transfer) => (
-                <li key={transfer.id} className="px-5 py-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{transfer.recipientName}</p>
-                      <p className="mt-0.5 font-mono text-xs text-[var(--icb-text-subtle)]">
-                        {transfer.recipientMasked} · {transfer.reference}
-                      </p>
-                    </div>
-                    <Amount value={transfer.debitAmount} direction="debit" size="sm" />
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <StatusBadge status={transfer.status} />
-                    <span className="text-xs text-[var(--icb-text-subtle)]">
-                      {formatDate(transfer.createdAt, 'medium')} · {transfer.rail.replace('_', '-')}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          {transfersPage.items.length > 0 ? (
+            <TransferList transfers={transfersPage.items} />
           ) : (
             <EmptyState
               icon={<ArrowLeftRight size={20} />}
               title="No transfers yet"
-              description="Your first transfer will appear here with its full posting breakdown."
+              description="Your first transfer will appear here with its full status history."
             />
           )}
         </Card>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader
+              title="Upcoming"
+              action={
+                <Link
+                  href="/transfer/scheduled"
+                  className="text-sm font-medium text-[var(--icb-primary)] hover:underline"
+                >
+                  View all
+                </Link>
+              }
+            />
+            <div className="px-5 pb-5 text-sm text-[var(--icb-text-muted)]">
+              {upcoming.length + standingOrders.length > 0 ? (
+                <p>
+                  {upcoming.length} scheduled transfer{upcoming.length === 1 ? '' : 's'} and{' '}
+                  {standingOrders.length} standing order{standingOrders.length === 1 ? '' : 's'}{' '}
+                  active.
+                </p>
+              ) : (
+                <p>
+                  Nothing scheduled. Set up a future-dated or repeating transfer from any rail.
+                </p>
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Templates"
+              action={
+                <Link
+                  href="/transfer/templates"
+                  className="text-sm font-medium text-[var(--icb-primary)] hover:underline"
+                >
+                  Manage
+                </Link>
+              }
+            />
+            <div className="px-5 pb-5 text-sm text-[var(--icb-text-muted)]">
+              {templates.length > 0 ? (
+                <p>
+                  {templates.length} saved template{templates.length === 1 ? '' : 's'} ready to
+                  re-run.
+                </p>
+              ) : (
+                <p>Save any transfer as a template at the confirmation step.</p>
+              )}
+            </div>
+          </Card>
+        </div>
       </div>
     </>
   );

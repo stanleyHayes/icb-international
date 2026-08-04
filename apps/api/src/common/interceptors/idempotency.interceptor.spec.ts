@@ -1,9 +1,13 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
-import { firstValueFrom, of } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 
 import { IdempotencyInterceptor } from './idempotency.interceptor.js';
-import type { IdempotencyRecord, IdempotencyStore } from './idempotency-store.port.js';
+import type {
+  IdempotencyClaim,
+  IdempotencyRecord,
+  IdempotencyStore,
+} from './idempotency-store.port.js';
 
 interface FakeRequest {
   method: string;
@@ -16,7 +20,9 @@ interface FakeRequest {
 interface Fixture {
   store: IdempotencyStore;
   saved: IdempotencyRecord[];
+  claim: ReturnType<typeof vi.fn>;
   find: ReturnType<typeof vi.fn>;
+  release: ReturnType<typeof vi.fn>;
   handle: ReturnType<typeof vi.fn>;
   request: FakeRequest;
   reply: { statusCode: number; status: (code: number) => void };
@@ -24,18 +30,29 @@ interface Fixture {
   handler: CallHandler;
 }
 
+const STORED: IdempotencyRecord = {
+  scope: 'cust-1:POST:/v1/transfers',
+  key: 'key-1',
+  statusCode: 201,
+  body: { id: 'tr_original' },
+};
+
 function fixture(options: {
   idempotent: boolean;
   key?: string;
-  existing?: IdempotencyRecord | null;
+  claim?: IdempotencyClaim;
+  found?: IdempotencyRecord | null;
+  handlerError?: Error;
 }): Fixture {
   const saved: IdempotencyRecord[] = [];
-  const find = vi.fn().mockResolvedValue(options.existing ?? null);
+  const claim = vi.fn().mockResolvedValue(options.claim ?? { outcome: 'claimed' });
+  const find = vi.fn().mockResolvedValue(options.found ?? null);
   const save = vi.fn((record: IdempotencyRecord) => {
     saved.push(record);
     return Promise.resolve();
   });
-  const store: IdempotencyStore = { find, save };
+  const release = vi.fn().mockResolvedValue(undefined);
+  const store: IdempotencyStore = { claim, find, save, release };
   const request = {
     method: 'POST',
     url: '/v1/transfers?x=1',
@@ -49,9 +66,11 @@ function fixture(options: {
     getHandler: () => ({}),
     getClass: () => ({}),
   } as unknown as ExecutionContext;
-  const handle = vi.fn(() => of({ id: 'tr_1' }));
+  const handle = vi.fn(() =>
+    options.handlerError ? throwError(() => options.handlerError) : of({ id: 'tr_1' }),
+  );
   const handler: CallHandler = { handle };
-  return { store, saved, find, handle, request, reply, context, handler };
+  return { store, saved, claim, find, release, handle, request, reply, context, handler };
 }
 
 function interceptorFor(f: Fixture, idempotent: boolean): IdempotencyInterceptor {
@@ -65,7 +84,7 @@ describe('IdempotencyInterceptor', () => {
     const result = await interceptorFor(f, false).intercept(f.context, f.handler);
 
     await expect(firstValueFrom(result)).resolves.toEqual({ id: 'tr_1' });
-    expect(f.find).not.toHaveBeenCalled();
+    expect(f.claim).not.toHaveBeenCalled();
   });
 
   it('rejects a mutating call without an Idempotency-Key', async () => {
@@ -73,26 +92,26 @@ describe('IdempotencyInterceptor', () => {
     await expect(interceptorFor(f, true).intercept(f.context, f.handler)).rejects.toThrow(
       expect.objectContaining({ code: 'VALIDATION_FAILED' }) as Error,
     );
+    expect(f.claim).not.toHaveBeenCalled();
   });
 
-  it('executes once and stores the response', async () => {
+  it('claims the key, executes once and stores the response', async () => {
     const f = fixture({ idempotent: true, key: 'key-1' });
     const result = await interceptorFor(f, true).intercept(f.context, f.handler);
 
     await expect(firstValueFrom(result)).resolves.toEqual({ id: 'tr_1' });
+    expect(f.claim).toHaveBeenCalledWith('cust-1:POST:/v1/transfers', 'key-1');
     expect(f.saved).toEqual([
       { scope: 'cust-1:POST:/v1/transfers', key: 'key-1', statusCode: 200, body: { id: 'tr_1' } },
     ]);
   });
 
   it('replays the stored response without running the handler', async () => {
-    const existing: IdempotencyRecord = {
-      scope: 'cust-1:POST:/v1/transfers',
+    const f = fixture({
+      idempotent: true,
       key: 'key-1',
-      statusCode: 201,
-      body: { id: 'tr_original' },
-    };
-    const f = fixture({ idempotent: true, key: 'key-1', existing });
+      claim: { outcome: 'completed', record: STORED },
+    });
     const result = await interceptorFor(f, true).intercept(f.context, f.handler);
 
     await expect(firstValueFrom(result)).resolves.toEqual({ id: 'tr_original' });
@@ -106,6 +125,35 @@ describe('IdempotencyInterceptor', () => {
     const result = await interceptorFor(f, true).intercept(f.context, f.handler);
 
     await firstValueFrom(result);
-    expect(f.find).toHaveBeenCalledWith('cust-2:POST:/v1/transfers', 'key-1');
+    expect(f.claim).toHaveBeenCalledWith('cust-2:POST:/v1/transfers', 'key-1');
+  });
+
+  it('waits out an in-flight claim and replays the winner\'s stored response', async () => {
+    const f = fixture({ idempotent: true, key: 'key-1', claim: { outcome: 'pending' } });
+    f.find.mockResolvedValue(STORED);
+    const result = await interceptorFor(f, true).intercept(f.context, f.handler);
+
+    await expect(firstValueFrom(result)).resolves.toEqual({ id: 'tr_original' });
+    expect(f.handle).not.toHaveBeenCalled();
+    expect(f.reply.status).toHaveBeenCalledWith(201);
+  });
+
+  it('conflicts rather than double-executing when the in-flight request never finishes', async () => {
+    const f = fixture({ idempotent: true, key: 'key-1', claim: { outcome: 'pending' } });
+
+    await expect(interceptorFor(f, true).intercept(f.context, f.handler)).rejects.toThrow(
+      expect.objectContaining({ code: 'CONFLICT' }) as Error,
+    );
+    expect(f.handle).not.toHaveBeenCalled();
+    expect(f.saved).toEqual([]);
+  }, 10_000);
+
+  it('releases the claim when the handler fails, so a retry gets a fresh run', async () => {
+    const f = fixture({ idempotent: true, key: 'key-1', handlerError: new Error('boom') });
+    const result = await interceptorFor(f, true).intercept(f.context, f.handler);
+
+    await expect(firstValueFrom(result)).rejects.toThrow('boom');
+    expect(f.release).toHaveBeenCalledWith('cust-1:POST:/v1/transfers', 'key-1');
+    expect(f.saved).toEqual([]);
   });
 });

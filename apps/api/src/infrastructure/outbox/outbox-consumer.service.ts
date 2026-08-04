@@ -13,6 +13,8 @@ export interface OutboxEvent {
   readonly type: string;
   readonly payload: Record<string, unknown>;
   readonly attempts: number;
+  /** The request that caused the event; null for events published outside a request. */
+  readonly correlationId: string | null;
 }
 
 export type OutboxEventHandler = (event: OutboxEvent) => Promise<void>;
@@ -24,6 +26,7 @@ export function toOutboxEvent(doc: HydratedDocument<OutboxEventDoc>): OutboxEven
     type: doc.type,
     payload: doc.payload,
     attempts: doc.attempts,
+    correlationId: doc.correlationId ?? null,
   };
 }
 

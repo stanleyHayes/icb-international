@@ -5,7 +5,7 @@
 
 ## Context
 
-The product simulates a real bank: transfers, holds, fees, interest, chargebacks, corrections.
+The product does what a bank does: transfers, holds, fees, interest, chargebacks, corrections.
 The money model has to stay consistent under concurrency, support reversal without rewriting
 history, and be auditable end-to-end (non-negotiables N3–N5).
 

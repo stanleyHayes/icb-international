@@ -8,12 +8,7 @@ import {
   riskDecisionSchema,
 } from '../common/enums.js';
 import { cursorQuerySchema, offsetQuerySchema } from '../common/pagination.js';
-import {
-  assetRefSchema,
-  idSchema,
-  isoDateTimeSchema,
-  moneySchema,
-} from '../common/primitives.js';
+import { assetRefSchema, idSchema, isoDateTimeSchema, moneySchema } from '../common/primitives.js';
 
 /**
  * One rule that fired, and what it contributed.
@@ -67,10 +62,15 @@ export const riskRuleSchema = z.object({
   updatedAt: isoDateTimeSchema,
 });
 
+/** `GET /risk/rules` wraps the rule set in an envelope so it can grow pagination later. */
+export const riskRuleListResponseSchema = z.object({ items: z.array(riskRuleSchema) });
+
 export const updateRiskRuleRequestSchema = z.object({
   enabled: z.boolean().optional(),
   weight: z.number().min(0).max(100).optional(),
-  parameters: z.record(z.string().max(40), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  parameters: z
+    .record(z.string().max(40), z.union([z.string(), z.number(), z.boolean()]))
+    .optional(),
   reason: z.string().min(4).max(500),
 });
 
@@ -86,7 +86,13 @@ export const riskCaseSchema = z.object({
   assignedTo: z.string().nullable(),
   resolution: z
     .object({
-      action: z.enum(['released', 'blocked', 'customer_contacted', 'escalated_to_aml', 'no_action']),
+      action: z.enum([
+        'released',
+        'blocked',
+        'customer_contacted',
+        'escalated_to_aml',
+        'no_action',
+      ]),
       note: z.string(),
       by: z.string(),
       at: isoDateTimeSchema,
@@ -222,6 +228,15 @@ export const createDisputeRequestSchema = z.object({
   evidence: z.array(z.object({ label: z.string().max(120), asset: assetRefSchema })).max(10),
 });
 
+/**
+ * Evidence attached after the dispute was raised. Composed from the create request's own
+ * evidence schema rather than declared afresh, so the two upload paths cannot drift into
+ * accepting different shapes.
+ */
+export const attachDisputeEvidenceRequestSchema = z.object({
+  evidence: createDisputeRequestSchema.shape.evidence,
+});
+
 export const advanceDisputeRequestSchema = z.object({
   stage: disputeStageSchema,
   note: z.string().min(4).max(2000),
@@ -242,5 +257,6 @@ export type RiskCase = z.infer<typeof riskCaseSchema>;
 export type AmlAlert = z.infer<typeof amlAlertSchema>;
 export type Dispute = z.infer<typeof disputeSchema>;
 export type CreateDisputeRequest = z.infer<typeof createDisputeRequestSchema>;
+export type AttachDisputeEvidenceRequest = z.infer<typeof attachDisputeEvidenceRequestSchema>;
 export type DisputeReason = (typeof DISPUTE_REASONS)[number];
 export type AmlAlertKind = (typeof AML_ALERT_KINDS)[number];

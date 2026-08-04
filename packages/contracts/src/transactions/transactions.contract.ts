@@ -183,6 +183,35 @@ export const cashflowSchema = z.object({
   points: z.array(cashflowPointSchema),
 });
 
+/** The merchant leaderboard: the top debit counterparties by total spend over a window. */
+export const merchantsAnalyticsSchema = z.object({
+  period: z.object({ from: z.iso.date(), to: z.iso.date() }),
+  currency: currencySchema,
+  merchants: z.array(
+    z.object({
+      name: z.string(),
+      category: z.string(),
+      total: moneySchema,
+      transactionCount: z.int().nonnegative(),
+    }),
+  ),
+});
+
+/** Charges that repeat at a stable amount — the subscription detector. */
+export const recurringAnalyticsSchema = z.object({
+  window: z.object({ from: z.iso.date(), to: z.iso.date() }),
+  currency: currencySchema,
+  recurring: z.array(
+    z.object({
+      name: z.string(),
+      category: z.string(),
+      amount: moneySchema,
+      occurrences: z.int().nonnegative(),
+      lastChargedAt: isoDateTimeSchema,
+    }),
+  ),
+});
+
 export type TransactionSummary = z.infer<typeof transactionSummarySchema>;
 export type TransactionDetail = z.infer<typeof transactionDetailSchema>;
 export type TransactionQuery = z.infer<typeof transactionQuerySchema>;
@@ -192,5 +221,7 @@ export type Counterparty = z.infer<typeof counterpartySchema>;
 export type FeeBreakdown = z.infer<typeof feeBreakdownSchema>;
 export type FxDetail = z.infer<typeof fxDetailSchema>;
 export type SpendByCategory = z.infer<typeof spendByCategorySchema>;
+export type MerchantsAnalytics = z.infer<typeof merchantsAnalyticsSchema>;
+export type RecurringAnalytics = z.infer<typeof recurringAnalyticsSchema>;
 export type Cashflow = z.infer<typeof cashflowSchema>;
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];

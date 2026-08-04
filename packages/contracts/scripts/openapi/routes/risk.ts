@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 import {
   amlAlertQuerySchema,
   amlAlertSchema,
@@ -7,6 +5,7 @@ import {
   resolveRiskCaseRequestSchema,
   riskCaseQuerySchema,
   riskCaseSchema,
+  riskRuleListResponseSchema,
   riskRuleSchema,
   updateAmlAlertRequestSchema,
   updateRiskRuleRequestSchema,
@@ -23,7 +22,7 @@ export const riskOperations = defineOperations([
     tag: TAG.risk,
     operationId: 'listRiskRules',
     summary: 'The fraud rule set (staff)',
-    response: success(STATUS.ok, 'All rules with weights and parameters.', z.array(riskRuleSchema)),
+    response: success(STATUS.ok, 'All rules with weights and parameters.', riskRuleListResponseSchema),
   },
   {
     method: 'patch',
@@ -57,6 +56,16 @@ export const riskOperations = defineOperations([
   },
   {
     method: 'post',
+    path: '/risk/cases/{caseId}/assign',
+    tag: TAG.risk,
+    operationId: 'assignRiskCase',
+    summary: 'Claim a case from the queue (staff)',
+    pathParams: { caseId: idSchema },
+    response: success(STATUS.ok, 'The case, now assigned to the caller.', riskCaseSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
+  },
+  {
+    method: 'post',
     path: '/risk/cases/{caseId}/resolve',
     tag: TAG.risk,
     operationId: 'resolveRiskCase',
@@ -68,7 +77,7 @@ export const riskOperations = defineOperations([
   },
   {
     method: 'get',
-    path: '/risk/aml/alerts',
+    path: '/admin/aml/alerts',
     tag: TAG.risk,
     operationId: 'listAmlAlerts',
     summary: 'Screening and monitoring alerts (staff)',
@@ -77,7 +86,7 @@ export const riskOperations = defineOperations([
   },
   {
     method: 'get',
-    path: '/risk/aml/alerts/{alertId}',
+    path: '/admin/aml/alerts/{alertId}',
     tag: TAG.risk,
     operationId: 'getAmlAlert',
     summary: 'Alert detail with match evidence (staff)',
@@ -87,7 +96,7 @@ export const riskOperations = defineOperations([
   },
   {
     method: 'patch',
-    path: '/risk/aml/alerts/{alertId}',
+    path: '/admin/aml/alerts/{alertId}',
     tag: TAG.risk,
     operationId: 'updateAmlAlert',
     summary: 'Assign, re-status, or narrate an alert (staff)',
@@ -98,12 +107,13 @@ export const riskOperations = defineOperations([
   },
   {
     method: 'post',
-    path: '/risk/aml/alerts/{alertId}/reports',
+    path: '/admin/aml/alerts/{alertId}/reports',
     tag: TAG.risk,
     operationId: 'fileAmlReport',
     summary: 'File a SAR/CTR draft from an alert (staff)',
     pathParams: { alertId: idSchema },
     request: fileReportRequestSchema,
+    idempotent: true,
     response: success(STATUS.ok, 'The alert with its filed report.', amlAlertSchema),
     errors: [
       { status: STATUS.notFound },

@@ -4,7 +4,9 @@ import { adminEndpoints } from './admin.js';
 import { amlEndpoints } from './aml.js';
 import { authEndpoints } from './auth.js';
 import { beneficiariesEndpoints } from './beneficiaries.js';
+import { budgetsEndpoints } from './budgets.js';
 import { cardsEndpoints } from './cards.js';
+import { contentEndpoints } from './content.js';
 import { customersEndpoints } from './customers.js';
 import { disputesEndpoints } from './disputes.js';
 import { documentsEndpoints } from './documents.js';
@@ -18,6 +20,7 @@ import { riskEndpoints } from './risk.js';
 import { savingsEndpoints } from './savings.js';
 import { simulationEndpoints } from './simulation.js';
 import { supportEndpoints } from './support.js';
+import { systemEndpoints } from './system.js';
 import { transactionsEndpoints } from './transactions.js';
 import { transfersEndpoints } from './transfers.js';
 
@@ -34,6 +37,7 @@ export const endpointRegistry = {
   transactions: transactionsEndpoints,
   transfers: transfersEndpoints,
   beneficiaries: beneficiariesEndpoints,
+  budgets: budgetsEndpoints,
   cards: cardsEndpoints,
   loans: loansEndpoints,
   savings: savingsEndpoints,
@@ -42,12 +46,14 @@ export const endpointRegistry = {
   aml: amlEndpoints,
   disputes: disputesEndpoints,
   products: productsEndpoints,
+  content: contentEndpoints,
   documents: documentsEndpoints,
   notifications: notificationsEndpoints,
   support: supportEndpoints,
   governance: governanceEndpoints,
   admin: adminEndpoints,
   simulation: simulationEndpoints,
+  system: systemEndpoints,
 } as const satisfies Record<string, Record<string, EndpointDef>>;
 
 export type EndpointRegistry = typeof endpointRegistry;

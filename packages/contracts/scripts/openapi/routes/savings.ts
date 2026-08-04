@@ -4,15 +4,16 @@ import {
   breakDepositQuoteSchema,
   contributeToGoalRequestSchema,
   createSavingsGoalRequestSchema,
+  currencySchema,
   depositRateBandSchema,
+  itemsEnvelopeSchema,
   openTermDepositRequestSchema,
   savingsGoalSchema,
-  savingsQuerySchema,
   termDepositSchema,
   updateSavingsGoalRequestSchema,
+  updateTermDepositRequestSchema,
 } from '../../../src/index.js';
 import { idSchema } from '../../../src/common/primitives.js';
-import { PAGE_SCHEMAS } from '../components.js';
 import { STATUS, TAG } from '../constants.js';
 import { defineOperations, success } from '../spec.js';
 
@@ -26,8 +27,7 @@ export const savingsOperations = defineOperations([
     tag: TAG.savings,
     operationId: 'listSavingsGoals',
     summary: 'Savings goals with progress',
-    query: savingsQuerySchema,
-    response: success(STATUS.ok, 'A cursor page of goals.', PAGE_SCHEMAS.SavingsGoalPage),
+    response: success(STATUS.ok, 'All goals.', itemsEnvelopeSchema(savingsGoalSchema)),
   },
   {
     method: 'post',
@@ -36,8 +36,19 @@ export const savingsOperations = defineOperations([
     operationId: 'createSavingsGoal',
     summary: 'Create a goal against a savings account',
     request: createSavingsGoalRequestSchema,
+    idempotent: true,
     response: success(STATUS.created, 'The created goal.', savingsGoalSchema),
     errors: [{ status: STATUS.unprocessable }],
+  },
+  {
+    method: 'get',
+    path: '/savings/goals/{goalId}',
+    tag: TAG.savings,
+    operationId: 'getSavingsGoal',
+    summary: 'Goal detail with progress',
+    pathParams: GOAL_ID,
+    response: success(STATUS.ok, 'The goal.', savingsGoalSchema),
+    errors: [{ status: STATUS.notFound }],
   },
   {
     method: 'patch',
@@ -51,8 +62,18 @@ export const savingsOperations = defineOperations([
     errors: [{ status: STATUS.notFound }, { status: STATUS.unprocessable }],
   },
   {
+    method: 'delete',
+    path: '/savings/goals/{goalId}',
+    tag: TAG.savings,
+    operationId: 'deleteSavingsGoal',
+    summary: 'Remove a goal',
+    pathParams: GOAL_ID,
+    response: success(STATUS.noContent, 'Goal removed.'),
+    errors: [{ status: STATUS.notFound }],
+  },
+  {
     method: 'post',
-    path: '/savings/goals/{goalId}/contributions',
+    path: '/savings/goals/{goalId}/contribute',
     tag: TAG.savings,
     operationId: 'contributeToGoal',
     summary: 'Move money into a goal',
@@ -67,11 +88,12 @@ export const savingsOperations = defineOperations([
   },
   {
     method: 'get',
-    path: '/savings/deposits/rates',
+    path: '/savings/rates',
     tag: TAG.savings,
     operationId: 'listDepositRates',
     summary: 'The term/rate matrix for fixed deposits',
-    response: success(STATUS.ok, 'Current rate bands.', z.array(depositRateBandSchema)),
+    query: z.object({ currency: currencySchema.optional() }),
+    response: success(STATUS.ok, 'Current rate bands.', itemsEnvelopeSchema(depositRateBandSchema)),
   },
   {
     method: 'get',
@@ -79,7 +101,11 @@ export const savingsOperations = defineOperations([
     tag: TAG.savings,
     operationId: 'listTermDeposits',
     summary: 'The customer’s fixed deposits',
-    response: success(STATUS.ok, 'All deposits with accrual.', z.array(termDepositSchema)),
+    response: success(
+      STATUS.ok,
+      'All deposits with accrual.',
+      itemsEnvelopeSchema(termDepositSchema),
+    ),
   },
   {
     method: 'post',
@@ -106,6 +132,17 @@ export const savingsOperations = defineOperations([
     pathParams: DEPOSIT_ID,
     response: success(STATUS.ok, 'The deposit.', termDepositSchema),
     errors: [{ status: STATUS.notFound }],
+  },
+  {
+    method: 'patch',
+    path: '/savings/deposits/{depositId}',
+    tag: TAG.savings,
+    operationId: 'updateTermDeposit',
+    summary: 'Change the maturity instruction',
+    pathParams: DEPOSIT_ID,
+    request: updateTermDepositRequestSchema,
+    response: success(STATUS.ok, 'The updated deposit.', termDepositSchema),
+    errors: [{ status: STATUS.notFound }, { status: STATUS.conflict }],
   },
   {
     method: 'get',
