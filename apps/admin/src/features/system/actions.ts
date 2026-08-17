@@ -10,7 +10,8 @@ export interface FlagFormState {
   message: string | null;
 }
 
-export const INITIAL_FLAG_STATE: FlagFormState = { status: 'idle', message: null };
+// The initial form state lives in flag-row.tsx: a 'use server' module may only export async
+// functions, so the constant cannot be shared from here.
 
 /**
  * Update a feature flag.

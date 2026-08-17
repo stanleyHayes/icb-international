@@ -25,8 +25,10 @@ export interface RadioGroupProps {
 const RADIO_BOX_CLASSES = [
   'relative inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
   'border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] shadow-[var(--shadow-xs)]',
-  'transition-colors duration-150 peer-checked:border-[var(--icb-primary)]',
-  'peer-focus-visible:focus-ring peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
+  // The input lives inside this box, so peer-* can never match it — peer targets following
+  // siblings. has-* looks the other way, at the descendant input.
+  'transition-colors duration-150 has-checked:border-[var(--icb-primary)]',
+  'has-focus-visible:focus-ring has-disabled:cursor-not-allowed has-disabled:opacity-50',
 ].join(' ');
 
 const RADIO_DOT_CLASSES =
@@ -100,7 +102,7 @@ function RadioItem({ option, name, checked, groupDisabled, onSelect, onBlur }: R
           onBlur={onBlur}
           className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
         />
-        <span aria-hidden="true" className={RADIO_DOT_CLASSES} />
+        <span aria-hidden="true" className={cn(RADIO_DOT_CLASSES, 'pointer-events-none')} />
       </span>
       <span className="flex flex-col">
         <span>{option.label}</span>

@@ -60,7 +60,13 @@ export class ChatGateway extends ChatRealtimePort implements OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
-    const fastify = this.adapterHost.httpAdapter.getInstance<FastifyInstance>();
+    // Standalone application contexts (seed CLI, queue workers, tests) have no HTTP adapter —
+    // there is nothing to register the route on, and live chat is meaningless there anyway.
+    const adapter = this.adapterHost.httpAdapter;
+    if (!adapter) {
+      return;
+    }
+    const fastify = adapter.getInstance<FastifyInstance>();
     await fastify.register(async (scope) => {
       await scope.register(fastifyWebsocket);
       scope.get(CHAT_WS_PATH, { websocket: true }, (socket, request) => {

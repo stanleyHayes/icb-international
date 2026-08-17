@@ -1,88 +1,151 @@
 'use client';
 
-import { Button } from '@icb/ui';
-import { AlertCircle, CheckCircle2, Copy } from 'lucide-react';
+import { Button, OTPInput } from '@icb/ui';
+import { AlertCircle, Check, CheckCircle2, Copy } from 'lucide-react';
 import Link from 'next/link';
-import { useActionState, useId, useState } from 'react';
+import { useActionState, useId, useState, useTransition } from 'react';
 
-import { confirmTotpAction, INITIAL_MFA_ENROL_STATE } from './mfa-actions';
+import { confirmTotpAction, type MfaEnrolState } from './mfa-actions';
+
+// Kept locally: server-action modules may only export async functions, so this cannot be
+// imported from './mfa-actions'.
+const INITIAL_MFA_ENROL_STATE: MfaEnrolState = {
+  status: 'idle',
+  message: null,
+  recoveryCodes: null,
+};
 
 interface MfaEnrolFormProps {
-  /** Base32 secret for manual entry, when scanning is not possible. */
-  secret: string;
-  /** PNG data URI rendered as the scannable code. */
-  qrCodeDataUri: string;
+  /**
+   * The enrolment material from the API. Null when the API reports the second factor already
+   * enabled (409) — including the re-render right after a successful confirm, where the form
+   * must stay mounted so the recovery codes in its state are not lost.
+   */
+  enrolment: {
+    /** Base32 secret for manual entry, when scanning is not possible. */
+    secret: string;
+    /** PNG data URI rendered as the scannable code. */
+    qrCodeDataUri: string;
+  } | null;
 }
 
 /**
  * The two-step enrolment: scan (or type) the secret, then prove possession with the first code.
  * On success the recovery codes replace the form — they are the only copy the operator ever sees.
+ *
+ * The code is entered into per-digit cells; once the sixth digit lands the form submits itself,
+ * so the flow needs no button press in the happy path.
  */
-export function MfaEnrolForm({ secret, qrCodeDataUri }: Readonly<MfaEnrolFormProps>) {
+export function MfaEnrolForm({ enrolment }: Readonly<MfaEnrolFormProps>) {
   const [state, action, pending] = useActionState(confirmTotpAction, INITIAL_MFA_ENROL_STATE);
+  const [code, setCode] = useState('');
+  const [, startTransition] = useTransition();
   const codeId = useId();
+
+  // The last digit submits straight away. The action is invoked with FormData built here rather
+  // than relying on the hidden input, whose DOM value lags the keystroke that fired onComplete.
+  const submitCode = (value: string) => {
+    const data = new FormData();
+    data.set('code', value);
+    startTransition(() => action(data));
+  };
 
   if (state.status === 'enrolled' && state.recoveryCodes) {
     return <RecoveryCodes codes={state.recoveryCodes} />;
   }
 
+  if (!enrolment) {
+    return <AlreadyEnrolled />;
+  }
+
+  const { secret, qrCodeDataUri } = enrolment;
+
   return (
-    <div className="mt-8 space-y-8">
-      <ol className="space-y-6">
-        <li className="flex gap-4">
+    <ol className="mt-10 space-y-5">
+      <li
+        className="animate-rise rounded-[var(--radius-lg)] border border-[var(--icb-border)] p-5"
+        style={{ animationDelay: '120ms' }}
+      >
+        <div className="flex items-center gap-3">
           <StepNumber value={1} />
           <div className="min-w-0">
-            <p className="text-sm font-medium">Add ICB to your authenticator</p>
-            <p className="mt-1 text-sm text-[var(--icb-text-muted)]">
-              Scan this code with your authenticator app, or enter the key manually.
+            <p className="text-sm font-semibold">Add ICB to your authenticator</p>
+            <p className="mt-0.5 text-sm text-[var(--icb-text-muted)]">
+              Scan the code with your authenticator app, or copy the key and enter it manually.
             </p>
-            {/* A data URI from the API, so next/image's static loader does not apply. */}
-            <img
-              src={qrCodeDataUri}
-              alt="Authenticator setup QR code for ICB Operations"
-              className="mt-4 h-44 w-44 rounded-[var(--radius-md)] border border-[var(--icb-border)]"
-            />
-            <SecretValue secret={secret} />
           </div>
-        </li>
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-6">
+          {/* A data URI from the API, so next/image's static loader does not apply. */}
+          <img
+            src={qrCodeDataUri}
+            alt="Authenticator setup QR code for ICB Operations"
+            className="h-40 w-40 rounded-[var(--radius-md)] border border-[var(--icb-border)] bg-white p-2"
+          />
+          <SecretValue secret={secret} />
+        </div>
+      </li>
 
-        <li className="flex gap-4">
+      <li
+        className="animate-rise rounded-[var(--radius-lg)] border border-[var(--icb-border)] p-5"
+        style={{ animationDelay: '180ms' }}
+      >
+        <div className="flex items-center gap-3">
           <StepNumber value={2} />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">Enter the first code</p>
-            <form action={action} className="mt-3 space-y-4">
-              {state.message ? (
-                <p
-                  role="alert"
-                  className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--icb-danger-border)] bg-[var(--icb-danger-bg)] px-4 py-3 text-sm text-[var(--icb-danger-fg)]"
-                >
-                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
-                  {state.message}
-                </p>
-              ) : null}
-              <div>
-                <label htmlFor={codeId} className="block text-sm font-medium">
-                  6-digit code
-                </label>
-                <input
-                  id={codeId}
-                  name="code"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  required
-                  minLength={6}
-                  maxLength={6}
-                  className="tabular mt-1.5 h-11 w-40 rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-center text-sm tracking-[0.3em] outline-none focus:border-[var(--icb-primary)]"
-                />
-              </div>
-              <Button type="submit" loading={pending}>
-                {pending ? 'Confirming…' : 'Enable two-factor authentication'}
-              </Button>
-            </form>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold">Enter the first code</p>
+            <p className="mt-0.5 text-sm text-[var(--icb-text-muted)]">
+              Type the 6-digit code your app shows — it proves the link worked.
+            </p>
           </div>
-        </li>
-      </ol>
+        </div>
+        <form action={action} className="mt-5 space-y-4">
+          {state.message ? (
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--icb-danger-border)] bg-[var(--icb-danger-bg)] px-4 py-3 text-sm text-[var(--icb-danger-fg)]"
+            >
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              {state.message}
+            </p>
+          ) : null}
+          <div>
+            <label htmlFor={codeId} className="block text-sm font-medium">
+              6-digit code
+            </label>
+            <OTPInput
+              id={codeId}
+              name="code"
+              value={code}
+              onChange={setCode}
+              onComplete={submitCode}
+              invalid={state.status === 'error'}
+              className="mt-2"
+            />
+          </div>
+          <Button type="submit" loading={pending} disabled={pending || code.length < 6}>
+            {pending ? 'Confirming…' : 'Enable two-factor authentication'}
+          </Button>
+        </form>
+      </li>
+    </ol>
+  );
+}
+
+/** Shown when the API reports the second factor is already on (a fresh visit post-enrolment). */
+function AlreadyEnrolled() {
+  return (
+    <div className="mt-10 animate-rise space-y-6" style={{ animationDelay: '120ms' }}>
+      <p className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--icb-success-border)] bg-[var(--icb-success-bg)] px-4 py-3 text-sm text-[var(--icb-success-fg)]">
+        <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+        Two-factor authentication is already on for this account.
+      </p>
+      <Link
+        href="/"
+        className="inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-4 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors hover:bg-[var(--icb-primary-hover)]"
+      >
+        Continue to the console
+      </Link>
     </div>
   );
 }
@@ -134,13 +197,35 @@ function StepNumber({ value }: Readonly<{ value: number }>) {
   );
 }
 
+/** The manual-entry fallback, grouped into four-character blocks with a copy button. */
 function SecretValue({ secret }: Readonly<{ secret: string }>) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    void navigator.clipboard.writeText(secret).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
-    <p className="mt-3 text-xs text-[var(--icb-text-subtle)]">
-      Manual entry key:{' '}
-      <code className="rounded bg-[var(--icb-bg-subtle)] px-1.5 py-0.5 font-mono text-[var(--icb-text)]">
-        {secret}
-      </code>
-    </p>
+    <div className="min-w-0">
+      <p className="text-xs font-medium tracking-[0.08em] text-[var(--icb-text-subtle)] uppercase">
+        Manual entry key
+      </p>
+      <div className="mt-2 flex items-center gap-2">
+        <code className="truncate rounded-[var(--radius-md)] border border-[var(--icb-border)] bg-[var(--icb-bg-subtle)] px-3 py-2 font-mono text-sm">
+          {secret.replace(/(.{4})/g, '$1 ').trim()}
+        </code>
+        <button
+          type="button"
+          onClick={copy}
+          aria-label={copied ? 'Manual entry key copied' : 'Copy manual entry key'}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--icb-border)] text-[var(--icb-text-muted)] transition-colors hover:border-[var(--icb-border-strong)] hover:text-[var(--icb-text)]"
+        >
+          {copied ? <Check size={15} /> : <Copy size={15} />}
+        </button>
+      </div>
+    </div>
   );
 }

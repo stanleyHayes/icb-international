@@ -5,7 +5,11 @@ import { Button, formatDate, formatTime } from '@icb/ui';
 import { AlertCircle } from 'lucide-react';
 import { useActionState, useId, useState } from 'react';
 
-import { INITIAL_FLAG_STATE, updateFlagAction } from './actions';
+import { updateFlagAction, type FlagFormState } from './actions';
+
+// Kept locally: server-action modules may only export async functions, so this cannot be
+// imported from './actions'.
+const INITIAL_FLAG_STATE: FlagFormState = { status: 'idle', message: null };
 
 const AUDIENCES = [
   { value: 'all', label: 'Everyone' },

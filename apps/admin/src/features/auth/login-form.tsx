@@ -51,8 +51,8 @@ function CredentialsForm({
           name="email"
           type="email"
           autoComplete="email"
+          placeholder="name@example.com"
           required
-          defaultValue="ops@icb.example"
           aria-invalid={Boolean(state.fieldErrors['email']) || undefined}
           aria-describedby={state.fieldErrors['email'] ? `${emailId}-error` : undefined}
           className="mt-1.5 h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-sm outline-none focus:border-[var(--icb-primary)]"
@@ -75,8 +75,8 @@ function CredentialsForm({
             name="password"
             type={revealed ? 'text' : 'password'}
             autoComplete="current-password"
+            placeholder="Your password"
             required
-            defaultValue="Staff!2345678"
             aria-invalid={Boolean(state.fieldErrors['password']) || undefined}
             className="h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 pr-11 text-sm outline-none focus:border-[var(--icb-primary)]"
           />
@@ -127,6 +127,7 @@ function MfaForm({ challenge }: Readonly<{ challenge: NonNullable<LoginState['ch
           type="text"
           inputMode="numeric"
           autoComplete="one-time-code"
+          placeholder="123456"
           required
           minLength={6}
           maxLength={16}

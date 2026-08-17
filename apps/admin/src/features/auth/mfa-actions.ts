@@ -12,7 +12,9 @@ export interface MfaEnrolState {
   recoveryCodes: string[] | null;
 }
 
-export const INITIAL_MFA_ENROL_STATE: MfaEnrolState = {
+// Not exported: a 'use server' module may only export async functions — the client form keeps
+// its own copy of the initial state (same trap as the login actions, see actions.ts).
+const INITIAL_MFA_ENROL_STATE: MfaEnrolState = {
   status: 'idle',
   message: null,
   recoveryCodes: null,

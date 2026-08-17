@@ -62,4 +62,34 @@ describe('ChatModule wiring', () => {
 
     await moduleRef.close();
   });
+
+  it('skips route registration when there is no HTTP adapter (CLI/worker contexts)', async () => {
+    const config = {
+      http: { corsOrigins: [] },
+      jwt: { accessSecret: 'test-secret' },
+    } as unknown as AppConfiguration;
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [JwtModule.register({})],
+      controllers: [ChatController, ChatStaffController],
+      providers: [
+        ChatService,
+        ChatTokenService,
+        ChatGateway,
+        { provide: ChatRealtimePort, useExisting: ChatGateway },
+        { provide: getModelToken(ChatConversationDoc.name), useValue: {} },
+        { provide: getModelToken(ChatMessageDoc.name), useValue: {} },
+        { provide: getModelToken(CustomerDoc.name), useValue: {} },
+        { provide: TokenService, useValue: {} },
+        { provide: CONFIG, useValue: config },
+        { provide: ClockService, useValue: new ClockService() },
+        { provide: HttpAdapterHost, useValue: { httpAdapter: null } },
+      ],
+    }).compile();
+
+    // Must not throw — the seed CLI boots the module in a standalone context.
+    await moduleRef.init();
+
+    await moduleRef.close();
+  });
 });

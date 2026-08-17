@@ -10,9 +10,11 @@ const CHECKBOX_BOX_CLASSES = [
   'relative inline-flex h-5 w-5 shrink-0 items-center justify-center',
   'rounded-[var(--radius-sm)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)]',
   'text-[var(--icb-text-on-brand)] shadow-[var(--shadow-xs)] transition-colors duration-150',
-  'peer-checked:border-[var(--icb-primary)] peer-checked:bg-[var(--icb-primary)]',
-  'peer-focus-visible:focus-ring peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
-  'peer-aria-invalid:border-[var(--icb-danger)]',
+  // The input lives inside this box, so peer-* can never match it — peer targets following
+  // siblings. has-* looks the other way, at the descendant input.
+  'has-checked:border-[var(--icb-primary)] has-checked:bg-[var(--icb-primary)]',
+  'has-focus-visible:focus-ring has-disabled:cursor-not-allowed has-disabled:opacity-50',
+  'has-[[aria-invalid=true]]:border-[var(--icb-danger)]',
 ].join(' ');
 
 export interface CheckboxProps extends Omit<ComponentProps<'input'>, 'type' | 'size'> {
@@ -53,7 +55,11 @@ export function Checkbox({
         aria-describedby={a11y.describedBy}
         className={cn('peer absolute inset-0 h-full w-full cursor-pointer opacity-0', className)}
       />
-      <IconCheck size={14} strokeWidth={2.5} className="opacity-0 peer-checked:opacity-100" />
+      <IconCheck
+        size={14}
+        strokeWidth={2.5}
+        className="pointer-events-none opacity-0 peer-checked:opacity-100"
+      />
     </span>
   );
   if (label == null) {

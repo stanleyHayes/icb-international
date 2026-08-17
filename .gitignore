@@ -29,3 +29,6 @@ e2e/a11y/results/
 
 # QA-06 Playwright journey artifacts (traces, screenshots, videos)
 e2e/.artifacts/
+
+# Local dev credentials (seeded logins)
+credentials.txt
