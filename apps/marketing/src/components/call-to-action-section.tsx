@@ -1,10 +1,12 @@
+import { Reveal } from '@icb/ui';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export function CallToActionSection() {
   return (
       <section className="mx-auto max-w-[1200px] px-5 py-24">
-        <div className="relative overflow-hidden rounded-[var(--radius-2xl)] bg-brand-tile px-8 py-16 text-center sm:px-16">
+        <Reveal>
+          <div className="relative overflow-hidden rounded-[var(--radius-2xl)] bg-brand-tile px-8 py-16 text-center sm:px-16">
           <h2 className="font-display text-3xl font-bold tracking-[-0.02em] text-white sm:text-4xl">
             Open an account in under ten minutes
           </h2>
@@ -18,7 +20,8 @@ export function CallToActionSection() {
             Get started
             <ArrowRight size={18} />
           </Link>
-        </div>
+          </div>
+        </Reveal>
       </section>
   );
 }

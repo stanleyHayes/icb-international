@@ -1,4 +1,4 @@
-import { Card, CardBody } from '@icb/ui';
+import { Card, CardBody, Reveal } from '@icb/ui';
 import { ArrowRight, Check } from 'lucide-react';
 import Link from 'next/link';
 
@@ -23,7 +23,8 @@ export function ProductSection({
           : 'scroll-mt-20 border-b border-[var(--icb-border)]'
       }
     >
-      <div className="mx-auto max-w-[1200px] px-5 py-16 lg:py-20">
+      <Reveal>
+        <div className="mx-auto max-w-[1200px] px-5 py-16 lg:py-20">
         <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:items-center">
           <div className={reversed ? 'lg:order-2' : ''}>
             <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
@@ -93,7 +94,8 @@ export function ProductSection({
             </Card>
           </div>
         </div>
-      </div>
+        </div>
+      </Reveal>
     </section>
   );
 }

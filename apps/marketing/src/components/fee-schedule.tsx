@@ -1,4 +1,4 @@
-import { Card, CardBody } from '@icb/ui';
+import { Card, CardBody, Reveal } from '@icb/ui';
 
 import { Section } from '@/components/page-header';
 import { RateTable } from '@/components/rate-table';
@@ -36,23 +36,25 @@ export function FeeSchedule() {
 
       <Section title="Product fees">
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {[...PERSONAL_PRODUCTS, ...BUSINESS_PRODUCTS].map((product) => (
-            <Card key={product.slug}>
-              <CardBody className="pt-5">
-                <h3 className="text-base font-semibold">{product.name}</h3>
-                <dl className="mt-4">
-                  {product.fees.map((fee) => (
-                    <div
-                      key={fee.label}
-                      className="flex items-baseline justify-between gap-4 border-b border-[var(--icb-border)] py-2 last:border-0"
-                    >
-                      <dt className="text-sm text-[var(--icb-text-muted)]">{fee.label}</dt>
-                      <dd className="tabular text-sm font-semibold">{fee.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </CardBody>
-            </Card>
+          {[...PERSONAL_PRODUCTS, ...BUSINESS_PRODUCTS].map((product, index) => (
+            <Reveal key={product.slug} delay={Math.min(index, 4) * 60}>
+              <Card>
+                <CardBody className="pt-5">
+                  <h3 className="text-base font-semibold">{product.name}</h3>
+                  <dl className="mt-4">
+                    {product.fees.map((fee) => (
+                      <div
+                        key={fee.label}
+                        className="flex items-baseline justify-between gap-4 border-b border-[var(--icb-border)] py-2 last:border-0"
+                      >
+                        <dt className="text-sm text-[var(--icb-text-muted)]">{fee.label}</dt>
+                        <dd className="tabular text-sm font-semibold">{fee.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </CardBody>
+              </Card>
+            </Reveal>
           ))}
         </div>
       </Section>

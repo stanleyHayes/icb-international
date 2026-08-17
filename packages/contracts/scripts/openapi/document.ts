@@ -39,6 +39,7 @@ const TAG_DESCRIPTIONS: Readonly<Record<TagName, string>> = {
   [TAG.documents]: 'Statements and generated documents with signed downloads.',
   [TAG.notifications]: 'The notification centre and per-channel preferences.',
   [TAG.support]: 'Support tickets and secure messaging.',
+  [TAG.chat]: 'Live support chat for visitors and customers, with the staff inbox.',
   [TAG.disputes]: 'Chargeback disputes from filing to resolution.',
   [TAG.risk]: 'Fraud rules, cases, and AML alerting (staff).',
   [TAG.governance]: 'Staff administration, audit trail, and maker-checker approvals.',

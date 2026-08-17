@@ -30,6 +30,7 @@ import { BeneficiariesModule } from './modules/beneficiaries/beneficiaries.modul
 import { BillingModule } from './modules/billing/billing.module.js';
 import { BudgetsModule } from './modules/budgets/budgets.module.js';
 import { CardsModule } from './modules/cards/cards.module.js';
+import { ChatModule } from './modules/chat/chat.module.js';
 import { ContentModule } from './modules/content/content.module.js';
 import { CustomersModule } from './modules/customers/customers.module.js';
 import { DocumentsModule } from './modules/documents/documents.module.js';
@@ -84,6 +85,7 @@ import { TransfersModule } from './modules/transfers/transfers.module.js';
     BillingModule,
     BudgetsModule,
     CardsModule,
+    ChatModule,
     ContentModule,
     CustomersModule,
     DisputesModule,

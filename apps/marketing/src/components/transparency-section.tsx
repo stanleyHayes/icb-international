@@ -1,4 +1,4 @@
-import { Card, CardBody } from '@icb/ui';
+import { Card, CardBody, Reveal } from '@icb/ui';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -6,7 +6,8 @@ import Link from 'next/link';
 export function TransparencySection() {
   return (
       <section className="border-y border-[var(--icb-border)] bg-[var(--icb-bg-subtle)]">
-        <div className="mx-auto max-w-[1200px] px-5 py-20">
+        <Reveal>
+          <div className="mx-auto max-w-[1200px] px-5 py-20">
           <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
             <div>
               <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
@@ -70,7 +71,8 @@ export function TransparencySection() {
               </CardBody>
             </Card>
           </div>
-        </div>
+          </div>
+        </Reveal>
       </section>
   );
 }

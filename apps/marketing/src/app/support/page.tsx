@@ -1,4 +1,4 @@
-import { Card, CardBody } from '@icb/ui';
+import { Card, CardBody, Reveal } from '@icb/ui';
 import { ChevronDown } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -58,18 +58,20 @@ export default function SupportPage() {
 
       <Section title="Browse by topic">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {HELP_CATEGORIES.map((category) => (
-            <Card key={category.name}>
-              <CardBody className="pt-6">
-                <h3 className="text-base font-semibold">{category.name}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                  {category.description}
-                </p>
-                <p className="mt-3 text-xs text-[var(--icb-text-subtle)]">
-                  {HELP_ARTICLES.filter((a) => a.category === category.name).length} articles
-                </p>
-              </CardBody>
-            </Card>
+          {HELP_CATEGORIES.map((category, index) => (
+            <Reveal key={category.name} delay={(index % 4) * 60}>
+              <Card>
+                <CardBody className="pt-6">
+                  <h3 className="text-base font-semibold">{category.name}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                    {category.description}
+                  </p>
+                  <p className="mt-3 text-xs text-[var(--icb-text-subtle)]">
+                    {HELP_ARTICLES.filter((a) => a.category === category.name).length} articles
+                  </p>
+                </CardBody>
+              </Card>
+            </Reveal>
           ))}
         </div>
       </Section>

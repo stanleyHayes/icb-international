@@ -20,18 +20,28 @@ export function PageHeader({
   return (
     <header className="border-b border-[var(--icb-border)] bg-[var(--icb-bg-subtle)]">
       <div className="mx-auto max-w-[1200px] px-5 py-16 lg:py-20">
-        <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
+        <p className="animate-rise text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
           {eyebrow}
         </p>
-        <h1 className="mt-3 max-w-3xl font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">
+        <h1
+          className="mt-3 max-w-3xl animate-rise font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl"
+          style={{ animationDelay: '60ms' }}
+        >
           {title}
         </h1>
         {standfirst ? (
-          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[var(--icb-text-muted)]">
+          <p
+            className="mt-5 max-w-2xl animate-rise text-lg leading-relaxed text-[var(--icb-text-muted)]"
+            style={{ animationDelay: '120ms' }}
+          >
             {standfirst}
           </p>
         ) : null}
-        {children ? <div className="mt-8">{children}</div> : null}
+        {children ? (
+          <div className="mt-8 animate-rise" style={{ animationDelay: '180ms' }}>
+            {children}
+          </div>
+        ) : null}
       </div>
     </header>
   );

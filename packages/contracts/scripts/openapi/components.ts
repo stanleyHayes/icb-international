@@ -6,6 +6,7 @@ import * as authContract from '../../src/auth/auth.contract.js';
 import * as beneficiariesContract from '../../src/beneficiaries/beneficiaries.contract.js';
 import * as budgetsContract from '../../src/budgets/budgets.contract.js';
 import * as cardsContract from '../../src/cards/cards.contract.js';
+import * as chatContract from '../../src/chat/chat.contract.js';
 import * as errorsModule from '../../src/common/errors.js';
 import * as primitivesModule from '../../src/common/primitives.js';
 import { cursorPageSchema, offsetPageSchema } from '../../src/common/pagination.js';
@@ -69,6 +70,7 @@ const CONTRACT_MODULES: readonly Record<string, unknown>[] = [
   beneficiariesContract,
   budgetsContract,
   cardsContract,
+  chatContract,
   customersContract,
   documentsContract,
   errorsModule,

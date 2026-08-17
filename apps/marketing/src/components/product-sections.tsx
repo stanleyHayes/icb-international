@@ -1,4 +1,4 @@
-import { Card, CardBody } from '@icb/ui';
+import { Card, CardBody, Reveal } from '@icb/ui';
 import { Check, ChevronDown } from 'lucide-react';
 
 import { Section } from '@/components/page-header';
@@ -19,18 +19,20 @@ export function FeatureGrid({
   return (
     <Section title="What you get" tone="subtle">
       <div className="grid gap-5 md:grid-cols-2">
-        {features.map((feature) => (
-          <Card key={feature.title}>
-            <CardBody className="pt-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
-                <feature.icon size={20} aria-hidden="true" />
-              </div>
-              <h3 className="mt-4 text-base font-semibold">{feature.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                {feature.body}
-              </p>
-            </CardBody>
-          </Card>
+        {features.map((feature, index) => (
+          <Reveal key={feature.title} delay={index * 60}>
+            <Card>
+              <CardBody className="pt-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
+                  <feature.icon size={20} aria-hidden="true" />
+                </div>
+                <h3 className="mt-4 text-base font-semibold">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                  {feature.body}
+                </p>
+              </CardBody>
+            </Card>
+          </Reveal>
         ))}
       </div>
     </Section>
@@ -47,50 +49,54 @@ export function EligibilitySection({ copy }: Readonly<{ copy: ProductPageCopy }>
       description="The headline criteria, stated plainly. Full eligibility is confirmed during the application itself."
     >
       <div className="grid gap-5 lg:grid-cols-2">
-        <Card>
-          <CardBody className="pt-6">
-            <h3 className="text-xs font-semibold tracking-[0.1em] text-[var(--icb-text-subtle)] uppercase">
-              You will need
-            </h3>
-            <ul className="mt-4 space-y-3">
-              {copy.eligibility.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm">
-                  <Check
-                    size={16}
-                    className="mt-0.5 shrink-0 text-[var(--icb-success)]"
-                    aria-hidden="true"
-                  />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </CardBody>
-        </Card>
-        <Card>
-          <CardBody className="pt-6">
-            <h3 className="text-xs font-semibold tracking-[0.1em] text-[var(--icb-text-subtle)] uppercase">
-              How it goes
-            </h3>
-            <ol className="mt-4 space-y-4">
-              {steps.map((step, index) => (
-                <li key={step.title} className="flex items-start gap-3.5">
-                  <span
-                    aria-hidden="true"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--icb-navy-50)] text-xs font-bold text-[var(--icb-primary)]"
-                  >
-                    {index + 1}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold">{step.title}</p>
-                    <p className="mt-0.5 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                      {step.body}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </CardBody>
-        </Card>
+        <Reveal>
+          <Card>
+            <CardBody className="pt-6">
+              <h3 className="text-xs font-semibold tracking-[0.1em] text-[var(--icb-text-subtle)] uppercase">
+                You will need
+              </h3>
+              <ul className="mt-4 space-y-3">
+                {copy.eligibility.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm">
+                    <Check
+                      size={16}
+                      className="mt-0.5 shrink-0 text-[var(--icb-success)]"
+                      aria-hidden="true"
+                    />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardBody>
+          </Card>
+        </Reveal>
+        <Reveal delay={60}>
+          <Card>
+            <CardBody className="pt-6">
+              <h3 className="text-xs font-semibold tracking-[0.1em] text-[var(--icb-text-subtle)] uppercase">
+                How it goes
+              </h3>
+              <ol className="mt-4 space-y-4">
+                {steps.map((step, index) => (
+                  <li key={step.title} className="flex items-start gap-3.5">
+                    <span
+                      aria-hidden="true"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--icb-navy-50)] text-xs font-bold text-[var(--icb-primary)]"
+                    >
+                      {index + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold">{step.title}</p>
+                      <p className="mt-0.5 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                        {step.body}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </CardBody>
+          </Card>
+        </Reveal>
       </div>
     </Section>
   );

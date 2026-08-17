@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { DashboardShell } from '@/components/dashboard-shell';
+import { ClientChat } from '@/features/chat/client-chat';
 import { readSession } from '@/lib/session';
 
 /**
@@ -18,5 +19,10 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
     redirect('/login');
   }
 
-  return <DashboardShell user={session.user}>{children}</DashboardShell>;
+  return (
+    <DashboardShell user={session.user}>
+      {children}
+      <ClientChat />
+    </DashboardShell>
+  );
 }

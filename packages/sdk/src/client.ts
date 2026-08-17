@@ -8,6 +8,7 @@ import { createAuthApi, type AuthApi } from './endpoints/auth.js';
 import { createBeneficiariesApi, type BeneficiariesApi } from './endpoints/beneficiaries.js';
 import { createBudgetsApi, type BudgetsApi } from './endpoints/budgets.js';
 import { createCardsApi, type CardsApi } from './endpoints/cards.js';
+import { createChatApi, type ChatApi } from './endpoints/chat.js';
 import { createContentApi, type ContentApi } from './endpoints/content.js';
 import { createCustomersApi, type CustomersApi } from './endpoints/customers.js';
 import { createDisputesApi, type DisputesApi } from './endpoints/disputes.js';
@@ -65,6 +66,7 @@ export interface IcbClient {
   documents: DocumentsApi;
   notifications: NotificationsApi;
   support: SupportApi;
+  chat: ChatApi;
   governance: GovernanceApi;
   admin: AdminApi;
   simulation: SimulationApi;
@@ -117,6 +119,7 @@ function buildNamespaces(call: Requester): IcbClient {
     documents: createDocumentsApi(call),
     notifications: createNotificationsApi(call),
     support: createSupportApi(call),
+    chat: createChatApi(call),
     governance: createGovernanceApi(call),
     admin: createAdminApi(call),
     simulation: createSimulationApi(call),

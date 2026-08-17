@@ -56,6 +56,7 @@ export const TAG = {
   documents: 'Documents',
   notifications: 'Notifications',
   support: 'Support',
+  chat: 'Chat',
   disputes: 'Disputes',
   risk: 'Risk & Compliance',
   governance: 'Governance',

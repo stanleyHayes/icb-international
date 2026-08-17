@@ -6,6 +6,7 @@ import { authEndpoints } from './auth.js';
 import { beneficiariesEndpoints } from './beneficiaries.js';
 import { budgetsEndpoints } from './budgets.js';
 import { cardsEndpoints } from './cards.js';
+import { chatEndpoints } from './chat.js';
 import { contentEndpoints } from './content.js';
 import { customersEndpoints } from './customers.js';
 import { disputesEndpoints } from './disputes.js';
@@ -50,6 +51,7 @@ export const endpointRegistry = {
   documents: documentsEndpoints,
   notifications: notificationsEndpoints,
   support: supportEndpoints,
+  chat: chatEndpoints,
   governance: governanceEndpoints,
   admin: adminEndpoints,
   simulation: simulationEndpoints,

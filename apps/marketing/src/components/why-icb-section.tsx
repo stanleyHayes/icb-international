@@ -1,4 +1,4 @@
-import { Card, CardBody } from '@icb/ui';
+import { Card, CardBody, Reveal } from '@icb/ui';
 import { Globe2, Layers, ShieldCheck, Zap } from 'lucide-react';
 
 const PILLARS = [
@@ -42,18 +42,20 @@ export function WhyIcbSection() {
         </div>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2">
-          {PILLARS.map((pillar) => (
-            <Card key={pillar.title} className="transition-shadow hover:shadow-[var(--shadow-md)]">
-              <CardBody className="pt-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
-                  <pillar.icon size={20} />
-                </div>
-                <h3 className="mt-4 text-lg font-semibold">{pillar.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                  {pillar.body}
-                </p>
-              </CardBody>
-            </Card>
+          {PILLARS.map((pillar, index) => (
+            <Reveal key={pillar.title} delay={index * 60}>
+              <Card className="transition-shadow hover:shadow-[var(--shadow-md)]">
+                <CardBody className="pt-6">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
+                    <pillar.icon size={20} />
+                  </div>
+                  <h3 className="mt-4 text-lg font-semibold">{pillar.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                    {pillar.body}
+                  </p>
+                </CardBody>
+              </Card>
+            </Reveal>
           ))}
         </div>
       </section>

@@ -65,9 +65,10 @@ export function ResultRow({
     <div className="flex items-baseline justify-between gap-4">
       <dt className="text-sm text-[var(--icb-text-muted)]">{label}</dt>
       <dd
+        key={prominent ? value : undefined}
         className={cn(
           'tabular text-right font-semibold',
-          prominent ? 'font-display text-2xl' : 'text-sm',
+          prominent ? 'animate-fade font-display text-2xl' : 'text-sm',
         )}
       >
         {value}

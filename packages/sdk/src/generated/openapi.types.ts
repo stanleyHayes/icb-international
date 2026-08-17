@@ -965,6 +965,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a live-chat conversation (anonymous visitors and customers) */
+        post: operations["startChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/conversations/{conversationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A conversation and its full message history */
+        get: operations["getChatHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/staff/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open chat conversations awaiting an agent (staff) */
+        get: operations["listStaffChatInbox"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/staff/conversations/{conversationId}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close a conversation (staff) */
+        post: operations["closeChatConversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/ws-ticket": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mint the short-lived ticket exchanged for the WebSocket upgrade */
+        post: operations["mintChatWsTicket"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/content/faq": {
         parameters: {
             query?: never;
@@ -3578,6 +3663,28 @@ export interface components {
             currentPassword: string;
             newPassword: components["schemas"]["Password"];
         };
+        /** @enum {string} */
+        ChatAuthor: "visitor" | "agent" | "system";
+        ChatConversation: {
+            id: components["schemas"]["Ulid"];
+            status: components["schemas"]["ChatConversationStatus"];
+            customerId: components["schemas"]["Ulid"] | null;
+            visitorName: string | null;
+            lastMessagePreview: string | null;
+            lastMessageAt: components["schemas"]["IsoDateTime"] | null;
+            createdAt: components["schemas"]["IsoDateTime"];
+            closedAt: components["schemas"]["IsoDateTime"] | null;
+        };
+        /** @enum {string} */
+        ChatConversationStatus: "open" | "closed";
+        ChatMessage: {
+            id: components["schemas"]["Ulid"];
+            conversationId: components["schemas"]["Ulid"];
+            author: components["schemas"]["ChatAuthor"];
+            authorName: string;
+            body: string;
+            sentAt: components["schemas"]["IsoDateTime"];
+        };
         ClockState: {
             now: components["schemas"]["IsoDateTime"];
             offsetMs: number;
@@ -4450,6 +4557,9 @@ export interface components {
         };
         /** @enum {string} */
         SimulationRail: "internal" | "on_us" | "ach" | "wire" | "swift" | "card";
+        StartChatRequest: {
+            visitorName?: string;
+        };
         StepUpRequest: {
             /** @enum {string} */
             purpose: "reveal_card" | "card_pan_reveal" | "add_beneficiary" | "high_value_transfer" | "change_security_settings" | "close_account" | "approval-decide" | "staff-manage";
@@ -4899,6 +5009,10 @@ export interface components {
             granularity: "week" | "month";
             points: components["schemas"]["CashflowPointOutput"][];
         };
+        ChatHistoryResponse: {
+            conversation: components["schemas"]["ChatConversationOutput"];
+            messages: components["schemas"]["ChatMessageOutput"][];
+        };
         CustomerNote: {
             id: components["schemas"]["Ulid"];
             customerId: components["schemas"]["Ulid"];
@@ -5287,6 +5401,9 @@ export interface components {
                 changeFromPreviousPeriod: number | null;
             }[];
         };
+        StaffChatInboxResponse: {
+            conversations: components["schemas"]["ChatConversationOutput"][];
+        };
         StaffTicketView: {
             id: components["schemas"]["Ulid"];
             reference: string;
@@ -5331,6 +5448,11 @@ export interface components {
             status: "active" | "paused" | "completed" | "cancelled";
             executedCount: number;
             createdAt: components["schemas"]["IsoDateTime"];
+        };
+        StartChatResponse: {
+            conversation: components["schemas"]["ChatConversationOutput"];
+            visitorToken: string;
+            messages: components["schemas"]["ChatMessageOutput"][];
         };
         Statement: {
             id: components["schemas"]["Ulid"];
@@ -5515,6 +5637,11 @@ export interface components {
             signature: string;
             apiKey: string;
             expiresAt: components["schemas"]["IsoDateTime"];
+        };
+        WsTicketResponse: {
+            ticket: string;
+            /** @constant */
+            wsPath: "/v1/chat/ws";
         };
         TransactionSummaryPage: {
             items: components["schemas"]["TransactionSummaryOutput"][];
@@ -5844,6 +5971,24 @@ export interface components {
             income: components["schemas"]["MoneyOutput"];
             expense: components["schemas"]["MoneyOutput"];
             net: components["schemas"]["MoneyOutput"];
+        };
+        ChatConversationOutput: {
+            id: components["schemas"]["Ulid"];
+            status: components["schemas"]["ChatConversationStatus"];
+            customerId: components["schemas"]["Ulid"] | null;
+            visitorName: string | null;
+            lastMessagePreview: string | null;
+            lastMessageAt: components["schemas"]["IsoDateTime"] | null;
+            createdAt: components["schemas"]["IsoDateTime"];
+            closedAt: components["schemas"]["IsoDateTime"] | null;
+        };
+        ChatMessageOutput: {
+            id: components["schemas"]["Ulid"];
+            conversationId: components["schemas"]["Ulid"];
+            author: components["schemas"]["ChatAuthor"];
+            authorName: string;
+            body: string;
+            sentAt: components["schemas"]["IsoDateTime"];
         };
         ClockStateOutput: {
             now: components["schemas"]["IsoDateTime"];
@@ -6469,6 +6614,35 @@ export interface components {
                 count: number;
                 value: components["schemas"]["MoneyOutput"];
             }[];
+        };
+        ChatClientFrame: {
+            /** @constant */
+            type: "message";
+            body: string;
+            conversationId?: components["schemas"]["Ulid"];
+        } | {
+            /** @constant */
+            type: "ping";
+        };
+        ChatServerFrame: {
+            /** @constant */
+            type: "ready";
+            conversationId: components["schemas"]["Ulid"] | null;
+        } | {
+            /** @constant */
+            type: "message";
+            message: components["schemas"]["ChatMessageOutput"];
+        } | {
+            /** @constant */
+            type: "conversation";
+            conversation: components["schemas"]["ChatConversationOutput"];
+        } | {
+            /** @constant */
+            type: "error";
+            message: string;
+        } | {
+            /** @constant */
+            type: "pong";
         };
         Reconciliation: {
             /** Format: date */
@@ -10914,6 +11088,314 @@ export interface operations {
             };
             /** @description The requested resource does not exist. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description An unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    startChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StartChatRequest"];
+            };
+        };
+        responses: {
+            /** @description The conversation and its resume token. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartChatResponse"];
+                };
+            };
+            /** @description The request is well-formed but fails validation or a business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description An unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getChatHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID identifier */
+                conversationId: components["schemas"]["Ulid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The conversation history, oldest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatHistoryResponse"];
+                };
+            };
+            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The authenticated principal may not perform this action. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The requested resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description An unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    listStaffChatInbox: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The open conversations. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffChatInboxResponse"];
+                };
+            };
+            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The authenticated principal may not perform this action. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description An unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    closeChatConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID identifier */
+                conversationId: components["schemas"]["Ulid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The closed conversation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatConversationOutput"];
+                };
+            };
+            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The authenticated principal may not perform this action. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The requested resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The request conflicts with current state or a processed idempotency key. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description An unexpected server error. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    mintChatWsTicket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The ticket and the WebSocket path. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WsTicketResponse"];
+                };
+            };
+            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The authenticated principal may not perform this action. */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

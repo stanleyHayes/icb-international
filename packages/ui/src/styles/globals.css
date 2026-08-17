@@ -79,6 +79,15 @@
 
   --ease-out: var(--icb-ease-out);
   --ease-emphasized: var(--icb-ease-emphasized);
+  --ease-in-out: var(--icb-ease-in-out);
+
+  --duration-instant: var(--icb-duration-instant);
+  --duration-fast: var(--icb-duration-fast);
+  --duration-normal: var(--icb-duration-normal);
+  --duration-slow: var(--icb-duration-slow);
+
+  --animate-rise: icb-rise var(--icb-duration-slow) var(--icb-ease-out) both;
+  --animate-fade: icb-fade var(--icb-duration-normal) var(--icb-ease-out) both;
 }
 
 @layer base {
@@ -200,4 +209,56 @@
   outline: 2px solid var(--icb-danger);
   outline-offset: 2px;
   border-radius: var(--icb-radius-xs);
+}
+
+@keyframes icb-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes icb-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes icb-pop {
+  from { opacity: 0; transform: scale(0.95) translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Scroll-reveal primitive styles. Starts hidden; the Reveal component flips data-visible. */
+.icb-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity var(--icb-duration-slow) var(--icb-ease-out),
+    transform var(--icb-duration-slow) var(--icb-ease-out);
+}
+
+.icb-reveal[data-visible='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Reduced motion: durations already collapse to 1ms via the token override in tokens.css;
+   additionally drop the translate and any stagger delay so nothing visibly moves. */
+@media (prefers-reduced-motion: reduce) {
+  .icb-reveal {
+    transform: none;
+    transition-delay: 0ms !important;
+  }
+
+  .animate-rise,
+  .animate-fade {
+    animation-delay: 0ms !important;
+  }
+}
+
+/* No-JS fail-open: SSR emits .icb-reveal at opacity 0 and only client JS flips
+   data-visible, so with scripting disabled the content must render visible. */
+@media (scripting: none) {
+  .icb-reveal {
+    opacity: 1;
+    transform: none;
+  }
 }

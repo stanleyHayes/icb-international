@@ -38,16 +38,25 @@ export function ProductHero({ copy }: Readonly<{ copy: ProductPageCopy }>) {
               </li>
             </ol>
           </nav>
-          <p className="mt-6 text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
+          <p className="mt-6 animate-rise text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
             {copy.tagline}
           </p>
-          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">
+          <h1
+            className="mt-3 animate-rise font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl"
+            style={{ animationDelay: '60ms' }}
+          >
             {copy.name}
           </h1>
-          <p className="mt-5 max-w-xl text-lg leading-relaxed text-[var(--icb-text-muted)]">
+          <p
+            className="mt-5 max-w-xl animate-rise text-lg leading-relaxed text-[var(--icb-text-muted)]"
+            style={{ animationDelay: '120ms' }}
+          >
             {copy.heroLead}
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-3">
+          <div
+            className="mt-9 flex animate-rise flex-wrap items-center gap-3"
+            style={{ animationDelay: '180ms' }}
+          >
             <Link
               href="/open-account"
               className="inline-flex h-12 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-6 text-base font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"

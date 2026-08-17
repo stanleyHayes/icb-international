@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { SupportChat } from '@/features/chat/support-chat';
 
 import './globals.css';
 
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <SiteHeader />
         <main id="main">{children}</main>
         <SiteFooter />
+        <SupportChat />
       </body>
     </html>
   );

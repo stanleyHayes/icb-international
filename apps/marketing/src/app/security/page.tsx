@@ -1,4 +1,4 @@
-import { Card, CardBody } from '@icb/ui';
+import { Card, CardBody, Reveal } from '@icb/ui';
 import {
   ArrowRight,
   Fingerprint,
@@ -88,18 +88,20 @@ export default function SecurityPage() {
 
       <Section title="How your account is protected" tone="subtle">
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {CONTROLS.map((control) => (
-            <Card key={control.title}>
-              <CardBody className="pt-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
-                  <control.icon size={20} />
-                </div>
-                <h3 className="mt-4 text-base font-semibold">{control.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                  {control.body}
-                </p>
-              </CardBody>
-            </Card>
+          {CONTROLS.map((control, index) => (
+            <Reveal key={control.title} delay={Math.min(index, 4) * 60}>
+              <Card>
+                <CardBody className="pt-6">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
+                    <control.icon size={20} />
+                  </div>
+                  <h3 className="mt-4 text-base font-semibold">{control.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                    {control.body}
+                  </p>
+                </CardBody>
+              </Card>
+            </Reveal>
           ))}
         </div>
       </Section>
@@ -143,27 +145,29 @@ export default function SecurityPage() {
 
       <Section title="Guides" tone="subtle">
         <div className="grid gap-5 md:grid-cols-2">
-          {GUIDES.map((guide) => (
-            <Link key={guide.href} href={guide.href} className="group block">
-              <Card className="h-full transition-shadow group-hover:shadow-[var(--shadow-md)]">
-                <CardBody className="pt-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
-                    <guide.icon size={20} />
-                  </div>
-                  <h3 className="mt-4 flex items-center gap-2 text-base font-semibold">
-                    {guide.title}
-                    <ArrowRight
-                      size={16}
-                      aria-hidden="true"
-                      className="text-[var(--icb-text-subtle)] transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
-                    />
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                    {guide.body}
-                  </p>
-                </CardBody>
-              </Card>
-            </Link>
+          {GUIDES.map((guide, index) => (
+            <Reveal key={guide.href} delay={index * 60}>
+              <Link href={guide.href} className="group block">
+                <Card className="h-full transition-shadow group-hover:shadow-[var(--shadow-md)]">
+                  <CardBody className="pt-6">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
+                      <guide.icon size={20} />
+                    </div>
+                    <h3 className="mt-4 flex items-center gap-2 text-base font-semibold">
+                      {guide.title}
+                      <ArrowRight
+                        size={16}
+                        aria-hidden="true"
+                        className="text-[var(--icb-text-subtle)] transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+                      />
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                      {guide.body}
+                    </p>
+                  </CardBody>
+                </Card>
+              </Link>
+            </Reveal>
           ))}
         </div>
       </Section>

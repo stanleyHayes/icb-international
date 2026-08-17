@@ -1,3 +1,4 @@
+import { Reveal } from '@icb/ui';
 import { ChevronDown, MapPin } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -45,13 +46,15 @@ export default function CareersPage() {
 
       <Section title="Working here" tone="subtle">
         <div className="grid gap-5 md:grid-cols-3">
-          {WORKING_HERE.map((item) => (
-            <div key={item.title}>
-              <h3 className="text-base font-semibold">{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                {item.body}
-              </p>
-            </div>
+          {WORKING_HERE.map((item, index) => (
+            <Reveal key={item.title} delay={index * 60}>
+              <div>
+                <h3 className="text-base font-semibold">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                  {item.body}
+                </p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </Section>

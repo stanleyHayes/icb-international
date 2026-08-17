@@ -30,20 +30,27 @@ export function Confirmation({ signInUrl }: Readonly<{ signInUrl: string | null 
     <Card>
       <CardBody className="py-10">
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--icb-success-bg)] text-[var(--icb-success-fg)]">
+          <div className="animate-rise mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--icb-success-bg)] text-[var(--icb-success-fg)]">
             <CheckCircle2 size={24} aria-hidden="true" />
           </div>
-          <h2 className="mt-5 font-display text-2xl font-bold tracking-[-0.02em]">
+          <h2 className="animate-rise mt-5 font-display text-2xl font-bold tracking-[-0.02em]">
             Application received
           </h2>
-          <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[var(--icb-text-muted)]">
+          <p
+            className="animate-rise mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[var(--icb-text-muted)]"
+            style={{ animationDelay: '60ms' }}
+          >
             Three short steps and the account is open. The first is already in your inbox.
           </p>
         </div>
 
         <ol className="mx-auto mt-8 max-w-md space-y-5">
           {NEXT_STEPS.map((step, index) => (
-            <li key={step.title} className="flex gap-4">
+            <li
+              key={step.title}
+              className="animate-rise flex gap-4"
+              style={{ animationDelay: `${120 + index * 60}ms` }}
+            >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--icb-bg-muted)] text-[var(--icb-primary)]">
                 <step.icon size={17} aria-hidden="true" />
                 <span className="sr-only">Step {index + 1}</span>
@@ -57,7 +64,7 @@ export function Confirmation({ signInUrl }: Readonly<{ signInUrl: string | null 
         </ol>
 
         {signInUrl ? (
-          <div className="mt-9 text-center">
+          <div className="animate-rise mt-9 text-center" style={{ animationDelay: '300ms' }}>
             <a
               href={signInUrl}
               className="inline-flex h-12 items-center rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-6 text-base font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"

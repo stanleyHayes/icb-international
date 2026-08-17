@@ -1,4 +1,4 @@
-import { Card, CardBody } from '@icb/ui';
+import { Card, CardBody, Reveal } from '@icb/ui';
 
 import { Section } from '@/components/page-header';
 import { LEADERSHIP, SUSTAINABILITY } from '@/content/company';
@@ -12,19 +12,21 @@ export function LeadershipSection() {
       description="The people accountable for the decisions described above. Each owns their area by name."
     >
       <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {LEADERSHIP.map((leader) => (
+        {LEADERSHIP.map((leader, index) => (
           <li key={leader.name}>
-            <Card className="h-full">
-              <CardBody className="pt-6">
-                <h3 className="text-base font-semibold">{leader.name}</h3>
-                <p className="mt-0.5 text-xs font-semibold tracking-[0.1em] text-[var(--icb-accent-text)] uppercase">
-                  {leader.role}
-                </p>
-                <p className="mt-3 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                  {leader.bio}
-                </p>
-              </CardBody>
-            </Card>
+            <Reveal delay={Math.min(index, 4) * 60} className="h-full">
+              <Card className="h-full">
+                <CardBody className="pt-6">
+                  <h3 className="text-base font-semibold">{leader.name}</h3>
+                  <p className="mt-0.5 text-xs font-semibold tracking-[0.1em] text-[var(--icb-accent-text)] uppercase">
+                    {leader.role}
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                    {leader.bio}
+                  </p>
+                </CardBody>
+              </Card>
+            </Reveal>
           </li>
         ))}
       </ul>

@@ -5,6 +5,7 @@ import { authOperations } from './auth.js';
 import { beneficiariesOperations } from './beneficiaries.js';
 import { budgetsOperations } from './budgets.js';
 import { cardsOperations } from './cards.js';
+import { chatOperations } from './chat.js';
 import { contentOperations } from './content.js';
 import { customersOperations } from './customers.js';
 import { disputesOperations } from './disputes.js';
@@ -31,6 +32,7 @@ export const ALL_OPERATIONS: readonly OperationSpec[] = [
   ...beneficiariesOperations,
   ...budgetsOperations,
   ...cardsOperations,
+  ...chatOperations,
   ...contentOperations,
   ...customersOperations,
   ...disputesOperations,

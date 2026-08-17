@@ -1,3 +1,4 @@
+import { Reveal } from '@icb/ui';
 import { ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -31,9 +32,10 @@ export default function NewsroomPage() {
 
       <Section>
         <ul className="max-w-3xl divide-y divide-[var(--icb-border)]">
-          {NEWS_ARTICLES.map((article) => (
+          {NEWS_ARTICLES.map((article, index) => (
             <li key={article.slug} className="py-8 first:pt-0">
-              <article>
+              <Reveal delay={Math.min(index, 4) * 60}>
+                <article>
                 <p className="text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
                   {article.category}
                   <span className="mx-2 text-[var(--icb-text-subtle)]" aria-hidden="true">
@@ -61,7 +63,8 @@ export default function NewsroomPage() {
                   Read the announcement
                   <ArrowRight size={15} aria-hidden="true" />
                 </Link>
-              </article>
+                </article>
+              </Reveal>
             </li>
           ))}
         </ul>

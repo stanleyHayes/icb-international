@@ -38,23 +38,32 @@ export default function HomePage() {
         />
         <div className="mx-auto grid max-w-[1200px] items-center gap-16 px-5 py-20 lg:grid-cols-[1.05fr_1fr] lg:py-28">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-[var(--icb-border)] bg-[var(--icb-surface)] px-3 py-1 text-xs font-medium text-[var(--icb-text-muted)]">
+            <p className="inline-flex animate-rise items-center gap-2 rounded-full border border-[var(--icb-border)] bg-[var(--icb-surface)] px-3 py-1 text-xs font-medium text-[var(--icb-text-muted)]">
               <Lock size={12} className="text-[var(--icb-accent)]" />
               Deposits protected up to 250,000
             </p>
 
-            <h1 className="mt-6 font-display text-5xl leading-[1.05] font-extrabold tracking-[-0.03em] sm:text-6xl lg:text-[4.25rem]">
+            <h1
+              className="mt-6 animate-rise font-display text-5xl leading-[1.05] font-extrabold tracking-[-0.03em] sm:text-6xl lg:text-[4.25rem]"
+              style={{ animationDelay: '60ms' }}
+            >
               Banking,
               <br />
               <span className="text-[var(--icb-primary)]">exactly.</span>
             </h1>
 
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-[var(--icb-text-muted)]">
+            <p
+              className="mt-6 max-w-lg animate-rise text-lg leading-relaxed text-[var(--icb-text-muted)]"
+              style={{ animationDelay: '120ms' }}
+            >
               Current accounts, savings, cards, lending and international payments — built on a
               ledger that balances to the cent, every second of every day.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-3">
+            <div
+              className="mt-9 flex animate-rise flex-wrap items-center gap-3"
+              style={{ animationDelay: '180ms' }}
+            >
               <Link
                 href="/open-account"
                 className="inline-flex h-12 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-6 text-base font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"
@@ -70,7 +79,10 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <dl className="mt-14 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
+            <dl
+              className="mt-14 grid animate-rise grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4"
+              style={{ animationDelay: '240ms' }}
+            >
               {NUMBERS.map((item) => (
                 <div key={item.label}>
                   <dt className="sr-only">{item.label}</dt>
@@ -83,7 +95,9 @@ export default function HomePage() {
             </dl>
           </div>
 
-          <BalancePreview />
+          <div className="animate-rise" style={{ animationDelay: '150ms' }}>
+            <BalancePreview />
+          </div>
         </div>
       </section>
 

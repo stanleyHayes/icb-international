@@ -57,6 +57,16 @@ export {
   type TimeSeriesPoint,
 } from './charts/lib/aggregate';
 
+export { ChatComposer } from './chat/chat-composer';
+export { ChatMessageList } from './chat/chat-message-list';
+export { ChatWidget, type ChatWidgetConnectResult } from './chat/chat-widget';
+export {
+  useChatSocket,
+  type ChatSocketStatus,
+  type UseChatSocketOptions,
+  type UseChatSocketResult,
+} from './chat/use-chat-socket';
+
 export { Button, type ButtonProps } from './primitives/button';
 export { Card, CardBody, CardFooter, CardHeader } from './primitives/card';
 export {
@@ -211,6 +221,7 @@ export { KEYS, firstEnabledIndex, keyToRovingIntent, resolveRovingIndex, type Ro
 export { FOCUSABLE_SELECTOR, Z_INDEX } from './layout/layout.constants';
 export { PageHeader, type PageHeaderProps } from './layout/page-header';
 export { Popover, type PopoverProps } from './layout/popover';
+export { Reveal } from './layout/reveal';
 export { Section, type SectionProps } from './layout/section';
 export { Sheet, type SheetProps } from './layout/sheet';
 export { Sidebar, type SidebarNavItem, type SidebarProps } from './layout/sidebar';

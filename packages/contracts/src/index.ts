@@ -29,6 +29,7 @@ export * from './products/products.contract.js';
 export * from './documents/documents.contract.js';
 export * from './notifications/notifications.contract.js';
 export * from './support/support.contract.js';
+export * from './chat/chat.contract.js';
 export * from './governance/governance.contract.js';
 export * from './admin/admin.contract.js';
 export * from './simulation/simulation.contract.js';

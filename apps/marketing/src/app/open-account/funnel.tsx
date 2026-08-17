@@ -111,7 +111,9 @@ export function ApplicationFunnel() {
               </p>
             ) : null}
 
-            {Panel ? <Panel /> : <ReviewStep onEdit={setStep} />}
+            <div key={step} className="animate-rise">
+              {Panel ? <Panel /> : <ReviewStep onEdit={setStep} />}
+            </div>
 
             <div className="flex items-center justify-between gap-3 border-t border-[var(--icb-border)] pt-5">
               {step > 0 ? (

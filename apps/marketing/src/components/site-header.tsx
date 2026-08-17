@@ -79,7 +79,7 @@ export function SiteHeader() {
         <nav
           id="mobile-nav"
           aria-label="Mobile"
-          className="border-t border-[var(--icb-border)] px-5 py-3 md:hidden"
+          className="origin-top animate-[icb-pop_var(--icb-duration-normal)_var(--icb-ease-out)_both] border-t border-[var(--icb-border)] px-5 py-3 md:hidden"
         >
           {NAV.map((item) => (
             <Link

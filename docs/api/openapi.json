@@ -84,6 +84,10 @@
       "description": "Support tickets and secure messaging."
     },
     {
+      "name": "Chat",
+      "description": "Live support chat for visitors and customers, with the staff inbox."
+    },
+    {
       "name": "Disputes",
       "description": "Chargeback disputes from filing to resolution."
     },
@@ -5383,6 +5387,353 @@
           },
           "404": {
             "description": "The requested resource does not exist.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unexpected server error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/conversations": {
+      "post": {
+        "operationId": "startChat",
+        "summary": "Start a live-chat conversation (anonymous visitors and customers)",
+        "tags": ["Chat"],
+        "security": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The conversation and its resume token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is well-formed but fails validation or a business rule.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unexpected server error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/conversations/{conversationId}": {
+      "get": {
+        "operationId": "getChatHistory",
+        "summary": "A conversation and its full message history",
+        "tags": ["Chat"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversationId",
+            "schema": {
+              "$ref": "#/components/schemas/Ulid"
+            },
+            "required": true,
+            "description": "ULID identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The conversation history, oldest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatHistoryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated principal may not perform this action.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource does not exist.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unexpected server error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/staff/inbox": {
+      "get": {
+        "operationId": "listStaffChatInbox",
+        "summary": "Open chat conversations awaiting an agent (staff)",
+        "tags": ["Chat"],
+        "responses": {
+          "200": {
+            "description": "The open conversations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffChatInboxResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated principal may not perform this action.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unexpected server error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/staff/conversations/{conversationId}/close": {
+      "post": {
+        "operationId": "closeChatConversation",
+        "summary": "Close a conversation (staff)",
+        "tags": ["Chat"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversationId",
+            "schema": {
+              "$ref": "#/components/schemas/Ulid"
+            },
+            "required": true,
+            "description": "ULID identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The closed conversation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatConversationOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated principal may not perform this action.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource does not exist.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The request conflicts with current state or a processed idempotency key.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unexpected server error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/ws-ticket": {
+      "post": {
+        "operationId": "mintChatWsTicket",
+        "summary": "Mint the short-lived ticket exchanged for the WebSocket upgrade",
+        "tags": ["Chat"],
+        "responses": {
+          "200": {
+            "description": "The ticket and the WebSocket path.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WsTicketResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated principal may not perform this action.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -21119,6 +21470,114 @@
         },
         "required": ["currentPassword", "newPassword"]
       },
+      "ChatAuthor": {
+        "type": "string",
+        "enum": ["visitor", "agent", "system"]
+      },
+      "ChatConversation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Ulid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ChatConversationStatus"
+          },
+          "customerId": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ulid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visitorName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastMessagePreview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastMessageAt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IsoDateTime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoDateTime"
+          },
+          "closedAt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IsoDateTime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "customerId",
+          "visitorName",
+          "lastMessagePreview",
+          "lastMessageAt",
+          "createdAt",
+          "closedAt"
+        ]
+      },
+      "ChatConversationStatus": {
+        "type": "string",
+        "enum": ["open", "closed"]
+      },
+      "ChatMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Ulid"
+          },
+          "conversationId": {
+            "$ref": "#/components/schemas/Ulid"
+          },
+          "author": {
+            "$ref": "#/components/schemas/ChatAuthor"
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "sentAt": {
+            "$ref": "#/components/schemas/IsoDateTime"
+          }
+        },
+        "required": ["id", "conversationId", "author", "authorName", "body", "sentAt"]
+      },
       "ClockState": {
         "type": "object",
         "properties": {
@@ -24694,6 +25153,16 @@
         "type": "string",
         "enum": ["internal", "on_us", "ach", "wire", "swift", "card"]
       },
+      "StartChatRequest": {
+        "type": "object",
+        "properties": {
+          "visitorName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        }
+      },
       "StepUpRequest": {
         "type": "object",
         "properties": {
@@ -26542,6 +27011,22 @@
         "required": ["currency", "granularity", "points"],
         "additionalProperties": false
       },
+      "ChatHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "conversation": {
+            "$ref": "#/components/schemas/ChatConversationOutput"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatMessageOutput"
+            }
+          }
+        },
+        "required": ["conversation", "messages"],
+        "additionalProperties": false
+      },
       "CustomerNote": {
         "type": "object",
         "properties": {
@@ -28340,6 +28825,19 @@
         "required": ["period", "currency", "total", "categories"],
         "additionalProperties": false
       },
+      "StaffChatInboxResponse": {
+        "type": "object",
+        "properties": {
+          "conversations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatConversationOutput"
+            }
+          }
+        },
+        "required": ["conversations"],
+        "additionalProperties": false
+      },
       "StaffTicketView": {
         "type": "object",
         "properties": {
@@ -28566,6 +29064,25 @@
           "executedCount",
           "createdAt"
         ],
+        "additionalProperties": false
+      },
+      "StartChatResponse": {
+        "type": "object",
+        "properties": {
+          "conversation": {
+            "$ref": "#/components/schemas/ChatConversationOutput"
+          },
+          "visitorToken": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatMessageOutput"
+            }
+          }
+        },
+        "required": ["conversation", "visitorToken", "messages"],
         "additionalProperties": false
       },
       "Statement": {
@@ -29515,6 +30032,20 @@
           "apiKey",
           "expiresAt"
         ],
+        "additionalProperties": false
+      },
+      "WsTicketResponse": {
+        "type": "object",
+        "properties": {
+          "ticket": {
+            "type": "string"
+          },
+          "wsPath": {
+            "type": "string",
+            "const": "/v1/chat/ws"
+          }
+        },
+        "required": ["ticket", "wsPath"],
         "additionalProperties": false
       },
       "TransactionSummaryPage": {
@@ -31130,6 +31661,108 @@
           }
         },
         "required": ["period", "income", "expense", "net"],
+        "additionalProperties": false
+      },
+      "ChatConversationOutput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Ulid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ChatConversationStatus"
+          },
+          "customerId": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ulid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visitorName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastMessagePreview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastMessageAt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IsoDateTime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoDateTime"
+          },
+          "closedAt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IsoDateTime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "customerId",
+          "visitorName",
+          "lastMessagePreview",
+          "lastMessageAt",
+          "createdAt",
+          "closedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ChatMessageOutput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Ulid"
+          },
+          "conversationId": {
+            "$ref": "#/components/schemas/Ulid"
+          },
+          "author": {
+            "$ref": "#/components/schemas/ChatAuthor"
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "sentAt": {
+            "$ref": "#/components/schemas/IsoDateTime"
+          }
+        },
+        "required": ["id", "conversationId", "author", "authorName", "body", "sentAt"],
         "additionalProperties": false
       },
       "ClockStateOutput": {
@@ -34095,6 +34728,120 @@
         },
         "required": ["asOf", "kpis", "queues", "volumeSeries", "railBreakdown"],
         "additionalProperties": false
+      },
+      "ChatClientFrame": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "message"
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "conversationId": {
+                "$ref": "#/components/schemas/Ulid"
+              }
+            },
+            "required": ["type", "body"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "ping"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          }
+        ],
+        "type": "object"
+      },
+      "ChatServerFrame": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "ready"
+              },
+              "conversationId": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Ulid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": ["type", "conversationId"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "message"
+              },
+              "message": {
+                "$ref": "#/components/schemas/ChatMessageOutput"
+              }
+            },
+            "required": ["type", "message"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "conversation"
+              },
+              "conversation": {
+                "$ref": "#/components/schemas/ChatConversationOutput"
+              }
+            },
+            "required": ["type", "conversation"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "error"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": ["type", "message"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "pong"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          }
+        ],
+        "type": "object"
       },
       "Reconciliation": {
         "type": "object",

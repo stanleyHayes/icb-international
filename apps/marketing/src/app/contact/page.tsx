@@ -1,4 +1,4 @@
-import { Card, CardBody } from '@icb/ui';
+import { Card, CardBody, Reveal } from '@icb/ui';
 import { Clock, MessageSquareLock, Phone, PhoneCall } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -54,22 +54,24 @@ export default function ContactPage() {
 
       <Section title="Ways to reach us" tone="subtle">
         <div className="grid gap-5 md:grid-cols-3">
-          {CHANNELS.map((channel) => (
-            <Card key={channel.title} className="h-full">
-              <CardBody className="pt-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
-                  <channel.icon size={20} />
-                </div>
-                <h2 className="mt-4 text-base font-semibold">{channel.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
-                  {channel.body}
-                </p>
-                <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-[var(--icb-text-subtle)]">
-                  <Clock size={13} aria-hidden="true" />
-                  {channel.detail}
-                </p>
-              </CardBody>
-            </Card>
+          {CHANNELS.map((channel, index) => (
+            <Reveal key={channel.title} delay={index * 60}>
+              <Card className="h-full">
+                <CardBody className="pt-6">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-navy-50)] text-[var(--icb-primary)]">
+                    <channel.icon size={20} />
+                  </div>
+                  <h2 className="mt-4 text-base font-semibold">{channel.title}</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--icb-text-muted)]">
+                    {channel.body}
+                  </p>
+                  <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-[var(--icb-text-subtle)]">
+                    <Clock size={13} aria-hidden="true" />
+                    {channel.detail}
+                  </p>
+                </CardBody>
+              </Card>
+            </Reveal>
           ))}
         </div>
         <p className="mt-8">
