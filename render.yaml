@@ -2,7 +2,7 @@ services:
   - type: web
     name: icb-api
     env: node
-    plan: starter
+    plan: free
     rootDir: .
     autoDeploy: true
     healthCheckPath: /health/ready
@@ -90,3 +90,5 @@ services:
     name: icb-redis
     plan: starter
     maxmemoryPolicy: noeviction
+    # Private-network only: no public IP access (api connects via fromService connectionString)
+    ipAllowList: []
