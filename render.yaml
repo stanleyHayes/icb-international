@@ -6,6 +6,9 @@ services:
     rootDir: .
     autoDeploy: true
     healthCheckPath: /health/ready
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter "./packages/**" build && pnpm --filter @icb/api build
     startCommand: node apps/api/dist/main.js
     envVars:
