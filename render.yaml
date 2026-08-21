@@ -49,7 +49,7 @@ services:
       - key: COOKIE_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://icbinternationcommercial.com,https://www.icbinternationcommercial.com,https://client.icbinternationcommercial.com,https://admin.icbinternationcommercial.com
+        value: https://icbinternationalcommercial.com,https://www.icbinternationalcommercial.com,https://client.icbinternationalcommercial.com,https://admin.icbinternationalcommercial.com
       - key: ICB_SIMULATION_ACKNOWLEDGED
         value: "true"
       - key: SIMULATION_ENABLED
@@ -57,15 +57,15 @@ services:
       - key: SIMULATION_SEED
         value: icb-default-seed
       - key: INITIAL_ADMIN_EMAIL
-        value: root@icbinternationcommercial.com
+        value: root@icbinternationalcommercial.com
       - key: INITIAL_ADMIN_PASSWORD
         generateValue: true
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
-        value: ICB <no-reply@icbinternationcommercial.com>
+        value: ICB <no-reply@icbinternationalcommercial.com>
       - key: EMAIL_REPLY_TO
-        value: support@icbinternationcommercial.com
+        value: support@icbinternationalcommercial.com
       - key: RESEND_WEBHOOK_SECRET
         sync: false
       - key: CLOUDINARY_CLOUD_NAME
