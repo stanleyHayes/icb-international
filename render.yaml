@@ -16,7 +16,7 @@ services:
   - type: web
     name: icb-api
     runtime: node
-    repo: https://github.com/stanleyHayes/reliancetrust
+    repo: https://github.com/stanleyHayes/icb-international
     branch: main
     plan: free
     rootDir: .
