@@ -1,16 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  ICB International Commercial Bank — Render Blueprint
+#
+#  External services (not managed by this blueprint):
+#    • MongoDB Atlas — must be a replica set; standalone disables transactions
+#    • Redis / Key Value — create one manually:
+#        Dashboard → New → Key Value → name: icb-redis, plan: free,
+#        eviction policy: noeviction. Then paste its *Internal* Connection
+#        String into REDIS_URL when the Blueprint prompts for it.
+#
+#      Redis is provisioned by hand because Render's blueprint schema requires
+#      an ipAllowList on Key Value services while this workspace's plan rejects
+#      any ipAllowList as Enterprise-only — a catch-22 that blocks every sync.
+#      For the same reason the web service declares no ipAllowList.
+# ─────────────────────────────────────────────────────────────────────────────
+
 services:
   - type: web
     name: icb-api
-    env: node
+    runtime: node
+    repo: https://github.com/stanleyHayes/reliancetrust
+    branch: main
     plan: free
     rootDir: .
     autoDeploy: true
     healthCheckPath: /health/ready
-    ipAllowList:
-      - source: 0.0.0.0/0
-        description: everywhere
+
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter "./packages/**" build && pnpm --filter @icb/api build
     startCommand: node apps/api/dist/main.js
+
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,11 +37,12 @@ services:
         value: "10000"
       - key: LOG_LEVEL
         value: info
+
+      # Internal Connection String (redis://red-...:6379) of the manually
+      # created icb-redis Key Value instance — see the header above.
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: icb-redis
-          property: connectionString
+        sync: false
+
       - key: MONGO_URI
         sync: false
       - key: JWT_ACCESS_SECRET
@@ -85,10 +103,3 @@ services:
         value: icb-api
       - key: BACKGROUND_JOBS_ENABLED
         value: "true"
-
-  - type: redis
-    name: icb-redis
-    plan: starter
-    maxmemoryPolicy: noeviction
-    # Private-network only: no public IP access (api connects via fromService connectionString)
-    ipAllowList: []
