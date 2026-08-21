@@ -22,7 +22,7 @@ export default defineConfig({
     // contention vitest.contract.config.ts caps at two. Matched here for the same reason.
     maxWorkers: 2,
     // One app boot per file already isolates state; a fork per file keeps process.env
-    // overrides (MONGO_URI, REDIS_URL) from leaking between suites.
+    // overrides (MONGO_URI) from leaking between suites.
     pool: 'forks',
   },
 });

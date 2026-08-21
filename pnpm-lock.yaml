@@ -32,9 +32,6 @@ importers:
       prettier:
         specifier: 3.9.6
         version: 3.9.6
-      redis:
-        specifier: ^6.2.0
-        version: 6.2.0(@opentelemetry/api@1.9.1)
       turbo:
         specifier: 2.10.8
         version: 2.10.8
@@ -123,9 +120,6 @@ importers:
       '@icb/money':
         specifier: workspace:*
         version: link:../../packages/money
-      '@nestjs/bullmq':
-        specifier: 11.0.4
-        version: 11.0.4(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(bullmq@6.0.5(ioredis@6.0.0)(redis@6.2.0(@opentelemetry/api@1.9.1)))
       '@nestjs/common':
         specifier: 11.1.28
         version: 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -165,18 +159,12 @@ importers:
       argon2:
         specifier: 0.45.1
         version: 0.45.1
-      bullmq:
-        specifier: 6.0.5
-        version: 6.0.5(ioredis@6.0.0)(redis@6.2.0(@opentelemetry/api@1.9.1))
       cloudinary:
         specifier: 2.10.0
         version: 2.10.0
       fastify:
         specifier: 5.11.0
         version: 5.11.0
-      ioredis:
-        specifier: 6.0.0
-        version: 6.0.0
       mongoose:
         specifier: 9.9.1
         version: 9.9.1
@@ -1505,9 +1493,6 @@ packages:
       '@types/node':
         optional: true
 
-  '@ioredis/commands@2.0.0':
-    resolution: {integrity: sha512-vrx0AE/T0h7cRZwfo1M39Cr+ZhZrkf0V8mQN75wucKCxCLD9l/VX6no3gFvrLqD1IlG/1LtzWovqEw3t0Vr9zg==}
-
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
@@ -1544,36 +1529,6 @@ packages:
   '@mongodb-js/saslprep@1.4.13':
     resolution: {integrity: sha512-E3Sv4eCYAlKYUTx8S3ioQcDUscOif+8zZ5OnW1IzJ+Tt+EO+ke8mn+Y3FX6N1H79picwbdOavVOb1jPi2EOyrg==}
 
-  '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
-    resolution: {integrity: sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@msgpackr-extract/msgpackr-extract-darwin-x64@3.0.4':
-    resolution: {integrity: sha512-zExlW9zUJKZH/tOtVMttwjKa4Xm/3KcNjnE3dPN92uCktwavMxpgCA3MoJK/DOnTWsQgo224OaST27/mPNAf+w==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@msgpackr-extract/msgpackr-extract-linux-arm64@3.0.4':
-    resolution: {integrity: sha512-dgX0P/9wGPJeHFBG+ZmhgE6bmtMt7NP5CRBGyyktpopdk/mW4POnrpQsSLtKI1dwpc+pPLuXHDh6vvskyQE/sw==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@msgpackr-extract/msgpackr-extract-linux-arm@3.0.4':
-    resolution: {integrity: sha512-Tg3yX65f5GbtXLkrYEHE5oibZG9epyYWas7FogTTEJeDEF9JlXJzKgXaNhT3UXlTOeA+AfZpYZYZ0uPj7Cfquw==}
-    cpu: [arm]
-    os: [linux]
-
-  '@msgpackr-extract/msgpackr-extract-linux-x64@3.0.4':
-    resolution: {integrity: sha512-8TNXMEjJc3QEy7R/x1INhgiU+XakDAFUzBhaz7+Rbrs8NH5UQeHQxxmzsSBJGyV6I1jW79undiQm8tOI+D+8FQ==}
-    cpu: [x64]
-    os: [linux]
-
-  '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4':
-    resolution: {integrity: sha512-CmCXPQrkbwExx3j946/PtHWHbYJiCRBRDl4BlkRQcJB/YOwQxJRTpoo7aTsortjgoJ1x7opzTSxn7C+ASSLVjQ==}
-    cpu: [x64]
-    os: [win32]
-
   '@mswjs/interceptors@0.41.9':
     resolution: {integrity: sha512-VVPPgHyQ6ShqnrmDWuxjmUIsO9gWyOZFmuOfLd9LfBGQJwZfy0gvv9pbHSJuoFNIYC7ZDX9aoFwowjcdSC4E8w==}
     engines: {node: '>=18'}
@@ -1584,19 +1539,6 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.3
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.3
-
-  '@nestjs/bull-shared@11.0.4':
-    resolution: {integrity: sha512-VBJcDHSAzxQnpcDfA0kt9MTGUD1XZzfByV70su0W0eDCQ9aqIEBlzWRW21tv9FG9dIut22ysgDidshdjlnczLw==}
-    peerDependencies:
-      '@nestjs/common': ^10.0.0 || ^11.0.0
-      '@nestjs/core': ^10.0.0 || ^11.0.0
-
-  '@nestjs/bullmq@11.0.4':
-    resolution: {integrity: sha512-wBzK9raAVG0/6NTMdvLGM4/FQ1lsB35/pYS8L6a0SDgkTiLpd7mAjQ8R692oMx5s7IjvgntaZOuTUrKYLNfIkA==}
-    peerDependencies:
-      '@nestjs/common': ^10.0.0 || ^11.0.0
-      '@nestjs/core': ^10.0.0 || ^11.0.0
-      bullmq: ^3.0.0 || ^4.0.0 || ^5.0.0
 
   '@nestjs/cli@11.0.13':
     resolution: {integrity: sha512-cPDDahP/IPDcqraIHjUZQXPupYQDoZlBRFOjgM76vVfcVnWQ45TUaat0tgR2ptfeQG0gY2kwtm4/JYwe5xu/8A==}
@@ -2340,42 +2282,6 @@ packages:
 
   '@protobufjs/utf8@1.1.2':
     resolution: {integrity: sha512-b1UQwcEZ4yCnMCD8DAL1VlbvBJE9/IX4FTIp7BG1xYpf29SLazLSrqUkj4w7Y5y7cCVP6E5tcqqcI0xemPkHug==}
-
-  '@redis/bloom@6.2.0':
-    resolution: {integrity: sha512-ggQvzpeCKnybwUrEiMVVtE1Np4vWnRfpeAaIP2MdZiVw7PHOhJrF4cONVuLRn1TkMi6ehp2OPjTOMK+8XmiQSQ==}
-    engines: {node: '>= 20.0.0'}
-    peerDependencies:
-      '@redis/client': ^6.2.0
-
-  '@redis/client@6.2.0':
-    resolution: {integrity: sha512-HHszna68MTBRiDZV3Wo2wANH7Z5v/nuh+ZyCAGBce0PS8tDcg1/yzZ1vqbKbUyTdz1wB54kqZxXrnPwpR8Ivdw==}
-    engines: {node: '>= 20.0.0'}
-    peerDependencies:
-      '@node-rs/xxhash': ^1.1.0
-      '@opentelemetry/api': '>=1 <2'
-    peerDependenciesMeta:
-      '@node-rs/xxhash':
-        optional: true
-      '@opentelemetry/api':
-        optional: true
-
-  '@redis/json@6.2.0':
-    resolution: {integrity: sha512-oweO7PfHWYXkgVT88K+Fm3Wx98lKYKAEXaH162gVbw1kmBOBVQHxw0Yjh1p6BYBUIQMHqLyWwYe99eK7/hD1VQ==}
-    engines: {node: '>= 20.0.0'}
-    peerDependencies:
-      '@redis/client': ^6.2.0
-
-  '@redis/search@6.2.0':
-    resolution: {integrity: sha512-chLEQfalFW3+uCPE99XoIOZhcQ3eF7S3fGxgiiaPf6MMrOZHEiTvgMnXR4xXZX0yDecyoWjGYlQQKTYag/ZExg==}
-    engines: {node: '>= 20.0.0'}
-    peerDependencies:
-      '@redis/client': ^6.2.0
-
-  '@redis/time-series@6.2.0':
-    resolution: {integrity: sha512-/H/eE/lnhZLZYpHGpI+ZN7TePb7isEaub8b07oQcTDQptPslVKdUFwNhUm+hQHks781oh+F1Leiip1WHh4HfWw==}
-    engines: {node: '>= 20.0.0'}
-    peerDependencies:
-      '@redis/client': ^6.2.0
 
   '@redocly/ajv@8.11.2':
     resolution: {integrity: sha512-io1JpnwtIcvojV7QKDUSIuMN/ikdOUd1ReEnUnMKGfDVridQZ31J0MmIuqwuRjWDZfmvr+Q0MqCcfHM2gTivOg==}
@@ -3135,24 +3041,6 @@ packages:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
     engines: {node: '>=6'}
 
-  bullmq@6.0.5:
-    resolution: {integrity: sha512-7YW2VjvrYCzZ/V0YAiUoM158SahuplMBfeMA+HbJ+oqLZtc0KaxAzGkF5Flk9v3Geonnp1JVcsKAVAxcZ176bA==}
-    engines: {node: '>=14.17.0'}
-    peerDependencies:
-      bullmq-otel: '>=2.0.0'
-      ioredis: '>=5.0.0'
-      pg: '>=8.0.0'
-      redis: '>=5.0.0'
-    peerDependenciesMeta:
-      bullmq-otel:
-        optional: true
-      ioredis:
-        optional: true
-      pg:
-        optional: true
-      redis:
-        optional: true
-
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
     engines: {node: '>= 0.8'}
@@ -3246,14 +3134,6 @@ packages:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
-  cluster-key-slot@1.1.1:
-    resolution: {integrity: sha512-rwHwUfXL40Chm1r08yrhU3qpUvdVlgkKNeyeGPOxnW8/SyVDvgRaed/Uz54AqWNaTCAThlj6QAs3TZcKI0xDEw==}
-    engines: {node: '>=0.10.0'}
-
-  cluster-key-slot@1.1.2:
-    resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
-    engines: {node: '>=0.10.0'}
-
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
     engines: {node: '>=7.0.0'}
@@ -3314,10 +3194,6 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
-
-  cron-parser@5.6.2:
-    resolution: {integrity: sha512-yJ/G1LVir6CnlkLI40CsampPLKl1SprGGlUagWtGJxewytRVYezv5xVyzzbT+Pvzx+VIRvZVF7/a0eEMTxdnTA==}
-    engines: {node: '>=18'}
 
   cron@4.4.0:
     resolution: {integrity: sha512-fkdfq+b+AHI4cKdhZlppHveI/mgz2qpiYxcm+t5E5TsxX7QrLS1VE0+7GENEk9z0EeGPcpSciGv6ez24duWhwQ==}
@@ -3410,10 +3286,6 @@ packages:
   delayed-stream@1.0.0:
     resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
     engines: {node: '>=0.4.0'}
-
-  denque@2.1.0:
-    resolution: {integrity: sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==}
-    engines: {node: '>=0.10'}
 
   dequal@2.0.3:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
@@ -3969,10 +3841,6 @@ packages:
   internal-slot@1.1.0:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
     engines: {node: '>= 0.4'}
-
-  ioredis@6.0.0:
-    resolution: {integrity: sha512-f+Dtubxfpf6KYFq7WVXJoOLn0bk4TJrMrN9SzeE+jrWrCWj7XX3fA6vkryafhADX+GMymRxgDJDOI33COkJc0w==}
-    engines: {node: '>=20.0.0'}
 
   ipaddr.js@2.4.0:
     resolution: {integrity: sha512-9VGk3HGanVE6JoZXHiCpnGy5X0jYDnN4EA4lntFPj+1vIWlFhIylq2CrrCOJH9EAhc5CYhq18F2Av2tgoAPsYQ==}
@@ -4573,13 +4441,6 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  msgpackr-extract@3.0.4:
-    resolution: {integrity: sha512-4kmO/MdyUIkLIvTPr8VHLil4AtoKIoniWPIEk5+CDy0xnWC84azhSFmuJ7PxZdsYtiP5kEeQsORAVIeMgxT+Hw==}
-    hasBin: true
-
-  msgpackr@2.0.5:
-    resolution: {integrity: sha512-cef05H/dSYpLpqp3sj/qyZh5vhUYCalnaLO7j1yOmpsR0y/XwLVtK7r5gn+U/F7CTEfMowcGhlUQJDLcLf7jcA==}
-
   msw@2.15.0:
     resolution: {integrity: sha512-2wQAmKkQKxRuXvYJxVhPGG0wZNBQyD06oJvxqw90XqLvptdqxdlHrFUfEteKkpaNORX3Xzc+HtEl/q0nfmN2wQ==}
     engines: {node: '>=18'}
@@ -4661,10 +4522,6 @@ packages:
   node-fetch@3.3.2:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
-  node-gyp-build-optional-packages@5.2.2:
-    resolution: {integrity: sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw==}
-    hasBin: true
 
   node-gyp-build@4.8.4:
     resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
@@ -4995,14 +4852,6 @@ packages:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
     engines: {node: '>=8'}
 
-  redis-errors@1.2.0:
-    resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
-    engines: {node: '>=4'}
-
-  redis@6.2.0:
-    resolution: {integrity: sha512-BShYVyT0Gx67CE80xry5XroSSv6Vxr60yKs0HRiBbUc7kHm+bY7gvSDBBgTjuiV/reWKeZWLyA1ebC5z359wRQ==}
-    engines: {node: '>= 20.0.0'}
-
   refa@0.12.1:
     resolution: {integrity: sha512-J8rn6v4DBb2nnFqkqwy6/NnTYMcgLA+sLr0iIO41qpv0n+ngb7ksag2tMRl0inb1bbO/esUwzW1vbJi7K0sI0g==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
@@ -5240,9 +5089,6 @@ packages:
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
-
-  standard-as-callback@2.1.0:
-    resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
 
   standardwebhooks@1.0.0:
     resolution: {integrity: sha512-BbHGOQK9olHPMvQNHWul6MYlrRTAOKn03rOe4A8O3CLWhNf4YHBqq2HJKKC+sfqpxiBY52pNeesD6jIiLDz8jg==}
@@ -6495,8 +6341,6 @@ snapshots:
     optionalDependencies:
       '@types/node': 26.1.2
 
-  '@ioredis/commands@2.0.0': {}
-
   '@isaacs/cliui@8.0.2':
     dependencies:
       string-width: 5.1.2
@@ -6540,24 +6384,6 @@ snapshots:
     dependencies:
       sparse-bitfield: 3.0.3
 
-  '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
-    optional: true
-
-  '@msgpackr-extract/msgpackr-extract-darwin-x64@3.0.4':
-    optional: true
-
-  '@msgpackr-extract/msgpackr-extract-linux-arm64@3.0.4':
-    optional: true
-
-  '@msgpackr-extract/msgpackr-extract-linux-arm@3.0.4':
-    optional: true
-
-  '@msgpackr-extract/msgpackr-extract-linux-x64@3.0.4':
-    optional: true
-
-  '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4':
-    optional: true
-
   '@mswjs/interceptors@0.41.9':
     dependencies:
       '@open-draft/deferred-promise': 2.2.0
@@ -6573,20 +6399,6 @@ snapshots:
       '@emnapi/runtime': 2.0.0-alpha.3
       '@tybys/wasm-util': 0.10.3
     optional: true
-
-  '@nestjs/bull-shared@11.0.4(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))':
-    dependencies:
-      '@nestjs/common': 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      tslib: 2.8.1
-
-  '@nestjs/bullmq@11.0.4(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(bullmq@6.0.5(ioredis@6.0.0)(redis@6.2.0(@opentelemetry/api@1.9.1)))':
-    dependencies:
-      '@nestjs/bull-shared': 11.0.4(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
-      '@nestjs/common': 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      bullmq: 6.0.5(ioredis@6.0.0)(redis@6.2.0(@opentelemetry/api@1.9.1))
-      tslib: 2.8.1
 
   '@nestjs/cli@11.0.13(@types/node@26.1.2)(prettier@3.9.6)':
     dependencies:
@@ -7505,28 +7317,6 @@ snapshots:
 
   '@protobufjs/utf8@1.1.2': {}
 
-  '@redis/bloom@6.2.0(@redis/client@6.2.0(@opentelemetry/api@1.9.1))':
-    dependencies:
-      '@redis/client': 6.2.0(@opentelemetry/api@1.9.1)
-
-  '@redis/client@6.2.0(@opentelemetry/api@1.9.1)':
-    dependencies:
-      cluster-key-slot: 1.1.2
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.1
-
-  '@redis/json@6.2.0(@redis/client@6.2.0(@opentelemetry/api@1.9.1))':
-    dependencies:
-      '@redis/client': 6.2.0(@opentelemetry/api@1.9.1)
-
-  '@redis/search@6.2.0(@redis/client@6.2.0(@opentelemetry/api@1.9.1))':
-    dependencies:
-      '@redis/client': 6.2.0(@opentelemetry/api@1.9.1)
-
-  '@redis/time-series@6.2.0(@redis/client@6.2.0(@opentelemetry/api@1.9.1))':
-    dependencies:
-      '@redis/client': 6.2.0(@opentelemetry/api@1.9.1)
-
   '@redocly/ajv@8.11.2':
     dependencies:
       fast-deep-equal: 3.1.3
@@ -8337,17 +8127,6 @@ snapshots:
 
   builtin-modules@3.3.0: {}
 
-  bullmq@6.0.5(ioredis@6.0.0)(redis@6.2.0(@opentelemetry/api@1.9.1)):
-    dependencies:
-      cron-parser: 5.6.2
-      msgpackr: 2.0.5
-      node-abort-controller: 3.1.1
-      semver: 7.8.5
-      tslib: 2.8.1
-    optionalDependencies:
-      ioredis: 6.0.0
-      redis: 6.2.0(@opentelemetry/api@1.9.1)
-
   bytes@3.1.2: {}
 
   call-bind-apply-helpers@1.0.2:
@@ -8432,10 +8211,6 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  cluster-key-slot@1.1.1: {}
-
-  cluster-key-slot@1.1.2: {}
-
   color-convert@2.0.1:
     dependencies:
       color-name: 1.1.4
@@ -8481,10 +8256,6 @@ snapshots:
       path-type: 4.0.0
     optionalDependencies:
       typescript: 5.9.3
-
-  cron-parser@5.6.2:
-    dependencies:
-      luxon: 3.7.2
 
   cron@4.4.0:
     dependencies:
@@ -8575,8 +8346,6 @@ snapshots:
       object-keys: 1.1.1
 
   delayed-stream@1.0.0: {}
-
-  denque@2.1.0: {}
 
   dequal@2.0.3: {}
 
@@ -9285,17 +9054,6 @@ snapshots:
       hasown: 2.0.4
       side-channel: 1.1.1
 
-  ioredis@6.0.0:
-    dependencies:
-      '@ioredis/commands': 2.0.0
-      cluster-key-slot: 1.1.1
-      debug: 4.4.3(supports-color@10.2.2)
-      denque: 2.1.0
-      redis-errors: 1.2.0
-      standard-as-callback: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-
   ipaddr.js@2.4.0: {}
 
   is-array-buffer@3.0.5:
@@ -9826,22 +9584,6 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msgpackr-extract@3.0.4:
-    dependencies:
-      node-gyp-build-optional-packages: 5.2.2
-    optionalDependencies:
-      '@msgpackr-extract/msgpackr-extract-darwin-arm64': 3.0.4
-      '@msgpackr-extract/msgpackr-extract-darwin-x64': 3.0.4
-      '@msgpackr-extract/msgpackr-extract-linux-arm': 3.0.4
-      '@msgpackr-extract/msgpackr-extract-linux-arm64': 3.0.4
-      '@msgpackr-extract/msgpackr-extract-linux-x64': 3.0.4
-      '@msgpackr-extract/msgpackr-extract-win32-x64': 3.0.4
-    optional: true
-
-  msgpackr@2.0.5:
-    optionalDependencies:
-      msgpackr-extract: 3.0.4
-
   msw@2.15.0(@types/node@26.1.2)(typescript@6.0.3):
     dependencies:
       '@inquirer/confirm': 6.1.1(@types/node@26.1.2)
@@ -9931,11 +9673,6 @@ snapshots:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
-
-  node-gyp-build-optional-packages@5.2.2:
-    dependencies:
-      detect-libc: 2.1.2
-    optional: true
 
   node-gyp-build@4.8.4: {}
 
@@ -10296,19 +10033,6 @@ snapshots:
       indent-string: 4.0.0
       strip-indent: 3.0.0
 
-  redis-errors@1.2.0: {}
-
-  redis@6.2.0(@opentelemetry/api@1.9.1):
-    dependencies:
-      '@redis/bloom': 6.2.0(@redis/client@6.2.0(@opentelemetry/api@1.9.1))
-      '@redis/client': 6.2.0(@opentelemetry/api@1.9.1)
-      '@redis/json': 6.2.0(@redis/client@6.2.0(@opentelemetry/api@1.9.1))
-      '@redis/search': 6.2.0(@redis/client@6.2.0(@opentelemetry/api@1.9.1))
-      '@redis/time-series': 6.2.0(@redis/client@6.2.0(@opentelemetry/api@1.9.1))
-    transitivePeerDependencies:
-      - '@node-rs/xxhash'
-      - '@opentelemetry/api'
-
   refa@0.12.1:
     dependencies:
       '@eslint-community/regexpp': 4.12.2
@@ -10603,8 +10327,6 @@ snapshots:
   split2@4.2.0: {}
 
   stackback@0.0.2: {}
-
-  standard-as-callback@2.1.0: {}
 
   standardwebhooks@1.0.0:
     dependencies:

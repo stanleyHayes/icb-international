@@ -1,7 +1,7 @@
 # ICB Threat Model (SEC-01)
 
 **Scope:** the full ICB monorepo — three Next.js apps, the NestJS/Fastify API, MongoDB,
-Redis, the rail adapters, and the media/email egress paths.
+the rail adapters, and the media/email egress paths.
 **Method:** STRIDE per component against the trust boundaries below; mitigations mapped
 from `agent_plan.md` §11 and verified against the tree on 2026-08-03.
 **Companion:** `docs/security/sec-04-audit.md` (secrets, redaction, encryption, dependencies).
@@ -43,10 +43,10 @@ move the books, so it is treated as privileged.
         ┌─────────▼─────────┐                        ┌────────────▼────────────┐
         │  MongoDB replica   │                        │  Egress (opt-in by key)  │
         │  set               │                        │  Resend  — email         │
-        │  ledger, sessions, │   ┌──────────────┐     │  Cloudinary — media      │
-        │  PII, enc. PAN/CVV │   │ Redis        │     │  Local fallbacks when    │
-        └───────────────────┘   │ cache, queue │     │  no key is configured    │
-                                 └──────────────┘     └─────────────────────────┘
+        │  ledger, sessions, │                        │  Cloudinary — media      │
+        │  PII, enc. PAN/CVV │                        │  Local fallbacks when    │
+        └───────────────────┘                        │  no key is configured    │
+                                                      └─────────────────────────┘
    ═ TB4: inside the API process — simulation vs domain code ═
         ┌──────────────────────────────────────────────────────┐
         │ Rails simulation (in-process): internal / ACH / wire  │
@@ -60,9 +60,9 @@ move the books, so it is treated as privileged.
 - **TB2 — edge apps ↔ API.** The security perimeter. Every request is authenticated,
   authorised, validated, rate-limited, and (for money movement) idempotency-checked here.
   The API never trusts a `customerId` from a request body.
-- **TB3 — API ↔ MongoDB/Redis.** Data-at-rest boundary. PAN/CVV/TOTP secrets cross it only
-  encrypted; logs crossing it are redacted first. Redis holds no PII-bearing documents —
-  cache, queue, and rate-limit state only.
+- **TB3 — API ↔ MongoDB.** Data-at-rest boundary, and since the Redis removal the only
+  datastore boundary. PAN/CVV/TOTP secrets cross it only encrypted; logs crossing it are
+  redacted first.
 - **TB4 — domain ↔ simulation (in-process).** A confused-deputy boundary: simulation
   controls (time travel, EOD, scenario injection) run with the same privileges as real
   domain code. Staff-only routes and the production boot assertion guard it.
@@ -107,14 +107,25 @@ move the books, so it is treated as privileged.
 | Info disclosure | Dump/theft of the data volume | PAN/CVV/TOTP AES-256-GCM at rest; credentials collection split from profile (`user_credentials`); token *hashes* stored, never tokens | Verified; DOB + profile PII in clear (G5) |
 | Repudiation | Silent edit of history | Hash-chained audit entries, integrity verification (ADM-18, nightly) | Verified |
 
-### 2.4 Redis (cache / queue / rate limits)
+### 2.4 Redis (cache / queue) — removed 2026-08-21
 
-| STRIDE | Threat | Mitigation in place | Status |
-| --- | --- | --- | --- |
-| Info disclosure | PII cached | Redis used for cache, queues, rate-limit counters — no document store; no PAN/PII written by design | Verified by reading; no PII write paths found |
-| Tampering | Poisoned cache altering money decisions | Money decisions always re-read Mongo (the source of truth); Redis is a performance tier only | Verified |
-| DoS | Redis unavailable | Degrade-gracefully posture; tests skip-with-message when infra is absent | Verified |
-| Spoofing | Unauthenticated network access | Deployment concern (loopback/private network); out of code scope | Accepted |
+Redis is no longer a component. The cache moved in-process (`CacheService`, a bounded map on
+the simulation clock) and the BullMQ queues were dropped: the approved-postings sweep is now an
+interval in the API process, and the accruals queue had no callers. The threats assessed here on
+2026-08-03 are retired with the component, not mitigated:
+
+| STRIDE | Threat | Disposition |
+| --- | --- | --- |
+| Info disclosure | PII cached | Retired. Cache contents never leave the API process; no separate store to dump. |
+| Tampering | Poisoned cache altering money decisions | Retired as an external threat. Money decisions still re-read Mongo as the source of truth. |
+| DoS | Redis unavailable | Retired. No external cache dependency to lose. |
+| Spoofing | Unauthenticated network access | Retired. No cache port is exposed. |
+
+New exposure introduced by the removal, carried as an accepted risk: the sweep and the cache are
+per-process, so a multi-instance deployment would run one sweep per instance and hold divergent
+caches. Idempotency in `ManualPostingsService` makes the duplicate sweep safe, and the deployment
+is single-instance in practice (Render free plan). Scaling out would need this revisited: declare
+`numInstances` explicitly, or move the sweep behind a leader election.
 
 ### 2.5 Rails simulation (transfers use-cases, card network, simulation engine)
 
@@ -182,6 +193,6 @@ move the books, so it is treated as privileged.
 | G6 | §11's "outbound HTTP blocked at the agent level" not implemented | A compromised dependency could exfiltrate to arbitrary hosts | OPS/security |
 | G7 | Dependency vulnerabilities: 12 (6 high) — see `sec-04-audit.md` §4 | Mostly build-time; `find-my-way` is runtime-reachable | All — upgrade pass |
 
-Accepted risks: Redis/Mongo network isolation is a deployment property, not code; the
+Accepted risks: Mongo network isolation is a deployment property, not code; the
 demo seed passwords (`apps/api/src/simulation/seed/seed.data.ts`) are deliberate and
 point at `@icb.example` personas that must never exist outside a seeded dev database.

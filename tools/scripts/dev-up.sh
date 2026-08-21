@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # dev-up.sh — start local infrastructure and the dev servers (see docs/runbook.md).
 #
-# Brings up MongoDB (single-node replica set) + Redis via docker compose, asserts that
+# Brings up MongoDB (single-node replica set) via docker compose, asserts that
 # transactions work, then starts all apps with `pnpm dev`.
 # Pass --infra-only to skip starting the dev servers.
 set -euo pipefail

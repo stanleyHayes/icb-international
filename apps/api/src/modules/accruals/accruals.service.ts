@@ -1,15 +1,8 @@
-import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
-import type { Queue } from 'bullmq';
 
 import { ValidationError } from '../../common/errors/index.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
-import {
-  ACCRUAL_JOB_NAMES,
-  ACCRUALS_QUEUE,
-  ISO_DATE_PATTERN,
-  dailyRunJobId,
-} from './accruals.constants.js';
+import { ISO_DATE_PATTERN } from './accruals.constants.js';
 import { CapitalisationService, type CapitalisationSummary } from './capitalisation.service.js';
 import { FeeAssessmentService, type FeeAssessmentSummary } from './fee-assessment.service.js';
 import { InterestAccrualService, type AccrualRunSummary } from './interest-accrual.service.js';
@@ -34,8 +27,8 @@ export interface AccrualRunReport {
  * index, so the whole run is safe to replay — a property the EOD batch relies on when an
  * operator re-runs a date.
  *
- * `enqueueDailyRun` puts the same run on the accruals queue with a deterministic job id, so
- * enqueueing a date twice is a no-op.
+ * The run is synchronous. It was briefly dispatchable through a BullMQ queue; that queue had no
+ * callers and went with Redis. A caller wanting a date closed awaits `runDaily`.
  */
 @Injectable()
 export class AccrualsService {
@@ -47,7 +40,6 @@ export class AccrualsService {
     private readonly overdraft: OverdraftFeeService,
     private readonly fees: FeeAssessmentService,
     private readonly clock: ClockService,
-    @InjectQueue(ACCRUALS_QUEUE) private readonly queue: Queue,
   ) {}
 
   /** Close one business date. Defaults to today on the simulation clock. */
@@ -70,18 +62,5 @@ export class AccrualsService {
     };
     this.logger.log({ businessDate: date }, 'Accrual run complete');
     return report;
-  }
-
-  /** Queue a daily run for workers; returns the deterministic job id. */
-  async enqueueDailyRun(businessDate?: string): Promise<string> {
-    const date = businessDate ?? this.clock.today();
-    if (!ISO_DATE_PATTERN.test(date)) {
-      throw new ValidationError('Expected an ISO calendar date (YYYY-MM-DD)', [
-        { path: 'businessDate', message: `Received "${date}"` },
-      ]);
-    }
-    const jobId = dailyRunJobId(date);
-    await this.queue.add(ACCRUAL_JOB_NAMES.dailyRun, { businessDate: date }, { jobId });
-    return jobId;
   }
 }

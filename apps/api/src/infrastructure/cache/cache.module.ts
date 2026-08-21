@@ -1,42 +1,17 @@
-import { Global, Inject, Module, type OnModuleDestroy } from '@nestjs/common';
-import type { Redis } from 'ioredis';
+import { Global, Module } from '@nestjs/common';
 
-import { CONFIG, type AppConfiguration } from '../../config/configuration.js';
 import { CacheService } from './cache.service.js';
-import { createRedisClient, REDIS_CLIENT } from './redis.client.js';
 
 /**
- * Redis-backed cache.
+ * In-process cache.
  *
- * When no `REDIS_URL` is configured the module still boots and CacheService becomes a no-op:
- * caching is an optimisation, not a dependency, and an environment without Redis must degrade
- * to straight-to-database reads rather than refuse to start.
+ * Previously Redis-backed. The cache is an optimisation rather than a dependency — every caller
+ * can recompute — so dropping the external store costs a shared cache across instances and
+ * nothing else. See CacheService for the scope this now has.
  */
 @Global()
 @Module({
-  providers: [
-    {
-      provide: REDIS_CLIENT,
-      inject: [CONFIG],
-      useFactory: (config: AppConfiguration): Redis | null =>
-        config.redis.url.length > 0 ? createRedisClient(config.redis.url) : null,
-    },
-    CacheService,
-  ],
-  exports: [CacheService, REDIS_CLIENT],
+  providers: [CacheService],
+  exports: [CacheService],
 })
-export class CacheModule implements OnModuleDestroy {
-  constructor(@Inject(REDIS_CLIENT) private readonly client: Redis | null) {}
-
-  async onModuleDestroy(): Promise<void> {
-    if (this.client === null) {
-      return;
-    }
-    try {
-      await this.client.quit();
-    } catch {
-      // A lazily-connected client that never connected cannot receive QUIT; drop it directly.
-      this.client.disconnect();
-    }
-  }
-}
+export class CacheModule {}

@@ -32,16 +32,6 @@ jobs:
     name: Verify (lint · typecheck · test · build)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    services:
-      redis:
-        image: redis:8-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 20
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -106,7 +96,6 @@ jobs:
         env:
           NODE_ENV: test
           MONGO_URI: mongodb://localhost:27017/icb-test?replicaSet=icb-rs&directConnection=true
-          REDIS_URL: redis://localhost:6379
 
       - name: Build
         run: pnpm build

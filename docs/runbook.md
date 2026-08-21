@@ -10,12 +10,12 @@ how-to.
 
 ## Bootstrap
 
-Prerequisites: Node 22+, pnpm 10+, Docker (for MongoDB + Redis).
+Prerequisites: Node 22+, pnpm 10+, Docker (for MongoDB).
 
 ```bash
 pnpm install
 cp .env.example .env          # then generate real secrets — see .env comments
-docker compose up -d          # Mongo replica set + Redis (+ one-shot RS init)
+docker compose up -d          # Mongo replica set (+ one-shot RS init)
 pnpm verify:infra             # asserts multi-document transactions work
 pnpm --filter @icb/api build  # seed/reset/verify:ledger run the compiled CLIs
 pnpm seed                     # 18 months of bank history; prints demo logins
@@ -29,10 +29,10 @@ pnpm dev                      # api :4100 · marketing :3100 · client :3101 · 
 
 | Command                                | What it does                                                                                                        |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `tools/scripts/dev-up.sh`              | Start infra (Mongo replica set + Redis), verify transactions, run `pnpm dev`. `--infra-only` skips the dev servers. |
+| `tools/scripts/dev-up.sh`              | Start infra (Mongo replica set), verify transactions, run `pnpm dev`. `--infra-only` skips the dev servers.         |
 | `tools/scripts/dev-down.sh`            | Stop the Docker services (data volumes are kept).                                                                   |
 | `tools/scripts/dev-reset.sh`           | **Destructive.** Drop volumes, recreate the replica set, verify, reseed.                                            |
-| `docker compose up -d`                 | Start MongoDB (single-node replica set) + Redis.                                                                    |
+| `docker compose up -d`                 | Start MongoDB (single-node replica set).                                                                            |
 | `pnpm verify:infra`                    | Assert `session.startTransaction()` works against the replica set.                                                  |
 | `pnpm seed`                            | Seed a whole bank with 18 months of history; prints demo logins.                                                    |
 | `pnpm dev`                             | Run everything — api :4100 · marketing :3100 · client :3101 · admin :3102.                                          |
@@ -166,7 +166,7 @@ node tools/scripts/migrate.mjs create add-kyc-reason   # scaffold a new one
 ## Full-stack containers
 
 `docker-compose.prod.yml` runs the whole system — api + marketing + client + admin +
-Mongo replica set + Redis — from the Dockerfiles in `apps/*/Dockerfile`:
+Mongo replica set — from the Dockerfiles in `apps/*/Dockerfile`:
 
 ```bash
 export JWT_ACCESS_SECRET=... JWT_REFRESH_SECRET=... FIELD_ENCRYPTION_KEY=... COOKIE_SECRET=...
@@ -184,7 +184,6 @@ running the seed CLI against its mapped Mongo port.
 `render.yaml` provisions:
 
 - `icb-api` (Node web service, Nest API)
-- `icb-redis` (managed Redis)
 
 Deploy checklist:
 
@@ -277,17 +276,10 @@ If `rs.status()` shows the member but clients still fail, the advertised host is
 for how you connect — keep `directConnection=true` in `MONGO_URI` (the default in
 `.env.example`), or re-initiate with the hostname your clients actually use.
 
-**Redis down / wrong port** — symptoms: API boots but `/health/ready` fails on Redis, or
-BullMQ jobs pile up silently. `.env.example` points at `localhost:6479`; compose
-publishes `${REDIS_PORT:-6379}`. If something _else_ answers on 6379 (another project's
-container on a shared machine), that is not your Redis — set `REDIS_PORT=6479` in `.env`,
-`docker compose up -d redis`, and make sure `REDIS_URL` matches. The API degrades rather
-than crashes, so check `/health/ready` before trusting a "running" stack.
-
 **Port conflicts** — this machine runs several projects' containers. Every published
-port is overridable via `.env`: `MONGO_PORT` (27217), `REDIS_PORT` (6479),
-`MONGO_EXPRESS_PORT` (8181), `API_PORT` (4100). `docker compose ps` shows what compose
-thinks it owns; `lsof -i :<port>` shows what actually has the port.
+port is overridable via `.env`: `MONGO_PORT` (27217), `MONGO_EXPRESS_PORT` (8181),
+`API_PORT` (4100). `docker compose ps` shows what compose thinks it owns; `lsof -i :<port>`
+shows what actually has the port.
 
 **Stale `.next` lock** — a dev server dies uncleanly and the next `pnpm dev` reports it
 cannot acquire the build lock. Fix: `rm -f apps/<app>/.next/dev/lock`; if in doubt,
@@ -295,7 +287,7 @@ cannot acquire the build lock. Fix: `rm -f apps/<app>/.next/dev/lock`; if in dou
 
 **Docker daemon unavailable** — `dev-up.sh`, `verify:infra`, and the backup/restore
 scripts detect it and exit with a message instead of false-failing. Nothing in the repo
-requires Docker except Mongo/Redis themselves.
+requires Docker except Mongo itself.
 
 **API 401s everywhere after a reseed** — `db:reset` rotates nothing, but it does
 recreate users; old tokens still reference deleted refresh families and are rejected.

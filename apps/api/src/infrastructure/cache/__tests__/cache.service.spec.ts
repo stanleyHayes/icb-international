@@ -1,29 +1,31 @@
-import type { Redis } from 'ioredis';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { ValidationError } from '../../../common/errors/index.js';
+import type { ClockService } from '../../../simulation/clock/clock.service.js';
 import {
   CACHE_KEY_PREFIX,
   DEFAULT_TTL_SECONDS,
+  MAX_ENTRIES,
   MAX_TTL_SECONDS,
   MIN_TTL_SECONDS,
 } from '../cache.constants.js';
 import { CacheService } from '../cache.service.js';
-import { createRedisClient } from '../redis.client.js';
 
-function redisMock() {
+/** A clock the test drives by hand, so TTL expiry is asserted rather than waited on. */
+function stubClock(startMs = 1_000_000) {
+  let nowMs = startMs;
   return {
-    get: vi.fn(),
-    set: vi.fn(),
-    del: vi.fn(),
+    clock: { epochMs: () => nowMs } as unknown as ClockService,
+    advanceSeconds: (seconds: number) => {
+      nowMs += seconds * 1_000;
+    },
   };
 }
 
 function setup() {
-  const redis = redisMock();
-  const cache = new CacheService(redis as unknown as Redis);
-  return { redis, cache };
+  const { clock, advanceSeconds } = stubClock();
+  return { cache: new CacheService(clock), advanceSeconds };
 }
 
 const balanceSchema = z.object({ balance: z.number() });
@@ -43,16 +45,13 @@ describe('keyFor', () => {
 
 describe('get', () => {
   it('returns null on a miss', async () => {
-    const { redis, cache } = setup();
-    redis.get.mockResolvedValue(null);
-
+    const { cache } = setup();
     await expect(cache.get('accounts', 'missing', balanceSchema)).resolves.toBeNull();
-    expect(redis.get).toHaveBeenCalledWith(`${CACHE_KEY_PREFIX}:accounts:missing`);
   });
 
   it('parses and validates a hit against the caller schema', async () => {
-    const { redis, cache } = setup();
-    redis.get.mockResolvedValue('{"balance":4200}');
+    const { cache } = setup();
+    await cache.set('accounts', 'a1', { balance: 4200 });
 
     await expect(cache.get('accounts', 'a1', balanceSchema)).resolves.toStrictEqual({
       balance: 4200,
@@ -60,70 +59,105 @@ describe('get', () => {
   });
 
   it('evicts a stale-shaped entry and answers as a miss', async () => {
-    const { redis, cache } = setup();
-    redis.get.mockResolvedValue('{"balance":"not-a-number"}');
+    const { cache } = setup();
+    await cache.set('accounts', 'a1', { balance: 'not-a-number' });
 
     await expect(cache.get('accounts', 'a1', balanceSchema)).resolves.toBeNull();
-    expect(redis.del).toHaveBeenCalledWith(`${CACHE_KEY_PREFIX}:accounts:a1`);
+    // Evicted, not merely rejected: a second read must not re-parse the same bad entry.
+    await expect(cache.get('accounts', 'a1', z.unknown())).resolves.toBeNull();
   });
 
-  it('turns a Redis failure into a miss rather than an error', async () => {
-    const { redis, cache } = setup();
-    redis.get.mockRejectedValue(new Error('connection refused'));
+  it('returns a copy, so a caller cannot mutate the cached value in place', async () => {
+    const { cache } = setup();
+    await cache.set('accounts', 'a1', { balance: 10 });
 
-    await expect(cache.get('accounts', 'a1', balanceSchema)).resolves.toBeNull();
+    const first = await cache.get('accounts', 'a1', balanceSchema);
+    first!.balance = 999;
+
+    await expect(cache.get('accounts', 'a1', balanceSchema)).resolves.toStrictEqual({
+      balance: 10,
+    });
   });
 });
 
-describe('set', () => {
-  it('writes JSON with the default TTL', async () => {
-    const { redis, cache } = setup();
-
+describe('ttl', () => {
+  it('expires an entry once the default TTL has passed on the simulation clock', async () => {
+    const { cache, advanceSeconds } = setup();
     await cache.set('accounts', 'a1', { balance: 1 });
 
-    expect(redis.set).toHaveBeenCalledWith(
-      `${CACHE_KEY_PREFIX}:accounts:a1`,
-      '{"balance":1}',
-      'EX',
-      DEFAULT_TTL_SECONDS,
-    );
+    advanceSeconds(DEFAULT_TTL_SECONDS - 1);
+    await expect(cache.get('accounts', 'a1', balanceSchema)).resolves.toStrictEqual({ balance: 1 });
+
+    advanceSeconds(1);
+    await expect(cache.get('accounts', 'a1', balanceSchema)).resolves.toBeNull();
   });
 
   it('clamps the TTL into the policy bounds', async () => {
-    const { redis, cache } = setup();
-
+    const { cache, advanceSeconds } = setup();
     await cache.set('accounts', 'low', 1, 0);
     await cache.set('accounts', 'high', 1, MAX_TTL_SECONDS * 10);
 
-    expect(redis.set).toHaveBeenNthCalledWith(1, expect.any(String), '1', 'EX', MIN_TTL_SECONDS);
-    expect(redis.set).toHaveBeenNthCalledWith(2, expect.any(String), '1', 'EX', MAX_TTL_SECONDS);
-  });
+    advanceSeconds(MIN_TTL_SECONDS);
+    await expect(cache.get('accounts', 'low', z.number())).resolves.toBeNull();
 
-  it('swallows a Redis failure — the caller can always recompute', async () => {
-    const { redis, cache } = setup();
-    redis.set.mockRejectedValue(new Error('connection refused'));
+    advanceSeconds(MAX_TTL_SECONDS - MIN_TTL_SECONDS - 1);
+    await expect(cache.get('accounts', 'high', z.number())).resolves.toBe(1);
 
-    await expect(cache.set('accounts', 'a1', 1)).resolves.toBeUndefined();
+    advanceSeconds(1);
+    await expect(cache.get('accounts', 'high', z.number())).resolves.toBeNull();
   });
 });
 
-describe('disabled cache', () => {
-  it('is a no-op when no Redis client is bound', async () => {
-    const cache = new CacheService(null);
+describe('delete', () => {
+  it('removes an entry', async () => {
+    const { cache } = setup();
+    await cache.set('accounts', 'a1', { balance: 1 });
 
-    expect(cache.isEnabled).toBe(false);
+    await cache.delete('accounts', 'a1');
+
     await expect(cache.get('accounts', 'a1', balanceSchema)).resolves.toBeNull();
-    await expect(cache.set('accounts', 'a1', 1)).resolves.toBeUndefined();
-    await expect(cache.delete('accounts', 'a1')).resolves.toBeUndefined();
   });
 });
 
-describe('createRedisClient', () => {
-  it('builds a lazily-connecting client', () => {
-    const client = createRedisClient('redis://localhost:6479');
+describe('capacity', () => {
+  it('reclaims an expired entry rather than the oldest live one', async () => {
+    const { cache, advanceSeconds } = setup();
 
-    expect(client.options.lazyConnect).toBe(true);
-    expect(client.options.enableOfflineQueue).toBe(false);
-    client.disconnect();
+    // Written first, so insertion order alone would make it the eviction candidate anyway —
+    // what is asserted is that being *expired* is what gets it dropped.
+    await cache.set('accounts', 'short', 1, MIN_TTL_SECONDS);
+    advanceSeconds(MIN_TTL_SECONDS);
+    // The oldest live entry. Filling to exactly the bound leaves one entry to reclaim, and the
+    // expired one must be it.
+    await cache.set('accounts', 'long', 2, MAX_TTL_SECONDS);
+    for (let i = 0; i < MAX_ENTRIES - 1; i += 1) {
+      await cache.set('accounts', `filler-${String(i)}`, i, MAX_TTL_SECONDS);
+    }
+
+    await expect(cache.get('accounts', 'short', z.number())).resolves.toBeNull();
+    await expect(cache.get('accounts', 'long', z.number())).resolves.toBe(2);
+  });
+
+  it('evicts oldest-first once every entry is live', async () => {
+    const { cache } = setup();
+
+    await cache.set('accounts', 'oldest', 1, MAX_TTL_SECONDS);
+    for (let i = 0; i < MAX_ENTRIES; i += 1) {
+      await cache.set('accounts', `filler-${String(i)}`, i, MAX_TTL_SECONDS);
+    }
+
+    // Nothing has expired, so the bound is held by dropping the oldest insertion.
+    await expect(cache.get('accounts', 'oldest', z.number())).resolves.toBeNull();
+    await expect(cache.get('accounts', 'filler-0', z.number())).resolves.toBe(0);
+    await expect(cache.get('accounts', `filler-${String(MAX_ENTRIES - 1)}`, z.number())).resolves.toBe(
+      MAX_ENTRIES - 1,
+    );
+  });
+});
+
+describe('isEnabled', () => {
+  it('is always on — the cache no longer depends on an external store', () => {
+    const { cache } = setup();
+    expect(cache.isEnabled).toBe(true);
   });
 });

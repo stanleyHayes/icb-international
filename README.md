@@ -18,7 +18,7 @@ codes. See [`agent_plan.md`](agent_plan.md) for the architecture and the task bo
 pnpm install
 cp .env.example .env
 
-# 1. Infrastructure — MongoDB 8 replica set (transactions are mandatory) + Redis 8
+# 1. Infrastructure — MongoDB 8 replica set (transactions are mandatory)
 pnpm infra:up
 pnpm verify:infra          # asserts multi-document transactions actually work
 

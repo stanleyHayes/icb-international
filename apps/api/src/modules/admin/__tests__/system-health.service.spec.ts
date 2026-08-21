@@ -1,4 +1,3 @@
-import type { Queue } from 'bullmq';
 import type { Connection } from 'mongoose';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -7,9 +6,6 @@ import { SystemHealthService } from '../system-health.service.js';
 
 const START = new Date('2026-08-03T12:00:00.000Z');
 const MONGODB = 'mongodb';
-const REDIS = 'redis';
-
-const COUNTS = { waiting: 3, active: 1, failed: 2, completed: 42 };
 
 function makeHarness(options: { readyState?: number } = {}) {
   const ping = vi.fn<() => Promise<unknown>>().mockResolvedValue({ ok: 1 });
@@ -17,14 +13,10 @@ function makeHarness(options: { readyState?: number } = {}) {
     readyState: options.readyState ?? 1,
     db: { admin: () => ({ ping }) },
   } as unknown as Connection;
-  const deadLetterCounts = vi.fn().mockResolvedValue({ ...COUNTS });
-  const accrualsCounts = vi.fn().mockResolvedValue({ ...COUNTS });
-  const deadLetter = { getJobCounts: deadLetterCounts } as unknown as Queue;
-  const accruals = { getJobCounts: accrualsCounts } as unknown as Queue;
   const clock = new ClockService();
   clock.freeze(START);
-  const service = new SystemHealthService(connection, deadLetter, accruals, clock);
-  return { service, ping, deadLetterCounts };
+  const service = new SystemHealthService(connection, clock);
+  return { service, ping };
 }
 
 describe('SystemHealthService', () => {
@@ -32,7 +24,7 @@ describe('SystemHealthService', () => {
     vi.clearAllMocks();
   });
 
-  it('reports healthy with component latencies and queue counts', async () => {
+  it('reports healthy with mongodb as the only component', async () => {
     const { service } = makeHarness();
 
     const health = await service.check();
@@ -40,12 +32,10 @@ describe('SystemHealthService', () => {
     expect(health.status).toBe('healthy');
     expect(health.components).toEqual([
       { name: MONGODB, status: 'healthy', latencyMs: 0, detail: null },
-      { name: REDIS, status: 'healthy', latencyMs: null, detail: null },
     ]);
-    expect(health.queues).toEqual([
-      { name: 'dead-letter', ...COUNTS },
-      { name: 'accruals', ...COUNTS },
-    ]);
+    // The queues section survives as an empty array: the console reads it, and the contract
+    // still declares it, but there are no queues left to report on.
+    expect(health.queues).toEqual([]);
     expect(health.uptimeSeconds).toBe(0);
     expect(health.version).toBeTruthy();
     expect(health.checkedAt).toBe(START.toISOString());
@@ -71,20 +61,5 @@ describe('SystemHealthService', () => {
 
     expect(health.status).toBe('down');
     expect(ping).not.toHaveBeenCalled();
-  });
-
-  it('degrades and empties the queues section when redis fails', async () => {
-    const { service, deadLetterCounts } = makeHarness();
-    deadLetterCounts.mockRejectedValue(new Error('redis unreachable'));
-
-    const health = await service.check();
-
-    expect(health.status).toBe('degraded');
-    expect(health.queues).toEqual([]);
-    const redis = health.components.find((component) => component.name === REDIS);
-    expect(redis?.status).toBe('degraded');
-    expect(redis?.detail).toBe('redis unreachable');
-    const mongodb = health.components.find((component) => component.name === MONGODB);
-    expect(mongodb?.status).toBe('healthy');
   });
 });

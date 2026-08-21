@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the API integration suite against the CI Mongo replica set + Redis.
+# Runs the API integration suite against the CI Mongo replica set.
 # The BE track adds `test:integration` to @icb/api; until that script exists
 # this step is a no-op so the pipeline shape can land first.
 set -euo pipefail

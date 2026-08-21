@@ -11,9 +11,7 @@ import { describe, it } from 'vitest';
 import { AppModule } from '../../../src/app.module.js';
 import { CorrelationInterceptor } from '../../../src/common/interceptors/correlation.interceptor.js';
 import { ProblemDetailsFilter } from '../../../src/common/filters/problem-details.filter.js';
-import { QueueDepthCollector } from '../../../src/common/observability/queue-depth.collector.js';
 import { CONFIG, type AppConfiguration } from '../../../src/config/configuration.js';
-import { pickReachableRedisUrl } from './redis-probe.js';
 
 /**
  * One integration suite = one full application boot against one throwaway database.
@@ -74,24 +72,15 @@ export function describeIntegration(
 /**
  * Boot the real AppModule the way main.ts does — same cookie plugin, global prefix, problem
  * filter — against the suite's database. Background pollers are off so a drain pass never
- * races an assertion; Redis falls back to any reachable instance (see redis-probe.ts).
+ * races an assertion.
  */
 export async function bootIntegrationApp(harness: MongoTestHarness): Promise<IntegrationApp> {
   process.env['NODE_ENV'] = 'test';
   process.env['MONGO_URI'] = harness.uri;
   process.env['BACKGROUND_JOBS_ENABLED'] = 'false';
   process.env['LOG_LEVEL'] = 'error';
-  process.env['REDIS_URL'] = await pickReachableRedisUrl(process.env['REDIS_URL'] ?? '');
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
-    // The collector is a background poller (disabled here via BACKGROUND_JOBS_ENABLED=false)
-    // whose queue gauges are irrelevant to the money paths. Substituting it keeps this suite
-    // about money, not about whether an observability edit elsewhere in the tree has landed.
-    .overrideProvider(QueueDepthCollector)
-    .useValue({
-      onApplicationBootstrap: () => undefined,
-      onModuleDestroy: () => undefined,
-    })
     /*
      * Registration is capped at 5 per minute per IP — a real defence against credential
      * stuffing, and one this suite trips on its sixth customer because every request comes from

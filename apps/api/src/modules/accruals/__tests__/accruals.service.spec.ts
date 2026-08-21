@@ -1,9 +1,7 @@
-import type { Queue } from 'bullmq';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ValidationError } from '../../../common/errors/index.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
-import { ACCRUAL_JOB_NAMES, dailyRunJobId } from '../accruals.constants.js';
 import { AccrualsService } from '../accruals.service.js';
 import type { CapitalisationService } from '../capitalisation.service.js';
 import type { FeeAssessmentService } from '../fee-assessment.service.js';
@@ -36,7 +34,6 @@ function setup() {
       duplicates: 0,
     }),
   };
-  const queue = { add: vi.fn().mockResolvedValue({}) };
   const clock = new ClockService();
   clock.freeze(NOW);
 
@@ -46,9 +43,8 @@ function setup() {
     overdraft as unknown as OverdraftFeeService,
     fees as unknown as FeeAssessmentService,
     clock,
-    queue as unknown as Queue,
   );
-  return { service, accrual, capitalisation, overdraft, fees, queue };
+  return { service, accrual, capitalisation, overdraft, fees };
 }
 
 describe('AccrualsService.runDaily', () => {
@@ -100,27 +96,5 @@ describe('AccrualsService.runDaily', () => {
     // not in skipping the run — and a replayed day accrues nothing twice.
     expect(replay.accrual.accountsAccrued).toBe(0);
     expect(fees.run).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('AccrualsService.enqueueDailyRun', () => {
-  it('enqueues the run with a deterministic job id, so duplicates collapse at the queue', async () => {
-    const { service, queue } = setup();
-
-    const jobId = await service.enqueueDailyRun(BUSINESS_DATE);
-
-    expect(jobId).toBe(dailyRunJobId(BUSINESS_DATE));
-    expect(queue.add).toHaveBeenCalledWith(
-      ACCRUAL_JOB_NAMES.dailyRun,
-      { businessDate: BUSINESS_DATE },
-      { jobId: 'accrual:2026-08-02' },
-    );
-  });
-
-  it('rejects a malformed date before touching the queue', async () => {
-    const { service, queue } = setup();
-
-    await expect(service.enqueueDailyRun('tomorrow')).rejects.toBeInstanceOf(ValidationError);
-    expect(queue.add).not.toHaveBeenCalled();
   });
 });

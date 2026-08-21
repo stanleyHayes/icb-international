@@ -17,7 +17,6 @@ export interface AppConfiguration {
   };
   readonly logLevel: RawConfiguration['LOG_LEVEL'];
   readonly mongo: { readonly uri: string };
-  readonly redis: { readonly url: string };
   readonly jwt: {
     readonly accessSecret: string;
     readonly refreshSecret: string;
@@ -99,7 +98,6 @@ export function loadConfiguration(source: NodeJS.ProcessEnv): AppConfiguration {
     http: { port: raw.API_PORT, host: raw.API_HOST, corsOrigins: raw.CORS_ORIGINS },
     logLevel: raw.LOG_LEVEL,
     mongo: { uri: raw.MONGO_URI },
-    redis: { url: raw.REDIS_URL },
     jwt: jwtSection(raw),
     crypto: {
       fieldEncryptionKey: raw.FIELD_ENCRYPTION_KEY,

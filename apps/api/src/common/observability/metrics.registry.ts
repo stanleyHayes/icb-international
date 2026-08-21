@@ -12,10 +12,6 @@ import promClient from 'prom-client';
  * test creating two application containers does not die on duplicate registration.
  */
 
-/** Queue states worth graphing; the rest (completed, paused) are noise at this granularity. */
-export const QUEUE_DEPTH_STATES = ['waiting', 'active', 'delayed', 'failed'] as const;
-export type QueueDepthState = (typeof QUEUE_DEPTH_STATES)[number];
-
 const HTTP_DURATION_BUCKETS_MS = [5, 10, 25, 50, 100, 250, 500, 1_000, 2_500];
 const EOD_DURATION_BUCKETS_MS = [100, 500, 1_000, 5_000, 15_000, 60_000, 300_000];
 
@@ -26,8 +22,6 @@ export interface IcbMetrics {
   readonly transferOutcomes: promClient.Counter<'rail' | 'status'>;
   readonly fraudDecisions: promClient.Counter<'decision'>;
   readonly eodRunDurationMs: promClient.Histogram<'outcome'>;
-  readonly queueDepth: promClient.Gauge<'queue' | 'state'>;
-  readonly dlqSize: promClient.Gauge<string>;
   readonly ledgerDriftAccounts: promClient.Gauge<string>;
 }
 
@@ -79,26 +73,13 @@ function seriesMetrics(registry: promClient.Registry) {
   return { httpRequestDurationMs, ledgerPostings, transferOutcomes, fraudDecisions, eodRunDurationMs };
 }
 
-/** Gauges — point-in-time values fed by collectors and the cached integrity check. */
+/** Gauges — point-in-time values fed by the cached integrity check. */
 function gaugeMetrics(registry: promClient.Registry) {
-  const queueDepth = new promClient.Gauge({
-    name: 'icb_queue_depth',
-    help: 'BullMQ jobs per queue and state, refreshed by the depth collector',
-    labelNames: ['queue', 'state'],
-    registers: [registry],
-  });
-
-  const dlqSize = new promClient.Gauge({
-    name: 'icb_dlq_size',
-    help: 'Jobs sitting on the dead-letter queue awaiting operations attention',
-    registers: [registry],
-  });
-
   const ledgerDriftAccounts = new promClient.Gauge({
     name: 'icb_ledger_drift_accounts',
     help: 'Accounts whose cached balance disagrees with the ledger, from the cached integrity check',
     registers: [registry],
   });
 
-  return { queueDepth, dlqSize, ledgerDriftAccounts };
+  return { ledgerDriftAccounts };
 }

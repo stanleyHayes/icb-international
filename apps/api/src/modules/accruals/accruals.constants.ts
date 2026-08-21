@@ -1,16 +1,5 @@
 import type { PostingActor } from '../ledger/domain/posting.types.js';
 
-/** Queue the daily accrual run is dispatched through. */
-export const ACCRUALS_QUEUE = 'accruals';
-
-/** The one job the accruals queue carries: close a business date. */
-export const ACCRUAL_JOB_NAMES = { dailyRun: 'daily-run' } as const;
-
-/** Deterministic job id, so enqueueing the same date twice is a no-op at the queue. */
-export function dailyRunJobId(businessDate: string): string {
-  return `accrual:${businessDate}`;
-}
-
 /**
  * Day-count conventions the engine prices accruals under. Which convention applies to which
  * balance is policy (domain/accrual-policy.ts), never a literal at the call site.

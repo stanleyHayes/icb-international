@@ -27,7 +27,6 @@ export const configurationSchema = z
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 
     MONGO_URI: z.string().startsWith('mongodb'),
-    REDIS_URL: z.string().startsWith('redis'),
 
     JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
     JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),

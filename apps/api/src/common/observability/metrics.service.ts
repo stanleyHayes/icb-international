@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { createMetrics, type IcbMetrics, type QueueDepthState } from './metrics.registry.js';
+import { createMetrics, type IcbMetrics } from './metrics.registry.js';
 
 /**
  * The instrumentation front door.
@@ -47,14 +47,6 @@ export class MetricsService {
 
   endOfDayRun(durationMs: number, balanced: boolean): void {
     this.metrics.eodRunDurationMs.observe({ outcome: balanced ? 'balanced' : 'failed' }, durationMs);
-  }
-
-  queueDepth(queue: string, state: QueueDepthState, depth: number): void {
-    this.metrics.queueDepth.set({ queue, state }, depth);
-  }
-
-  deadLetterQueueSize(size: number): void {
-    this.metrics.dlqSize.set(size);
   }
 
   /** Drifted account count from the most recent (cached) ledger integrity check. */

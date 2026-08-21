@@ -12,7 +12,8 @@
  *
  * Scope: this is per-process. Two API instances would still contend at the database, where the
  * retry loop in TransactionManager remains the backstop. A multi-instance deployment wanting the
- * same guarantee needs a distributed lock — Redis is already a dependency for it.
+ * same guarantee needs a distributed lock, which would mean reintroducing the shared store the
+ * API no longer has.
  */
 
 interface Queue {

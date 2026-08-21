@@ -1,5 +1,5 @@
 # Full-stack compose for a self-contained ICB deployment: api + the three Next.js apps
-# + MongoDB (single-node replica set) + Redis.
+# + MongoDB (single-node replica set).
 #
 #   docker compose -f docker-compose.prod.yml build
 #   docker compose -f docker-compose.prod.yml up -d
@@ -53,20 +53,6 @@ services:
           }
         '
 
-  redis:
-    image: redis:8-alpine
-    container_name: icb-prod-redis
-    restart: unless-stopped
-    command: ['redis-server', '--appendonly', 'yes', '--save', '60', '1']
-    ports:
-      - '${REDIS_PORT:-6379}:6379'
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 5s
-      timeout: 3s
-      retries: 20
 
   api:
     build:
@@ -78,8 +64,6 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     ports:
       - '${API_PORT:-4100}:4100'
     environment:
@@ -88,7 +72,6 @@ services:
       API_HOST: 0.0.0.0
       LOG_LEVEL: info
       MONGO_URI: mongodb://mongo:27017/icb?replicaSet=icb-rs&directConnection=true
-      REDIS_URL: redis://redis:6379
       # Secrets — required, no defaults. Export them before `up`.
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?export JWT_ACCESS_SECRET first}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?export JWT_REFRESH_SECRET first}
@@ -117,8 +100,8 @@ services:
       SIMULATION_ENABLED: 'true'
       SIMULATION_SEED: ${SIMULATION_SEED:-icb-default-seed}
       ICB_SIMULATION_ACKNOWLEDGED: 'true'
-    # The Dockerfile carries a liveness HEALTHCHECK on /health; /health/ready (Mongo +
-    # Redis) is what an orchestrator should gate traffic on.
+    # The Dockerfile carries a liveness HEALTHCHECK on /health; /health/ready (Mongo)
+    # is what an orchestrator should gate traffic on.
     healthcheck:
       test:
         - CMD
@@ -186,4 +169,3 @@ services:
 
 volumes:
   mongo-data:
-  redis-data:

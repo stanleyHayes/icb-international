@@ -3,15 +3,13 @@
 #
 #  External services (not managed by this blueprint):
 #    • MongoDB Atlas — must be a replica set; standalone disables transactions
-#    • Redis / Key Value — create one manually:
-#        Dashboard → New → Key Value → name: icb-redis, plan: free,
-#        eviction policy: noeviction. Then paste its *Internal* Connection
-#        String into REDIS_URL when the Blueprint prompts for it.
 #
-#      Redis is provisioned by hand because Render's blueprint schema requires
-#      an ipAllowList on Key Value services while this workspace's plan rejects
-#      any ipAllowList as Enterprise-only — a catch-22 that blocks every sync.
-#      For the same reason the web service declares no ipAllowList.
+#  The API has no Redis dependency: the cache is in-process and the approved-
+#  postings sweep is an interval rather than a BullMQ job. MongoDB is the only
+#  datastore.
+#
+#  The web service declares no ipAllowList — Render gates that behind an
+#  Enterprise workspace plan and rejects the blueprint outright when present.
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -37,11 +35,6 @@ services:
         value: "10000"
       - key: LOG_LEVEL
         value: info
-
-      # Internal Connection String (redis://red-...:6379) of the manually
-      # created icb-redis Key Value instance — see the header above.
-      - key: REDIS_URL
-        sync: false
 
       - key: MONGO_URI
         sync: false

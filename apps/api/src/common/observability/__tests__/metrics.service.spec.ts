@@ -51,14 +51,10 @@ describe('MetricsService', () => {
     expect(text).toContain('outcome="balanced"');
   });
 
-  it('sets queue depth, DLQ size and ledger drift gauges', async () => {
+  it('sets the ledger drift gauge', async () => {
     const text = await rendered((m) => {
-      m.queueDepth('accruals', 'waiting', 7);
-      m.deadLetterQueueSize(2);
       m.ledgerDrift(0);
     });
-    expect(text).toContain('icb_queue_depth{queue="accruals",state="waiting"} 7');
-    expect(text).toContain('icb_dlq_size 2');
     expect(text).toContain('icb_ledger_drift_accounts 0');
   });
 });

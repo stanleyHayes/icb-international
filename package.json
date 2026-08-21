@@ -40,7 +40,6 @@
     "mongodb": "^7.5.0",
     "playwright": "1.62.1",
     "prettier": "3.9.6",
-    "redis": "^6.2.0",
     "turbo": "2.10.8",
     "typescript": "6.0.3"
   },

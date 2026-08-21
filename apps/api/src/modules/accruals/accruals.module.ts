@@ -1,8 +1,6 @@
-import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { QueueModule } from '../../infrastructure/queue/queue.module.js';
 import {
   FeeChargeDoc,
   FeeChargeSchema,
@@ -11,8 +9,6 @@ import {
 } from '../../simulation/eod/infrastructure/eod.schemas.js';
 import { AccountsModule } from '../accounts/accounts.module.js';
 import { LedgerModule } from '../ledger/ledger.module.js';
-import { ACCRUALS_QUEUE } from './accruals.constants.js';
-import { AccrualsProcessor } from './accruals.processor.js';
 import { AccrualsService } from './accruals.service.js';
 import { CapitalisationService } from './capitalisation.service.js';
 import { FeeAssessmentService } from './fee-assessment.service.js';
@@ -39,8 +35,6 @@ import { PeriodActivityService } from './period-activity.service.js';
   imports: [
     LedgerModule,
     AccountsModule,
-    QueueModule,
-    BullModule.registerQueue({ name: ACCRUALS_QUEUE }),
     MongooseModule.forFeature([
       { name: InterestAccrualDoc.name, schema: InterestAccrualSchema },
       { name: FeeChargeDoc.name, schema: FeeChargeSchema },
@@ -54,7 +48,6 @@ import { PeriodActivityService } from './period-activity.service.js';
     OverdraftFeeService,
     FeeAssessmentService,
     AccrualsService,
-    AccrualsProcessor,
   ],
   exports: [AccrualsService],
 })
