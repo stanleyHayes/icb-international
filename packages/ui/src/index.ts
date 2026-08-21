@@ -135,7 +135,9 @@ export {
 } from './data/transaction-list';
 export { TransactionRow, type TransactionRowProps } from './data/transaction-row';
 
+export { BrandSplash } from './feedback/brand-splash';
 export { EmptyState } from './feedback/empty-state';
+export { NotFoundPanel } from './feedback/not-found-panel';
 export { Skeleton } from './feedback/skeleton';
 
 export { Calendar, type CalendarProps } from './form/calendar';

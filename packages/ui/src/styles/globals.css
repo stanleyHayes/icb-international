@@ -226,6 +226,44 @@
   to { opacity: 1; transform: none; }
 }
 
+/*
+ * Brand splash: the mark draws itself.
+ *
+ * The ICB arc is an open path, so tracing it is native to the form rather than decoration
+ * layered on top — the splash is the logo being drawn, not a spinner beside one. Both paths
+ * carry `pathLength="1"` so the dash maths is exact regardless of the arc's real length.
+ */
+@keyframes icb-trace {
+  to { stroke-dashoffset: 0; }
+}
+
+.icb-splash-arc,
+.icb-splash-stem {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.icb-splash-arc {
+  animation: icb-trace 900ms var(--icb-ease-emphasized) forwards;
+}
+
+/* Delayed so the gold stem lands after the arc closes, reading as one gesture, not two. */
+.icb-splash-stem {
+  animation: icb-trace 420ms var(--icb-ease-out) 620ms forwards;
+}
+
+/*
+ * Reduced motion: show the finished mark immediately. The duration tokens already collapse to
+ * 1ms, but these animations set their own durations, so the end state has to be stated here.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .icb-splash-arc,
+  .icb-splash-stem {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
 /* Scroll-reveal primitive styles. Starts hidden; the Reveal component flips data-visible. */
 .icb-reveal {
   opacity: 0;
