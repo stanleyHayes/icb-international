@@ -75,7 +75,7 @@ describe('InterestAccrualStep', () => {
   });
 
   it('honours the account’s own rate over the fallback', async () => {
-    const { step, accrualsModel } = setup([accountDoc({ interestRate: 0.0365 })], {
+    const { step, accrualsModel } = setup([accountDoc({ interestRate: 3.65 })], {
       ledgerMinorUnits: 10_000_000,
     });
 
@@ -83,6 +83,21 @@ describe('InterestAccrualStep', () => {
 
     expect(accrualsModel.create).toHaveBeenCalledWith(
       [expect.objectContaining({ rate: 0.0365, minorUnits: 1_000 })],
+      expect.anything(),
+    );
+  });
+
+  it('reads the stored rate as a percentage, not a fraction', async () => {
+    // The seed writes 4.15 for the 4.15% reserve savings product. Consuming that as a fraction
+    // accrues 415% APR — a hundred times the interest owed — so pin the units here.
+    const { step, accrualsModel } = setup([accountDoc({ interestRate: 4.15 })], {
+      ledgerMinorUnits: 500_000,
+    });
+
+    await step.run(CONTEXT);
+
+    expect(accrualsModel.create).toHaveBeenCalledWith(
+      [expect.objectContaining({ rate: 0.0415, minorUnits: 57 })],
       expect.anything(),
     );
   });
@@ -116,7 +131,7 @@ describe('InterestAccrualStep', () => {
 
   it('accrues across accounts and sums the totals', async () => {
     const { step } = setup(
-      [accountDoc(), accountDoc({ _id: 'acct-2', interestRate: 0.0365 })],
+      [accountDoc(), accountDoc({ _id: 'acct-2', interestRate: 3.65 })],
       { ledgerMinorUnits: 10_000_000 },
     );
 

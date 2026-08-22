@@ -13,6 +13,7 @@ import { customerRef } from '../ledger/domain/account-ref.js';
 import { policyFor } from './domain/accrual-policy.js';
 import { yearFraction } from './domain/day-count.js';
 import { bandedInterest, effectiveRate } from './domain/tiered-rates.js';
+import { annualRateFraction } from '../accounts/domain/interest-rate.js';
 
 /** Interest-bearing account kinds the engine accrues. */
 const INTEREST_BEARING_KINDS: readonly string[] = ['current', 'savings', 'fixed_deposit'];
@@ -78,7 +79,7 @@ export class InterestAccrualService {
     }
     const currency: CurrencyCode = account.currency;
     const balance = await this.ledgerBalance(account._id, currency);
-    const policy = policyFor(account.kind, currency, account.interestRate);
+    const policy = policyFor(account.kind, currency, annualRateFraction(account.interestRate));
     if (balance <= 0 || policy === null) {
       return null;
     }

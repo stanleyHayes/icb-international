@@ -13,6 +13,7 @@ import { AccountBalanceDoc } from '../../../modules/ledger/infrastructure/ledger
 import { LedgerService } from '../../../modules/ledger/ledger.service.js';
 import { CurrencyTotals, type EodContext } from '../eod.context.js';
 import { InterestAccrualDoc } from '../infrastructure/eod.schemas.js';
+import { annualRateFraction } from '../../../modules/accounts/domain/interest-rate.js';
 
 /** Actual days elapsed over a 365-day year — the convention retail savings is quoted on. */
 const DAY_COUNT_BASIS = 'ACT/365';
@@ -78,7 +79,7 @@ export class InterestAccrualStep {
       return null;
     }
 
-    const rate = account.interestRate ?? FALLBACK_RATE;
+    const rate = annualRateFraction(account.interestRate) ?? FALLBACK_RATE;
     const interest = multiply(balance, rate / DAYS_IN_YEAR, 'half-even');
 
     if (interest.minorUnits <= 0) {

@@ -12,6 +12,7 @@ import { LedgerService } from '../ledger/ledger.service.js';
 import { SYSTEM_ACTOR } from './accruals.constants.js';
 import { policyFor } from './domain/accrual-policy.js';
 import { isCapitalisationDate } from './domain/capitalisation.js';
+import { annualRateFraction } from '../accounts/domain/interest-rate.js';
 
 export interface CapitalisationSummary {
   readonly accountsCapitalised: number;
@@ -65,7 +66,11 @@ export class CapitalisationService {
     if (!isCurrencyCode(account.currency)) {
       return null;
     }
-    const policy = policyFor(account.kind, account.currency, account.interestRate);
+    const policy = policyFor(
+      account.kind,
+      account.currency,
+      annualRateFraction(account.interestRate),
+    );
     if (policy === null || !isCapitalisationDate(businessDate, policy.capitalisation, account.statementDay)) {
       return null;
     }

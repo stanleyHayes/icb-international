@@ -97,7 +97,7 @@ describe('InterestAccrualService', () => {
   });
 
   it('honours an account’s own rate over the tier card', async () => {
-    const { service, accrualsModel } = setup([account({ interestRate: 0.0365 })], 10_000_000);
+    const { service, accrualsModel } = setup([account({ interestRate: 3.65 })], 10_000_000);
 
     await service.run(BUSINESS_DATE, AS_OF);
 

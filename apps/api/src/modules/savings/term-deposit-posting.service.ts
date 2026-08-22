@@ -11,6 +11,7 @@ import { LedgerService } from '../ledger/ledger.service.js';
 import { accruedInterestOn } from './domain/interest.js';
 import { toDepositTerms } from './infrastructure/term-deposit.mapper.js';
 import { TermDepositDoc } from './infrastructure/term-deposit.schemas.js';
+import { annualRatePercent } from '../accounts/domain/interest-rate.js';
 
 /** Every leg a term deposit ever posts, in one place. */
 const SOURCE_TYPE = 'term_deposit';
@@ -53,7 +54,8 @@ export class TermDepositPostingService {
         kind: 'fixed_deposit',
         currency: input.currency,
         nickname: input.reference,
-        interestRate: input.rate,
+        // TermDepositDoc.rate is a fraction; AccountDoc.interestRate is a percentage.
+        interestRate: annualRatePercent(input.rate),
       },
       session,
     );
