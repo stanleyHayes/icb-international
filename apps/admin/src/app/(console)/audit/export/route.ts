@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { readSession } from '@/lib/session';
+import { resolveApiBaseUrl } from '@icb/contracts';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/v1';
+const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 
 /**
  * NDJSON export of the filtered audit trail.

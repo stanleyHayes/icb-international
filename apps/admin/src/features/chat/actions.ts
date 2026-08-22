@@ -1,5 +1,6 @@
 'use server';
 
+import { resolveApiBaseUrl } from '@icb/contracts';
 import type {
   ChatConversation,
   ChatHistoryResponse,
@@ -9,7 +10,7 @@ import type {
 
 import { api } from '@/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/v1';
+const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 const WS_BASE = API_URL.replace(/^http/, 'ws');
 
 /**

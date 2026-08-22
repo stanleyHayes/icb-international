@@ -1,11 +1,12 @@
 import 'server-only';
 
+import { resolveApiBaseUrl } from '@icb/contracts';
 import type { ProblemDetails } from '@icb/contracts';
 import { redirect } from 'next/navigation';
 
 import { readSession } from './session';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/v1';
+const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 
 /**
  * Thrown for any non-2xx response, carrying the API's problem-details payload.

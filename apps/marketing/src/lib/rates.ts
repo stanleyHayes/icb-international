@@ -1,7 +1,7 @@
-import { rateTableSchema, type RateTable } from '@icb/contracts';
+import { rateTableSchema, resolveApiBaseUrl, type RateTable } from '@icb/contracts';
 import { format, fromMinorUnits } from '@icb/money';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/v1';
+const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 export const RATES_REVALIDATE_SECONDS = 3600;
 
 /**
@@ -74,7 +74,7 @@ async function fetchRateTable(): Promise<RateTable | null> {
   }
 }
 
-function bestSavingsRow(table: RateTable): (readonly string[]) | null {
+function bestSavingsRow(table: RateTable): readonly string[] | null {
   const best = table.savings.reduce<RateTable['savings'][number] | null>(
     (top, row) => (top === null || row.rate > top.rate ? row : top),
     null,
@@ -84,7 +84,7 @@ function bestSavingsRow(table: RateTable): (readonly string[]) | null {
     : [best.name, formatRate(best.rate), BASIS_AER_VARIABLE, 'Instant access'];
 }
 
-function bestDepositRow(table: RateTable): (readonly string[]) | null {
+function bestDepositRow(table: RateTable): readonly string[] | null {
   const twelveMonth =
     table.deposits.find((row) => row.termMonths === 12) ??
     table.deposits.reduce<RateTable['deposits'][number] | null>(
@@ -101,7 +101,7 @@ function bestDepositRow(table: RateTable): (readonly string[]) | null {
       ];
 }
 
-function lowestLoanRow(table: RateTable): (readonly string[]) | null {
+function lowestLoanRow(table: RateTable): readonly string[] | null {
   const lowest = table.loans.reduce<RateTable['loans'][number] | null>(
     (top, row) => (top === null || row.fromRate < top.fromRate ? row : top),
     null,
@@ -124,7 +124,12 @@ function toView(table: RateTable): RatesView {
     live: true,
     effectiveFrom: table.effectiveFrom,
     savingsRows: orFallback(
-      table.savings.map((row) => [row.name, 'Any balance', formatRate(row.rate), BASIS_AER_VARIABLE]),
+      table.savings.map((row) => [
+        row.name,
+        'Any balance',
+        formatRate(row.rate),
+        BASIS_AER_VARIABLE,
+      ]),
       FALLBACK_VIEW.savingsRows,
     ),
     depositRows: orFallback(

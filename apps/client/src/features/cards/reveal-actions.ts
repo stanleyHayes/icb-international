@@ -1,5 +1,6 @@
 'use server';
 
+import { resolveApiBaseUrl } from '@icb/contracts';
 import type { CardSensitiveDetails, MfaChallenge, StepUpToken } from '@icb/contracts';
 import { redirect } from 'next/navigation';
 
@@ -7,7 +8,7 @@ import { readSession } from '@/lib/session';
 
 import { ApiError, api } from '@/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/v1';
+const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 
 export interface StepUpState {
   status: 'idle' | 'challenge' | 'revealed' | 'error';

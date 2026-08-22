@@ -1,8 +1,9 @@
 import 'server-only';
 
 import { readSession } from '@/lib/session';
+import { resolveApiBaseUrl } from '@icb/contracts';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/v1';
+const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 
 const PASSTHROUGH_HEADERS = ['content-type', 'content-disposition', 'cache-control'] as const;
 
@@ -25,7 +26,9 @@ export async function proxyApiDownload(path: string): Promise<Response> {
   });
 
   if (!upstream.ok || upstream.body === null) {
-    return new Response('This file is not available.', { status: upstream.ok ? 502 : upstream.status });
+    return new Response('This file is not available.', {
+      status: upstream.ok ? 502 : upstream.status,
+    });
   }
 
   const headers = new Headers();

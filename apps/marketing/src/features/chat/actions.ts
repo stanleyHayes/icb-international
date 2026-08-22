@@ -2,13 +2,14 @@
 
 import {
   chatHistoryResponseSchema,
+  resolveApiBaseUrl,
   startChatResponseSchema,
-  wsTicketResponseSchema,
   type ChatConversation,
   type ChatMessage,
+  wsTicketResponseSchema,
 } from '@icb/contracts';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/v1';
+const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 /** The same base URL with the scheme swapped for the WebSocket upgrade. */
 const WS_URL = API_URL.replace(/^http/, 'ws');
 
@@ -29,8 +30,7 @@ export type ChatActionResult =
   | { ok: false; status: number | null; message: string };
 
 type WsUrlResult =
-  | { ok: true; wsUrl: string }
-  | { ok: false; status: number | null; message: string };
+  { ok: true; wsUrl: string } | { ok: false; status: number | null; message: string };
 
 const GENERIC_MESSAGE = 'We could not start the chat. Please try again.';
 

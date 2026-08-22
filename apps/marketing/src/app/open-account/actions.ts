@@ -1,8 +1,8 @@
 'use server';
 
-import { registerRequestSchema } from '@icb/contracts';
+import { registerRequestSchema, resolveApiBaseUrl } from '@icb/contracts';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/v1';
+const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 const CLIENT_URL = process.env.NEXT_PUBLIC_CLIENT_URL ?? 'http://localhost:3101';
 
 export interface ApplicationState {

@@ -1,6 +1,12 @@
 'use server';
 
-import type { ChatConversation, ChatMessage, StartChatResponse, WsTicketResponse } from '@icb/contracts';
+import { resolveApiBaseUrl } from '@icb/contracts';
+import type {
+  ChatConversation,
+  ChatMessage,
+  StartChatResponse,
+  WsTicketResponse,
+} from '@icb/contracts';
 
 import { ApiError, api } from '@/lib/api';
 
@@ -8,7 +14,7 @@ export type ConnectChatResult =
   | { ok: true; conversation: ChatConversation; messages: ChatMessage[]; wsUrl: string }
   | { ok: false; error: string };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100/v1';
+const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 const WS_BASE = API_URL.replace(/^http/, 'ws');
 
 function message(error: unknown, fallback: string): string {
