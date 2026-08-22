@@ -2,7 +2,7 @@
   "name": "icb",
   "version": "1.0.0",
   "private": true,
-  "description": "ICB — International Commercial Bank. A full-fidelity banking simulation.",
+  "description": "ICB \u2014 International Commercial Bank. A full-fidelity banking simulation.",
   "packageManager": "pnpm@10.27.0",
   "engines": {
     "node": ">=22.0.0",

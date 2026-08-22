@@ -5,6 +5,23 @@ packages:
 
 overrides:
   fastify: 5.11.0
+  # Security advisories in transitive dependencies, each pinned to the lowest patched version
+  # from `pnpm audit`. Every range carries an upper bound: an open-ended `>=x` lets pnpm satisfy
+  # the override with the newest version on the registry, which crosses majors and breaks the
+  # dependent. Drop an entry once the direct dependency ships the fix itself.
+  find-my-way: '>=9.7.0 <10'
+  # Two js-yaml majors coexist and cannot cross: @redocly/openapi-core is built against the v4
+  # API (`types.merge`) and throws on v5, while @nestjs/swagger is on v5. Patch each in place.
+  js-yaml@4: '>=4.3.1 <5'
+  js-yaml@5: '>=5.2.2 <6'
+  nanoid@3: '>=3.3.18 <4'
+  picomatch@4: '>=4.0.4 <5'
+  postcss: '>=8.5.18 <9'
+  sharp: '>=0.35.0 <0.36'
+  # openapi-typescript imports `@redocly/openapi-core/lib/ref-utils.js`, which 1.34.19 dropped
+  # from its exports map. Pin the last version that still exports it; js-yaml@4 above patches
+  # the advisory underneath it.
+  '@redocly/openapi-core': '1.34.18'
 
 onlyBuiltDependencies:
   - '@nestjs/core'
