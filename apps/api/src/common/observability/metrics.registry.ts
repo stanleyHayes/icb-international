@@ -28,11 +28,16 @@ export interface IcbMetrics {
 export function createMetrics(): IcbMetrics {
   const registry = new promClient.Registry();
   promClient.collectDefaultMetrics({ register: registry });
-  return { registry, ...seriesMetrics(registry), ...gaugeMetrics(registry) };
+  return {
+    registry,
+    ...histogramMetrics(registry),
+    ...counterMetrics(registry),
+    ...gaugeMetrics(registry),
+  };
 }
 
-/** Counters and histograms — the series that accumulate. */
-function seriesMetrics(registry: promClient.Registry) {
+/** Histograms — the latency distributions. */
+function histogramMetrics(registry: promClient.Registry) {
   const httpRequestDurationMs = new promClient.Histogram({
     name: 'icb_http_request_duration_ms',
     help: 'HTTP handler execution time by route template',
@@ -41,6 +46,19 @@ function seriesMetrics(registry: promClient.Registry) {
     registers: [registry],
   });
 
+  const eodRunDurationMs = new promClient.Histogram({
+    name: 'icb_eod_run_duration_ms',
+    help: 'End-of-day pipeline duration by outcome',
+    labelNames: ['outcome'],
+    buckets: EOD_DURATION_BUCKETS_MS,
+    registers: [registry],
+  });
+
+  return { httpRequestDurationMs, eodRunDurationMs };
+}
+
+/** Counters — the series that only ever accumulate. */
+function counterMetrics(registry: promClient.Registry) {
   const ledgerPostings = new promClient.Counter({
     name: 'icb_ledger_postings_total',
     help: 'Ledger transactions posted; rate() gives postings per second',
@@ -62,15 +80,7 @@ function seriesMetrics(registry: promClient.Registry) {
     registers: [registry],
   });
 
-  const eodRunDurationMs = new promClient.Histogram({
-    name: 'icb_eod_run_duration_ms',
-    help: 'End-of-day pipeline duration by outcome',
-    labelNames: ['outcome'],
-    buckets: EOD_DURATION_BUCKETS_MS,
-    registers: [registry],
-  });
-
-  return { httpRequestDurationMs, ledgerPostings, transferOutcomes, fraudDecisions, eodRunDurationMs };
+  return { ledgerPostings, transferOutcomes, fraudDecisions };
 }
 
 /** Gauges — point-in-time values fed by the cached integrity check. */

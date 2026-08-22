@@ -45,8 +45,31 @@ export class CustomerLifecycleService {
     const customer = await this.profiles.require(customerId);
     const from = customer.status as CustomerStatus;
 
-    assertTransitionAllowed({ from, to: request.status, kycStatus: customer.kycStatus as KycStatus });
+    assertTransitionAllowed({
+      from,
+      to: request.status,
+      kycStatus: customer.kycStatus as KycStatus,
+    });
 
+    const updated = await this.commitTransition(customerId, from, request, actor);
+
+    this.logger.log(
+      redactPii({ customerId, from, to: request.status, actor: actor.id, reason: request.reason }),
+      'Customer status changed',
+    );
+    return this.assembler.assemble(updated);
+  }
+
+  /**
+   * Applies the transition with the prior status in the filter, so two concurrent requests cannot
+   * both write — the loser matches nothing and is told to retry rather than silently overwriting.
+   */
+  private async commitTransition(
+    customerId: string,
+    from: CustomerStatus,
+    request: SetCustomerStatusRequest,
+    actor: TransitionActor,
+  ) {
     const updated = await this.customers
       .findOneAndUpdate(
         { _id: customerId, status: from },
@@ -72,10 +95,6 @@ export class CustomerLifecycleService {
       });
     }
 
-    this.logger.log(
-      redactPii({ customerId, from, to: request.status, actor: actor.id, reason: request.reason }),
-      'Customer status changed',
-    );
-    return this.assembler.assemble(updated);
+    return updated;
   }
 }

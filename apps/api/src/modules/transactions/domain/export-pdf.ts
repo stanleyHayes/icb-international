@@ -55,7 +55,11 @@ function drawPageHeader(writer: PdfWriter, context: ExportPdfContext): void {
   writer.text(DESCRIPTION_X, HEADER_Y + 11, 'Description', { font: 'bold', size: BODY_SIZE });
   writer.text(OUT_RIGHT, HEADER_Y + 11, 'Out', { font: 'bold', size: BODY_SIZE, align: 'right' });
   writer.text(IN_RIGHT, HEADER_Y + 11, 'In', { font: 'bold', size: BODY_SIZE, align: 'right' });
-  writer.text(BALANCE_RIGHT, HEADER_Y + 11, 'Balance', { font: 'bold', size: BODY_SIZE, align: 'right' });
+  writer.text(BALANCE_RIGHT, HEADER_Y + 11, 'Balance', {
+    font: 'bold',
+    size: BODY_SIZE,
+    align: 'right',
+  });
 }
 
 function drawLine(writer: PdfWriter, line: ExportLine, y: number): void {
@@ -86,15 +90,7 @@ export function renderExportPdf(lines: readonly ExportLine[], context: ExportPdf
 
   drawPageHeader(writer, context);
   let y = HEADER_Y + ROW_HEIGHT + 13;
-  writer.text(MARGIN, y, `Opening balance ${decimal(context.openingMinorUnits, context.currency)}`, {
-    font: 'bold',
-    size: BODY_SIZE,
-  });
-  writer.text(BALANCE_RIGHT, y, decimal(context.openingMinorUnits, context.currency), {
-    font: 'bold',
-    size: BODY_SIZE,
-    align: 'right',
-  });
+  drawOpeningBalance(writer, context, y);
   y += ROW_HEIGHT;
 
   for (const line of lines) {
@@ -107,11 +103,21 @@ export function renderExportPdf(lines: readonly ExportLine[], context: ExportPdf
     y += ROW_HEIGHT;
   }
 
-  writer.line(MARGIN, y + 4, BALANCE_RIGHT, y + 4);
-  writer.text(MARGIN, y + 18, `Closing balance ${decimal(context.closingMinorUnits, context.currency)}`, {
-    font: 'bold',
-    size: BODY_SIZE,
-  });
+  drawClosingBalance(writer, context, y);
 
   return writer.toBuffer();
+}
+
+/** The opening figure, stated once under the header and repeated in the right-hand money column. */
+function drawOpeningBalance(writer: PdfWriter, context: ExportPdfContext, y: number): void {
+  const opening = decimal(context.openingMinorUnits, context.currency);
+  writer.text(MARGIN, y, `Opening balance ${opening}`, { font: 'bold', size: BODY_SIZE });
+  writer.text(BALANCE_RIGHT, y, opening, { font: 'bold', size: BODY_SIZE, align: 'right' });
+}
+
+/** The closing figure, ruled off from the last line so the total cannot be misread as a movement. */
+function drawClosingBalance(writer: PdfWriter, context: ExportPdfContext, y: number): void {
+  writer.line(MARGIN, y + 4, BALANCE_RIGHT, y + 4);
+  const closing = decimal(context.closingMinorUnits, context.currency);
+  writer.text(MARGIN, y + 18, `Closing balance ${closing}`, { font: 'bold', size: BODY_SIZE });
 }

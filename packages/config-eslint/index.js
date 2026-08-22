@@ -82,6 +82,9 @@ export const baseConfig = tseslint.config(
       'sonarjs/no-identical-functions': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
+      // Fixture builders return large inferred mock shapes. Spelling those out is churn that
+      // rots on the next field change, and a test helper is not a published module boundary.
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
     },
   },
   prettier,

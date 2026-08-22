@@ -4,7 +4,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { ClientSession, Model } from 'mongoose';
 
-import { DomainError, InsufficientFundsError, LimitExceededError } from '../../../common/errors/index.js';
+import { DomainError, InsufficientFundsError } from '../../../common/errors/index.js';
 import { newId } from '../../../infrastructure/database/identifier.js';
 import { TransactionManager } from '../../../infrastructure/database/transaction.manager.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
@@ -18,6 +18,7 @@ import {
   type AuthorisationDecline,
 } from '../domain/authorisation-rules.js';
 import { generateArn } from '../domain/card-numbers.js';
+import { toDeclineError } from '../domain/decline-error.js';
 import { assertCardUsable } from '../domain/card-state.js';
 import { categoryForMcc } from '../domain/mcc.js';
 import { CardAuthorisationDoc } from '../infrastructure/card-authorisation.schemas.js';
@@ -84,9 +85,13 @@ export class CardAuthorisationService {
 
     const currency = card.currency as CurrencyCode;
     if (command.amount.currency !== currency) {
-      throw new DomainError('ACCOUNT_CURRENCY_MISMATCH', 'This card cannot be billed in that currency', {
-        context: { cardCurrency: currency, requested: command.amount.currency },
-      });
+      throw new DomainError(
+        'ACCOUNT_CURRENCY_MISMATCH',
+        'This card cannot be billed in that currency',
+        {
+          context: { cardCurrency: currency, requested: command.amount.currency },
+        },
+      );
     }
 
     const context = await this.buildContext(card, command, now);
@@ -206,7 +211,13 @@ export class CardAuthorisationService {
         );
 
         return this.write(
-          { ...base, status: APPROVED, declineReason: null, arn: generateArn(now), holdId: hold.id },
+          {
+            ...base,
+            status: APPROVED,
+            declineReason: null,
+            arn: generateArn(now),
+            holdId: hold.id,
+          },
           session,
         );
       },
@@ -276,20 +287,4 @@ export class CardAuthorisationService {
     }
     return created;
   }
-}
-
-/** A control failure and a limit failure are different problems, so they get different codes. */
-function toDeclineError(card: CardDoc, decline: AuthorisationDecline): DomainError {
-  if (decline.kind === 'control') {
-    return new DomainError('CARD_CONTROL_DECLINED', decline.reason, {
-      context: { cardId: card._id },
-    });
-  }
-
-  const currency = card.currency as CurrencyCode;
-  return new LimitExceededError(
-    decline.limitName ?? 'card limit',
-    fromMinorUnits(decline.limitMinorUnits ?? 0, currency),
-    fromMinorUnits(decline.attemptedMinorUnits ?? 0, currency),
-  );
 }
