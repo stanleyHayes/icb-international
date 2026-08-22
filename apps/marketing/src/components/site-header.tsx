@@ -58,7 +58,7 @@ export function SiteHeader() {
           </a>
           <Link
             href="/open-account"
-            className="inline-flex h-10 items-center rounded-md bg-[var(--icb-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"
+            className="hidden h-10 items-center rounded-md bg-[var(--icb-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)] md:inline-flex"
           >
             Open an account
           </Link>
@@ -97,6 +97,13 @@ export function SiteHeader() {
           >
             Sign in
           </a>
+          <Link
+            href="/open-account"
+            onClick={() => setOpen(false)}
+            className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-md bg-[var(--icb-primary)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--icb-primary-hover)]"
+          >
+            Open an account
+          </Link>
         </nav>
       ) : null}
     </header>
