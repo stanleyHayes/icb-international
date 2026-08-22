@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import businessPortrait from '@/assets/imagery/segment-business.webp';
 import { PageHeader } from '@/components/page-header';
 import { ProductSection } from '@/components/product-section';
 import { BUSINESS_PRODUCTS } from '@/content/products-business';
@@ -35,6 +36,10 @@ export default function BusinessPage() {
         eyebrow="Business"
         title="Banking that keeps up with your cash cycle"
         standfirst="Multi-currency accounts, bulk payments, four-eyes controls and trade finance — built for a finance team that needs to reconcile, not guess."
+        portrait={{
+          src: businessPortrait,
+          alt: 'A textile business owner in her Accra workshop, an ICB business banking customer.',
+        }}
       />
       {BUSINESS_PRODUCTS.map((product, index) => (
         <ProductSection key={product.slug} product={product} reversed={index % 2 === 1} />

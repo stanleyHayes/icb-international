@@ -1,3 +1,4 @@
+import Image, { type StaticImageData } from 'next/image';
 import type { ReactNode } from 'react';
 
 /**
@@ -5,41 +6,71 @@ import type { ReactNode } from 'react';
  *
  * One component rather than a hand-rolled header per page, so the rhythm between eyebrow,
  * heading and standfirst is identical everywhere and a new page cannot drift.
+ *
+ * `portrait` turns the masthead into two columns for the segment pages, where a face answers
+ * "is this page for me?" faster than the standfirst can. It is optional and the pages that omit
+ * it render exactly as before — a single measure of text, unchanged.
  */
 export function PageHeader({
   eyebrow,
   title,
   standfirst,
+  portrait,
   children,
 }: Readonly<{
   eyebrow: string;
   title: string;
   standfirst?: string;
+  portrait?: { src: StaticImageData; alt: string };
   children?: ReactNode;
 }>) {
   return (
     <header className="border-b border-[var(--icb-border)] bg-[var(--icb-bg-subtle)]">
-      <div className="mx-auto max-w-[1200px] px-5 py-16 lg:py-20">
-        <p className="animate-rise text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
-          {eyebrow}
-        </p>
-        <h1
-          className="mt-3 max-w-3xl animate-rise font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl"
-          style={{ animationDelay: '60ms' }}
-        >
-          {title}
-        </h1>
-        {standfirst ? (
-          <p
-            className="mt-5 max-w-2xl animate-rise text-lg leading-relaxed text-[var(--icb-text-muted)]"
+      <div
+        className={
+          portrait
+            ? 'mx-auto grid max-w-[1200px] items-center gap-10 px-5 py-16 lg:grid-cols-[1.15fr_1fr] lg:gap-16 lg:py-20'
+            : 'mx-auto max-w-[1200px] px-5 py-16 lg:py-20'
+        }
+      >
+        <div>
+          <p className="animate-rise text-xs font-semibold tracking-[0.14em] text-[var(--icb-accent-text)] uppercase">
+            {eyebrow}
+          </p>
+          <h1
+            className="mt-3 max-w-3xl animate-rise font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl"
+            style={{ animationDelay: '60ms' }}
+          >
+            {title}
+          </h1>
+          {standfirst ? (
+            <p
+              className="mt-5 max-w-2xl animate-rise text-lg leading-relaxed text-[var(--icb-text-muted)]"
+              style={{ animationDelay: '120ms' }}
+            >
+              {standfirst}
+            </p>
+          ) : null}
+          {children ? (
+            <div className="mt-8 animate-rise" style={{ animationDelay: '180ms' }}>
+              {children}
+            </div>
+          ) : null}
+        </div>
+
+        {portrait ? (
+          <div
+            className="animate-rise relative aspect-[4/5] overflow-hidden rounded-[var(--radius-2xl)] sm:aspect-[3/2] lg:aspect-auto lg:h-[420px]"
             style={{ animationDelay: '120ms' }}
           >
-            {standfirst}
-          </p>
-        ) : null}
-        {children ? (
-          <div className="mt-8 animate-rise" style={{ animationDelay: '180ms' }}>
-            {children}
+            <Image
+              src={portrait.src}
+              alt={portrait.alt}
+              fill
+              sizes="(max-width: 1024px) 100vw, 460px"
+              placeholder="blur"
+              className="object-cover"
+            />
           </div>
         ) : null}
       </div>

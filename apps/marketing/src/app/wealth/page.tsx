@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import wealthPortrait from '@/assets/imagery/segment-wealth.webp';
 import { PageHeader } from '@/components/page-header';
 import { ProductSection } from '@/components/product-section';
 import { WEALTH_PRODUCTS } from '@/content/products-wealth';
@@ -35,6 +36,10 @@ export default function WealthPage() {
         eyebrow="Wealth"
         title="Money you keep, working as hard as money you spend"
         standfirst="Investments, foreign exchange and private banking on the same ledger as your current account — so a conversion, a trade and a transfer all post the same way: visibly, and to the cent."
+        portrait={{
+          src: wealthPortrait,
+          alt: 'An ICB private banking client in his office in the late afternoon.',
+        }}
       />
       {WEALTH_PRODUCTS.map((product, index) => (
         <ProductSection key={product.slug} product={product} reversed={index % 2 === 1} />

@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { BalancePreview } from '@/components/balance-preview';
 import { CallToActionSection } from '@/components/call-to-action-section';
+import { CustomerBand } from '@/components/customer-band';
 import { RateStrip } from '@/components/rate-strip';
 import { TransparencySection } from '@/components/transparency-section';
 import { WhyIcbSection } from '@/components/why-icb-section';
@@ -105,10 +106,11 @@ export default function HomePage() {
 
       <WhyIcbSection />
 
+      <CustomerBand />
+
       <TransparencySection />
 
       <CallToActionSection />
-
     </>
   );
 }
