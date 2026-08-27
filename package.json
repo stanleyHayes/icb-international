@@ -30,6 +30,7 @@
     "seed": "pnpm --filter @icb/api seed",
     "verify:ledger": "pnpm --filter @icb/api verify:ledger",
     "db:reset": "pnpm --filter @icb/api db:reset",
+    "provision:console": "pnpm --filter @icb/api provision:console",
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {

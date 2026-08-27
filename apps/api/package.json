@@ -17,6 +17,7 @@
     "test:security": "vitest run --config test/security/vitest.config.ts",
     "seed": "node --env-file=../../.env dist/simulation/seed/seed.cli.js",
     "db:reset": "node --env-file=../../.env dist/simulation/seed/seed.cli.js --reset",
+    "provision:console": "node --env-file=../../.env dist/modules/iam/provision-console.cli.js",
     "verify:ledger": "node --env-file=../../.env dist/simulation/seed/verify-ledger.cli.js",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },

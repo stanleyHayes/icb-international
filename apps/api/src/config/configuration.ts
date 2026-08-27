@@ -60,6 +60,8 @@ export interface AppConfiguration {
   readonly seed: {
     readonly initialAdminEmail: string;
     readonly initialAdminPassword: string;
+    /** Null unless CONSOLE_ACCOUNT_PASSWORD is set; only the provisioning CLI reads it. */
+    readonly consoleAccountPassword: string | null;
   };
   /** False in CLI runs, so periodic sweeps never race a short-lived process's shutdown. */
   readonly backgroundJobs: { readonly enabled: boolean };
@@ -110,6 +112,7 @@ export function loadConfiguration(source: NodeJS.ProcessEnv): AppConfiguration {
     seed: {
       initialAdminEmail: raw.INITIAL_ADMIN_EMAIL,
       initialAdminPassword: raw.INITIAL_ADMIN_PASSWORD,
+      consoleAccountPassword: raw.CONSOLE_ACCOUNT_PASSWORD ?? null,
     },
     backgroundJobs: { enabled: raw.BACKGROUND_JOBS_ENABLED },
     otel: {

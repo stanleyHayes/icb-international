@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from '../auth/auth.module.js';
 import { ApprovalsController } from './approvals.controller.js';
 import { ApprovalsService } from './approvals.service.js';
+import { ConsoleProvisioningService } from './console-provisioning.service.js';
 import {
   ApprovalRequestDoc,
   ApprovalRequestSchema,
@@ -42,7 +43,14 @@ import { StaffService } from './staff.service.js';
     ApprovalsService,
     StaffSessionPolicy,
     PermissionMatrixService,
+    ConsoleProvisioningService,
   ],
-  exports: [StaffService, ApprovalsService, StaffSessionPolicy, PermissionMatrixService],
+  exports: [
+    StaffService,
+    ApprovalsService,
+    StaffSessionPolicy,
+    PermissionMatrixService,
+    ConsoleProvisioningService,
+  ],
 })
 export class IamModule {}

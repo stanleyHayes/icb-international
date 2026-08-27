@@ -77,6 +77,17 @@ export const configurationSchema = z
       .string()
       .min(12, 'INITIAL_ADMIN_PASSWORD must be at least 12 characters')
       .default('Staff!2345678'),
+    /**
+     * Password applied to the standing operations-console accounts by `provision:console`.
+     *
+     * Optional and without a default on purpose: the API never needs it to boot, only the
+     * provisioning CLI reads it, and a default here would be a committed credential. The CLI
+     * refuses to run when it is unset rather than falling back to something guessable.
+     */
+    CONSOLE_ACCOUNT_PASSWORD: z
+      .string()
+      .min(12, 'CONSOLE_ACCOUNT_PASSWORD must be at least 12 characters')
+      .optional(),
     ICB_SIMULATION_ACKNOWLEDGED: booleanish.default(false),
   })
   .refine(
