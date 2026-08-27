@@ -167,8 +167,16 @@ describe('errors', () => {
 
 describe('compact formatting', () => {
   it('abbreviates large figures for dense dashboards', () => {
-    expect(formatCompact(usd(1_234_500))).toMatch(/12\.3K/);
-    expect(formatCompact(usd(500_000_000))).toMatch(/5M/);
+    expect(formatCompact(usd(1_234_500))).toBe('$12.3K');
+    expect(formatCompact(usd(500_000_000))).toBe('$5M');
+  });
+
+  it('strips the trailing zero rather than leaving it to the host ICU', () => {
+    // A loose /5M/ passed on macOS and failed on CI, where ICU rendered '$5.0M'. Exact equality
+    // is the point: the same figure must format identically on every machine that runs this.
+    expect(formatCompact(usd(100_000_000))).toBe('$1M');
+    expect(formatCompact(usd(150_000_000))).toBe('$1.5M');
+    expect(formatCompact(usd(100_000))).toBe('$1K');
   });
 
   it('drops a zero fraction when asked', () => {

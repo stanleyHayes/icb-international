@@ -88,7 +88,14 @@ export function formatParts(money: Money, options: FormatOptions = {}): MoneyPar
   };
 }
 
-/** Compact form for dense dashboards: 1.2K, 3.4M. Never used where an exact figure is required. */
+/**
+ * Compact form for dense dashboards: 1.2K, 3.4M. Never used where an exact figure is required.
+ *
+ * `trailingZeroDisplay` is not decoration. Without it the trailing zero is left to whichever ICU
+ * the runtime happens to carry, and the same figure renders `$5M` on one machine and `$5.0M` on
+ * another — which is how this surfaced: green locally, red on CI. A bank cannot have a number that
+ * depends on the host it was formatted on, so the strip is stated rather than inherited.
+ */
 export function formatCompact(money: Money, locale = DEFAULT_LOCALE): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
@@ -96,5 +103,6 @@ export function formatCompact(money: Money, locale = DEFAULT_LOCALE): string {
     currencyDisplay: 'narrowSymbol',
     notation: 'compact',
     maximumFractionDigits: 1,
+    trailingZeroDisplay: 'stripIfInteger',
   }).format(toDecimalNumber(money));
 }
