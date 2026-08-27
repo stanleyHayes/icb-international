@@ -1,0 +1,11 @@
+# Findings reviewed and dismissed, by gitleaks fingerprint.
+#
+# A fingerprint pins one finding in one blob, so a real secret added to the same file later still
+# fails the scan — nothing here is a blanket path or rule exemption. The scan covers git history,
+# which is why a finding cannot be cleared by editing the file today, and why one fixture that has
+# been touched twice needs an entry per commit.
+
+# A ULID beneficiary identifier used as a test fixture in the micro-deposit digest tests. Crockford
+# base32 scores high enough on entropy for the generic-api-key rule; the value grants nothing.
+32622c181144c189727ee50ad8fb3cf95b50c0b6:apps/api/src/modules/beneficiaries/__tests__/micro-deposit.spec.ts:generic-api-key:44
+5eddeedfd7cb37d79a4df2197ff85c1af76237f7:apps/api/src/modules/beneficiaries/__tests__/micro-deposit.spec.ts:generic-api-key:44
