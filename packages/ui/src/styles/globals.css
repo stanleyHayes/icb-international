@@ -226,6 +226,12 @@
   to { opacity: 1; transform: none; }
 }
 
+/* An off-canvas panel entering from the left edge, for the console navigation drawer. */
+@keyframes icb-slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+
 /*
  * Brand splash: the mark draws itself.
  *
