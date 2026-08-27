@@ -217,11 +217,11 @@ export { CommandPalette, type CommandItem, type CommandPaletteProps } from './la
 export { Container } from './layout/container';
 export { Dialog, type DialogProps } from './layout/dialog';
 export { Drawer, type DrawerProps } from './layout/drawer';
-export { OverlayFrame, type OverlayFrameProps } from './layout/overlay-frame';
 export { DropdownMenu, type DropdownMenuItem, type DropdownMenuProps } from './layout/dropdown-menu';
 export { Grid, type GridCols, type GridProps } from './layout/grid';
 export { KEYS, firstEnabledIndex, keyToRovingIntent, resolveRovingIndex, type RovingAxis, type RovingIntent, type RovingOptions } from './layout/keyboard';
 export { FOCUSABLE_SELECTOR, Z_INDEX } from './layout/layout.constants';
+export { OverlayFrame, type OverlayFrameProps } from './layout/overlay-frame';
 export { PageHeader, type PageHeaderProps } from './layout/page-header';
 export { Popover, type PopoverProps } from './layout/popover';
 export { Reveal } from './layout/reveal';
