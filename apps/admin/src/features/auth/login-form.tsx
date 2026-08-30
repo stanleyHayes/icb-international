@@ -11,6 +11,7 @@ import { loginAction, type LoginState } from './actions';
 const INITIAL_LOGIN_STATE: LoginState = {
   error: null,
   fieldErrors: {},
+  email: '',
 };
 
 export function LoginForm() {
@@ -34,6 +35,9 @@ export function LoginForm() {
           autoComplete="email"
           placeholder="name@example.com"
           required
+          // React resets uncontrolled fields when the action resolves; re-seeding from state
+          // keeps the email after a failed sign-in (the password is deliberately cleared).
+          defaultValue={state.email}
           aria-invalid={Boolean(state.fieldErrors['email']) || undefined}
           aria-describedby={state.fieldErrors['email'] ? `${emailId}-error` : undefined}
           className="mt-1.5 h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-sm outline-none focus:border-[var(--icb-primary)]"
