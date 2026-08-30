@@ -24,7 +24,11 @@ services:
     healthCheckPath: /health/ready
 
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter "./packages/**" build && pnpm --filter @icb/api build
-    startCommand: node apps/api/dist/main.js
+    # Provisioning runs at every boot on purpose: it is an idempotent upsert keyed on the
+    # address, so it creates the console sign-ins on first deploy and re-applies the password
+    # and roles after a rotation. It refuses (and the deploy fails loudly) when
+    # CONSOLE_ACCOUNT_PASSWORD is unset — set it in the dashboard before the first deploy.
+    startCommand: node apps/api/dist/modules/iam/provision-console.cli.js && node apps/api/dist/main.js
 
     envVars:
       - key: NODE_ENV
@@ -60,6 +64,10 @@ services:
         value: root@icbinternationalcommercial.com
       - key: INITIAL_ADMIN_PASSWORD
         generateValue: true
+      # Password for the operations-console sign-ins (admin@, support@, info@). No
+      # generateValue: the value must stay known so operators can actually sign in.
+      - key: CONSOLE_ACCOUNT_PASSWORD
+        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
