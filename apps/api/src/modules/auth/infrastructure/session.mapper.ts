@@ -23,7 +23,6 @@ export function toSession(row: SessionRow, currentSessionId: string): Session {
       label: typeof stored.label === 'string' ? stored.label : parsed.label,
       browser: parsed.browser,
       os: parsed.os,
-      trusted: row.trusted,
     },
     ipAddress: row.ipAddress,
     location: row.location,

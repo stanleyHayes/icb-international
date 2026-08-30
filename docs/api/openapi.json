@@ -17,7 +17,7 @@
   "tags": [
     {
       "name": "Auth",
-      "description": "Registration, login, MFA, sessions, and step-up authentication."
+      "description": "Registration, login, and sessions."
     },
     {
       "name": "Customers",
@@ -138,7 +138,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -214,7 +214,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -294,7 +294,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -381,7 +381,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -488,7 +488,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -597,7 +597,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -696,7 +696,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -786,7 +786,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -893,7 +893,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -976,7 +976,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1055,7 +1055,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1124,7 +1124,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1183,7 +1183,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1261,7 +1261,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1340,7 +1340,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1399,7 +1399,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1516,7 +1516,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1592,7 +1592,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1672,7 +1672,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1769,7 +1769,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1876,7 +1876,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1974,7 +1974,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2073,7 +2073,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2181,7 +2181,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2287,7 +2287,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2435,7 +2435,7 @@
         },
         "responses": {
           "200": {
-            "description": "Authenticated, or an MFA challenge to complete.",
+            "description": "The authenticated session.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2445,7 +2445,7 @@
             }
           },
           "401": {
-            "description": "Invalid credentials, an expired challenge, or a reused refresh token.",
+            "description": "Invalid credentials or a reused refresh token.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2456,65 +2456,6 @@
           },
           "423": {
             "description": "Too many failed attempts.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "An unexpected server error.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/mfa/verify": {
-      "post": {
-        "operationId": "verifyMfa",
-        "summary": "Complete an MFA challenge",
-        "tags": ["Auth"],
-        "security": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MfaVerifyRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Authenticated session tokens and user.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid credentials, an expired challenge, or a reused refresh token.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2564,7 +2505,7 @@
             }
           },
           "401": {
-            "description": "Invalid credentials, an expired challenge, or a reused refresh token.",
+            "description": "Invalid credentials or a reused refresh token.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2606,7 +2547,7 @@
             "description": "Session revoked."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2665,7 +2606,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2820,7 +2761,7 @@
             "description": "Password changed; other sessions revoked."
           },
           "401": {
-            "description": "Invalid credentials, an expired challenge, or a reused refresh token.",
+            "description": "Invalid credentials or a reused refresh token.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2924,224 +2865,6 @@
         }
       }
     },
-    "/auth/totp/enrol": {
-      "post": {
-        "operationId": "enrolTotp",
-        "summary": "Start TOTP enrolment",
-        "tags": ["Auth"],
-        "responses": {
-          "200": {
-            "description": "The shared secret and provisioning URI.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TotpEnrolResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The authenticated principal may not perform this action.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "TOTP is already enrolled.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "An unexpected server error.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/totp/confirm": {
-      "post": {
-        "operationId": "confirmTotp",
-        "summary": "Confirm TOTP enrolment with a first code",
-        "tags": ["Auth"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TotpConfirmRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Recovery codes, shown exactly once.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecoveryCodes"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The authenticated principal may not perform this action.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "The token is invalid, expired, or already used.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "An unexpected server error.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/totp/disable": {
-      "post": {
-        "operationId": "disableTotp",
-        "summary": "Disable TOTP (requires step-up)",
-        "tags": ["Auth"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TotpConfirmRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "TOTP disabled."
-          },
-          "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The authenticated principal may not perform this action.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "The token is invalid, expired, or already used.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "An unexpected server error.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/auth/sessions": {
       "get": {
         "operationId": "listSessions",
@@ -3162,7 +2885,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3224,7 +2947,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3287,7 +3010,7 @@
             "description": "Session revoked."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3349,143 +3072,7 @@
             "description": "All other sessions revoked."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The authenticated principal may not perform this action.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "An unexpected server error.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/step-up": {
-      "post": {
-        "operationId": "requestStepUp",
-        "summary": "Request a step-up challenge for a sensitive action",
-        "tags": ["Auth"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StepUpRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The challenge to complete.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MfaChallengeOutput"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The authenticated principal may not perform this action.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded. Retry after `retryAfterSeconds`.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "An unexpected server error.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/step-up/verify": {
-      "post": {
-        "operationId": "verifyStepUp",
-        "summary": "Complete a step-up challenge for a single-use token",
-        "tags": ["Auth"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StepUpVerifyRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "A short-lived, single-purpose step-up token.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StepUpToken"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid credentials, an expired challenge, or a reused refresh token.",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3586,7 +3173,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3629,7 +3216,7 @@
       },
       "post": {
         "operationId": "createBeneficiary",
-        "summary": "Add a payee (requires step-up; cooling-off applies)",
+        "summary": "Add a payee (cooling-off applies)",
         "tags": ["Beneficiaries"],
         "requestBody": {
           "content": {
@@ -3652,7 +3239,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3732,7 +3319,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3819,7 +3406,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3890,7 +3477,7 @@
             "description": "Beneficiary removed."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3978,7 +3565,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4085,7 +3672,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4185,7 +3772,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4254,7 +3841,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4320,7 +3907,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4447,7 +4034,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4513,7 +4100,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4593,7 +4180,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4680,7 +4267,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4745,7 +4332,7 @@
     "/cards/{cardId}/sensitive": {
       "get": {
         "operationId": "getCardSensitiveDetails",
-        "summary": "Reveal PAN and CVV (requires a fresh step-up token)",
+        "summary": "Reveal PAN and CVV",
         "tags": ["Cards"],
         "parameters": [
           {
@@ -4770,7 +4357,7 @@
             }
           },
           "401": {
-            "description": "A valid step-up token is required.",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4869,7 +4456,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4968,7 +4555,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5033,7 +4620,7 @@
     "/cards/{cardId}/pin": {
       "post": {
         "operationId": "setCardPin",
-        "summary": "Set or change the PIN (requires step-up)",
+        "summary": "Set or change the PIN",
         "tags": ["Cards"],
         "parameters": [
           {
@@ -5060,7 +4647,7 @@
             "description": "PIN set."
           },
           "401": {
-            "description": "A valid step-up token is required.",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5159,7 +4746,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5258,7 +4845,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5366,7 +4953,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5505,7 +5092,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5574,7 +5161,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5644,7 +5231,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5723,7 +5310,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6075,7 +5662,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6217,7 +5804,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6381,7 +5968,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6462,7 +6049,7 @@
             "description": "The article was deleted."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6601,7 +6188,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6792,7 +6379,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7005,7 +6592,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7086,7 +6673,7 @@
             "description": "The location was deleted."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7196,7 +6783,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7322,7 +6909,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7443,7 +7030,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7516,7 +7103,7 @@
             "description": "The override was deleted."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7621,7 +7208,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7741,7 +7328,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7814,7 +7401,7 @@
             "description": "The entry was deleted."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7883,7 +7470,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7949,7 +7536,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8027,7 +7614,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8096,7 +7683,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8226,7 +7813,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8296,7 +7883,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8385,7 +7972,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8478,7 +8065,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8565,7 +8152,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8699,7 +8286,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8775,7 +8362,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8875,7 +8462,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8972,7 +8559,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9106,7 +8693,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9176,7 +8763,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9265,7 +8852,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9364,7 +8951,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9442,7 +9029,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9522,7 +9109,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9601,7 +9188,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9671,7 +9258,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9759,7 +9346,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9847,7 +9434,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9919,7 +9506,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9985,7 +9572,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10050,7 +9637,7 @@
     "/admin/staff/{staffId}": {
       "get": {
         "operationId": "getStaffUser",
-        "summary": "One staff user with roles and MFA state (admin)",
+        "summary": "One staff user with roles (admin)",
         "tags": ["Governance"],
         "parameters": [
           {
@@ -10075,7 +9662,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10211,7 +9798,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10270,7 +9857,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10358,7 +9945,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10428,7 +10015,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10517,7 +10104,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10596,7 +10183,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10655,7 +10242,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10733,7 +10320,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10821,7 +10408,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10909,7 +10496,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11059,7 +10646,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11129,7 +10716,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11218,7 +10805,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11317,7 +10904,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11385,7 +10972,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11473,7 +11060,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11550,7 +11137,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11620,7 +11207,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11717,7 +11304,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11815,7 +11402,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11904,7 +11491,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11974,7 +11561,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12054,7 +11641,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12161,7 +11748,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12287,7 +11874,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12357,7 +11944,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12419,7 +12006,7 @@
             "description": "All notifications marked as read."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12513,7 +12100,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12614,7 +12201,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12718,7 +12305,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12787,7 +12374,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12853,7 +12440,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12933,7 +12520,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13004,7 +12591,7 @@
             "description": "Bill unlinked."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13093,7 +12680,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13200,7 +12787,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13331,7 +12918,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13401,7 +12988,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13489,7 +13076,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13716,7 +13303,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13794,7 +13381,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13863,7 +13450,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13942,7 +13529,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14083,7 +13670,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14153,7 +13740,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14233,7 +13820,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14332,7 +13919,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14475,7 +14062,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14545,7 +14132,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14632,7 +14219,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14739,7 +14326,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14838,7 +14425,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14914,7 +14501,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14994,7 +14581,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15081,7 +14668,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15162,7 +14749,7 @@
             "description": "Goal removed."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15259,7 +14846,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15357,7 +14944,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15426,7 +15013,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15502,7 +15089,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15582,7 +15169,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15669,7 +15256,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15759,7 +15346,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15857,7 +15444,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15936,7 +15523,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -15995,7 +15582,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16061,7 +15648,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16139,7 +15726,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16208,7 +15795,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16277,7 +15864,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16355,7 +15942,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16444,7 +16031,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16512,7 +16099,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16592,7 +16179,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16661,7 +16248,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16720,7 +16307,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16789,7 +16376,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16869,7 +16456,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16941,7 +16528,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17007,7 +16594,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17087,7 +16674,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17170,7 +16757,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17257,7 +16844,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17356,7 +16943,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17454,7 +17041,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17542,7 +17129,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17612,7 +17199,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17709,7 +17296,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17780,7 +17367,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17859,7 +17446,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17949,7 +17536,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18346,7 +17933,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18416,7 +18003,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18503,7 +18090,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18601,7 +18188,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18694,7 +18281,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18772,7 +18359,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18855,7 +18442,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18924,7 +18511,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18992,7 +18579,7 @@
         },
         "responses": {
           "201": {
-            "description": "The quote, including fees, FX, and step-up flags.",
+            "description": "The quote, including fees, FX, and approval flags.",
             "content": {
               "application/json": {
                 "schema": {
@@ -19002,7 +18589,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19120,7 +18707,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19302,7 +18889,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19372,7 +18959,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19469,7 +19056,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19567,7 +19154,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19669,7 +19256,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19735,7 +19322,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19808,7 +19395,7 @@
             "description": "Template deleted."
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19880,7 +19467,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19950,7 +19537,7 @@
             }
           },
           "401": {
-            "description": "Missing, expired, or insufficient credentials (includes step-up).",
+            "description": "Missing or expired credentials.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -20682,9 +20269,6 @@
           "emailVerified": {
             "type": "boolean"
           },
-          "mfaEnabled": {
-            "type": "boolean"
-          },
           "roles": {
             "type": "array",
             "items": {
@@ -20720,7 +20304,6 @@
           "firstName",
           "lastName",
           "emailVerified",
-          "mfaEnabled",
           "roles",
           "lastLoginAt"
         ]
@@ -22483,9 +22066,6 @@
           "INVALID_CREDENTIALS",
           "ACCOUNT_LOCKED",
           "EMAIL_NOT_VERIFIED",
-          "MFA_REQUIRED",
-          "MFA_INVALID",
-          "STEP_UP_REQUIRED",
           "SESSION_EXPIRED",
           "REFRESH_TOKEN_REUSED",
           "PASSWORD_POLICY_VIOLATION",
@@ -23939,43 +23519,6 @@
           "maxLength": 500
         }
       },
-      "MfaChallenge": {
-        "type": "object",
-        "properties": {
-          "challengeId": {
-            "$ref": "#/components/schemas/Ulid"
-          },
-          "method": {
-            "type": "string",
-            "enum": ["totp", "sms", "recovery_code"]
-          },
-          "hint": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "$ref": "#/components/schemas/IsoDateTime"
-          }
-        },
-        "required": ["challengeId", "method", "expiresAt"]
-      },
-      "MfaVerifyRequest": {
-        "type": "object",
-        "properties": {
-          "challengeId": {
-            "$ref": "#/components/schemas/Ulid"
-          },
-          "code": {
-            "type": "string",
-            "minLength": 6,
-            "maxLength": 16
-          },
-          "trustDevice": {
-            "default": false,
-            "type": "boolean"
-          }
-        },
-        "required": ["challengeId", "code"]
-      },
       "Money": {
         "type": "object",
         "properties": {
@@ -25163,39 +24706,6 @@
           }
         }
       },
-      "StepUpRequest": {
-        "type": "object",
-        "properties": {
-          "purpose": {
-            "type": "string",
-            "enum": [
-              "reveal_card",
-              "card_pan_reveal",
-              "add_beneficiary",
-              "high_value_transfer",
-              "change_security_settings",
-              "close_account",
-              "approval-decide",
-              "staff-manage"
-            ]
-          }
-        },
-        "required": ["purpose"]
-      },
-      "StepUpVerifyRequest": {
-        "type": "object",
-        "properties": {
-          "challengeId": {
-            "$ref": "#/components/schemas/Ulid"
-          },
-          "code": {
-            "type": "string",
-            "minLength": 6,
-            "maxLength": 16
-          }
-        },
-        "required": ["challengeId", "code"]
-      },
       "SubmitKycRequest": {
         "type": "object",
         "properties": {
@@ -25310,17 +24820,6 @@
           "slaDueAt",
           "createdAt"
         ]
-      },
-      "TotpConfirmRequest": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "minLength": 6,
-            "maxLength": 6
-          }
-        },
-        "required": ["code"]
       },
       "TransactionCategory": {
         "type": "string",
@@ -28110,40 +27609,21 @@
         "additionalProperties": false
       },
       "LoginResponse": {
-        "oneOf": [
-          {
-            "type": "object",
-            "properties": {
-              "outcome": {
-                "type": "string",
-                "const": "authenticated"
-              },
-              "tokens": {
-                "$ref": "#/components/schemas/AuthTokensOutput"
-              },
-              "user": {
-                "$ref": "#/components/schemas/AuthenticatedUserOutput"
-              }
-            },
-            "required": ["outcome", "tokens", "user"],
-            "additionalProperties": false
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "const": "authenticated"
           },
-          {
-            "type": "object",
-            "properties": {
-              "outcome": {
-                "type": "string",
-                "const": "mfa_required"
-              },
-              "challenge": {
-                "$ref": "#/components/schemas/MfaChallengeOutput"
-              }
-            },
-            "required": ["outcome", "challenge"],
-            "additionalProperties": false
+          "tokens": {
+            "$ref": "#/components/schemas/AuthTokensOutput"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthenticatedUserOutput"
           }
-        ],
-        "type": "object"
+        },
+        "required": ["outcome", "tokens", "user"],
+        "additionalProperties": false
       },
       "MerchantsAnalytics": {
         "type": "object",
@@ -28520,24 +28000,6 @@
         "required": ["effectiveFrom", "savings", "deposits", "loans"],
         "additionalProperties": false
       },
-      "RecoveryCodes": {
-        "type": "object",
-        "properties": {
-          "codes": {
-            "minItems": 10,
-            "maxItems": 10,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "generatedAt": {
-            "$ref": "#/components/schemas/IsoDateTime"
-          }
-        },
-        "required": ["codes", "generatedAt"],
-        "additionalProperties": false
-      },
       "RecurringAnalytics": {
         "type": "object",
         "properties": {
@@ -28663,12 +28125,9 @@
                     "type": "null"
                   }
                 ]
-              },
-              "trusted": {
-                "type": "boolean"
               }
             },
-            "required": ["label", "browser", "os", "trusted"],
+            "required": ["label", "browser", "os"],
             "additionalProperties": false
           },
           "ipAddress": {
@@ -28974,9 +28433,6 @@
           "active": {
             "type": "boolean"
           },
-          "mfaEnabled": {
-            "type": "boolean"
-          },
           "lastLoginAt": {
             "anyOf": [
               {
@@ -28998,7 +28454,6 @@
           "lastName",
           "roles",
           "active",
-          "mfaEnabled",
           "lastLoginAt",
           "createdAt"
         ],
@@ -29157,19 +28612,6 @@
           "asset",
           "generatedAt"
         ],
-        "additionalProperties": false
-      },
-      "StepUpToken": {
-        "type": "object",
-        "properties": {
-          "stepUpToken": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "$ref": "#/components/schemas/IsoDateTime"
-          }
-        },
-        "required": ["stepUpToken", "expiresAt"],
         "additionalProperties": false
       },
       "SystemHealth": {
@@ -29353,22 +28795,6 @@
           "status",
           "brokenAt"
         ],
-        "additionalProperties": false
-      },
-      "TotpEnrolResponse": {
-        "type": "object",
-        "properties": {
-          "secret": {
-            "type": "string"
-          },
-          "otpauthUri": {
-            "type": "string"
-          },
-          "qrCodeDataUri": {
-            "type": "string"
-          }
-        },
-        "required": ["secret", "otpauthUri", "qrCodeDataUri"],
         "additionalProperties": false
       },
       "TransactionDetail": {
@@ -29852,9 +29278,6 @@
               }
             ]
           },
-          "requiresStepUp": {
-            "type": "boolean"
-          },
           "requiresApproval": {
             "type": "boolean"
           },
@@ -29873,7 +29296,6 @@
           "fx",
           "estimatedArrival",
           "cutOffAt",
-          "requiresStepUp",
           "requiresApproval",
           "expiresAt"
         ],
@@ -30975,9 +30397,6 @@
           "emailVerified": {
             "type": "boolean"
           },
-          "mfaEnabled": {
-            "type": "boolean"
-          },
           "roles": {
             "type": "array",
             "items": {
@@ -31013,7 +30432,6 @@
           "firstName",
           "lastName",
           "emailVerified",
-          "mfaEnabled",
           "roles",
           "lastLoginAt"
         ],
@@ -33292,26 +32710,6 @@
           }
         },
         "required": ["name", "category", "mcc", "city", "country", "logoUrl"],
-        "additionalProperties": false
-      },
-      "MfaChallengeOutput": {
-        "type": "object",
-        "properties": {
-          "challengeId": {
-            "$ref": "#/components/schemas/Ulid"
-          },
-          "method": {
-            "type": "string",
-            "enum": ["totp", "sms", "recovery_code"]
-          },
-          "hint": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "$ref": "#/components/schemas/IsoDateTime"
-          }
-        },
-        "required": ["challengeId", "method", "expiresAt"],
         "additionalProperties": false
       },
       "MoneyOutput": {

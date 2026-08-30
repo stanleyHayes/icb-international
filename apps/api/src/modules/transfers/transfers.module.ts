@@ -22,7 +22,6 @@ import { TransferPreparationService } from './application/transfer-preparation.s
 import { TRANSFER_PRICING } from './application/transfer-pricing.js';
 import { TransferQuoteRedemptionService } from './application/transfer-quote-redemption.service.js';
 import { TransferQuotesService } from './application/transfer-quotes.service.js';
-import { TransferStepUpService } from './application/transfer-step-up.service.js';
 import { TransferTemplatesService } from './application/transfer-templates.service.js';
 import { AchTransferUseCase } from './application/use-cases/ach-transfer.use-case.js';
 import { InternalTransferUseCase } from './application/use-cases/internal-transfer.use-case.js';
@@ -78,7 +77,6 @@ import { TransfersService } from './transfers.service.js';
     TransferPreparationService,
     TransferQuotesService,
     TransferQuoteRedemptionService,
-    TransferStepUpService,
     BulkTransfersService,
     TransferTemplatesService,
     StandingOrdersService,

@@ -8,7 +8,6 @@ export interface Availability {
   api: boolean;
   mongo: boolean;
   apps: Record<string, boolean>;
-  adminTotp: boolean;
   notes: string[];
 }
 
@@ -16,7 +15,7 @@ export function readAvailability(): Availability {
   try {
     return JSON.parse(fs.readFileSync(AVAILABILITY_FILE, 'utf8')) as Availability;
   } catch {
-    return { api: false, mongo: false, apps: {}, adminTotp: false, notes: ['no setup output'] };
+    return { api: false, mongo: false, apps: {}, notes: ['no setup output'] };
   }
 }
 

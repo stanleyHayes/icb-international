@@ -79,7 +79,6 @@ services:
       COOKIE_SECRET: ${COOKIE_SECRET:?export COOKIE_SECRET first}
       JWT_ACCESS_TTL_SECONDS: '900'
       JWT_REFRESH_TTL_SECONDS: '604800'
-      STEP_UP_TTL_SECONDS: '300'
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100,http://localhost:3101,http://localhost:3102}
       # Recording fakes bind when these are empty; set real keys to deliver mail/media.
       RESEND_API_KEY: ${RESEND_API_KEY:-}

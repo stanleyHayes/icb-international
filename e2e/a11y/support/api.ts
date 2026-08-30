@@ -8,21 +8,9 @@ export interface LoginTokens {
   readonly tokenType: string;
 }
 
-export interface MfaChallenge {
-  readonly challengeId: string;
-  readonly method: string;
-  readonly expiresAt: string;
-  readonly hint?: string;
-}
-
-export type LoginResult =
-  | { readonly outcome: 'authenticated'; readonly accessToken: string }
-  | { readonly outcome: 'mfa_required'; readonly challenge: MfaChallenge };
-
 interface RawLoginBody {
   readonly outcome: string;
   readonly tokens?: LoginTokens;
-  readonly challenge?: MfaChallenge;
 }
 
 export class ApiRequestError extends Error {
@@ -55,40 +43,15 @@ async function request<T>(
   return (text ? JSON.parse(text) : null) as T;
 }
 
-export async function apiLogin(email: string, password: string): Promise<LoginResult> {
+export async function apiLogin(
+  email: string,
+  password: string,
+): Promise<{ accessToken: string }> {
   const body = await request<RawLoginBody>('/auth/login', { body: { email, password } });
   if (body.outcome === 'authenticated' && body.tokens) {
-    return { outcome: 'authenticated', accessToken: body.tokens.accessToken };
-  }
-  if (body.outcome === 'mfa_required' && body.challenge) {
-    return { outcome: 'mfa_required', challenge: body.challenge };
+    return { accessToken: body.tokens.accessToken };
   }
   throw new Error(`unexpected login outcome: ${JSON.stringify(body).slice(0, 200)}`);
-}
-
-export async function apiMfaVerify(challenge: MfaChallenge, code: string): Promise<string> {
-  const body = await request<{ tokens: LoginTokens }>('/auth/mfa/verify', {
-    body: {
-      challengeId: challenge.challengeId,
-      method: challenge.method,
-      expiresAt: challenge.expiresAt,
-      code,
-    },
-  });
-  return body.tokens.accessToken;
-}
-
-export async function apiTotpEnrol(token: string): Promise<string> {
-  const body = await request<{ secret: string }>('/auth/totp/enrol', {
-    method: 'POST',
-    token,
-    body: {},
-  });
-  return body.secret;
-}
-
-export async function apiTotpConfirm(token: string, code: string): Promise<void> {
-  await request('/auth/totp/confirm', { method: 'POST', token, body: { code } });
 }
 
 export async function apiGet<T>(path: string, token: string): Promise<T> {

@@ -43,7 +43,6 @@ export default function BranchesPage() {
           </p>
           <p>
             You will never be asked for your password, PIN or full card number in a branch either.
-            Staff can verify you from your account and a second factor you control.
           </p>
           <p>
             Cash above a branch&rsquo;s same-day counter limit can be ordered for next-day

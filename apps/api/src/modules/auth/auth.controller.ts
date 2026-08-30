@@ -1,12 +1,10 @@
 import {
   loginRequestSchema,
-  mfaVerifyRequestSchema,
   registerRequestSchema,
   type AuthenticatedUser,
   type AuthTokens,
   type LoginRequest,
   type LoginResponse,
-  type MfaVerifyRequest,
   type RegisterRequest,
 } from '@icb/contracts';
 import { Body, Controller, Get, HttpCode, Inject, Post, Req, Res } from '@nestjs/common';
@@ -27,19 +25,14 @@ import { RegistrationService } from './application/registration.service.js';
 import type { AccessTokenClaims } from './application/token.service.js';
 import { UserProfileReader } from './application/user-profile-reader.js';
 
-interface MfaVerifyResponse {
-  tokens: AuthTokens;
-  user: AuthenticatedUser;
-}
-
 /**
  * Pre-auth credential endpoints get the tight auth ceiling: five attempts per minute per IP.
- * Credential stuffing and MFA guessing need volume; a human needs two or three tries.
+ * Credential stuffing needs volume; a human needs two or three tries.
  */
 const AUTH_THROTTLE = { default: { limit: AUTH_THROTTLE_LIMIT, ttl: THROTTLE_WINDOW_MS } };
 
 /**
- * Pre-auth flows: registration, login, MFA completion, and the refresh/logout cycle.
+ * Pre-auth flows: registration, login, and the refresh/logout cycle.
  *
  * The refresh token goes into an httpOnly, SameSite=Strict cookie and never into the response
  * body — so no script on the page can read it, and it is not stored anywhere JavaScript
@@ -74,25 +67,9 @@ export class AuthController {
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<LoginResponse> {
-    const outcome = await this.logins.login(body, readDevice(request));
-    if (outcome.outcome === 'mfa_required') {
-      return { outcome: 'mfa_required', challenge: outcome.challenge };
-    }
-    this.setRefreshCookie(reply, outcome.session);
-    return { outcome: 'authenticated', ...sessionBody(outcome.session) };
-  }
-
-  @Public()
-  @Post('mfa/verify')
-  @HttpCode(200)
-  @Throttle(AUTH_THROTTLE)
-  async verifyMfa(
-    @Body(zodBody(mfaVerifyRequestSchema)) body: MfaVerifyRequest,
-    @Res({ passthrough: true }) reply: FastifyReply,
-  ): Promise<MfaVerifyResponse> {
-    const issued = await this.logins.verifyMfa(body);
-    this.setRefreshCookie(reply, issued);
-    return sessionBody(issued);
+    const session = await this.logins.login(body, readDevice(request));
+    this.setRefreshCookie(reply, session);
+    return { outcome: 'authenticated', ...sessionBody(session) };
   }
 
   @Public()
@@ -144,7 +121,7 @@ export class AuthController {
   }
 }
 
-function sessionBody(issued: IssuedSession): MfaVerifyResponse {
+function sessionBody(issued: IssuedSession): { tokens: AuthTokens; user: AuthenticatedUser } {
   return {
     tokens: {
       accessToken: issued.accessToken,

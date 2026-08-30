@@ -36,13 +36,6 @@ export class StaffUserDoc {
   @Prop({ type: Boolean, required: true, default: true, index: true })
   active!: boolean;
 
-  /** Policy flag: the account must enrol a second factor before it can operate. */
-  @Prop({ type: Boolean, required: true, default: true })
-  mfaRequired!: boolean;
-
-  @Prop({ type: Boolean, required: true, default: false })
-  mfaEnabled!: boolean;
-
   @Prop({ type: Date, default: null })
   lastLoginAt!: Date | null;
 

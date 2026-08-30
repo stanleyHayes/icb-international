@@ -17,9 +17,8 @@ import { SessionManagerService } from './session-manager.service.js';
 /**
  * Authenticated password change.
  *
- * Knowing the current password is the authorisation — this is the one place a second factor is
- * not demanded, because a stolen session alone must not be enough to take over the account.
- * Every *other* session is revoked (the caller stays signed in) and trusted devices are dropped.
+ * Knowing the current password is the authorisation — a stolen session alone must not be
+ * enough to take over the account. Every *other* session is revoked (the caller stays signed in).
  */
 @Injectable()
 export class ChangePasswordService {

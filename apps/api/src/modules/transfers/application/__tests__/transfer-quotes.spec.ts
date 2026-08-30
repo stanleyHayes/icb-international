@@ -73,7 +73,6 @@ function setup() {
   );
   const redemption = new TransferQuoteRedemptionService(
     model as never,
-    { assert: vi.fn().mockResolvedValue(undefined) } as never,
     clock,
     config,
   );

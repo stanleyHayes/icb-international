@@ -8,7 +8,7 @@ export interface RequestOptions {
   signal?: AbortSignal;
   /** Overrides the auto-generated key on idempotent endpoints. */
   idempotencyKey?: string;
-  /** Extra headers, applied last (e.g. a step-up token on a sensitive read). */
+  /** Extra headers, applied last. */
   headers?: Record<string, string>;
 }
 

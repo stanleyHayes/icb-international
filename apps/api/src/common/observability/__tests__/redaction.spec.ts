@@ -15,7 +15,6 @@ describe('log redaction paths', () => {
       'tokenHash',
       'dateOfBirth',
       'nationalId',
-      'mfaSecretEncrypted',
     ]) {
       expect(REDACT_PATHS, `missing ${field}`).toContain(field);
     }

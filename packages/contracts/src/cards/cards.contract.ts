@@ -71,7 +71,7 @@ export const cardDetailSchema = cardSummarySchema.extend({
 });
 
 /**
- * The full PAN. Returned only behind a fresh step-up token, never logged, never cached, and
+ * The full PAN. Returned only to the authenticated cardholder, never logged, never cached, and
  * accompanied by the deadline after which the UI must stop displaying it.
  */
 export const cardSensitiveDetailsSchema = z.object({

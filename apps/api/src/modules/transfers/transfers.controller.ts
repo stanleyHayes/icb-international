@@ -10,20 +10,17 @@ import {
   type TransferQuote,
   type TransferSummary,
 } from '@icb/contracts';
-import { Body, Controller, Get, Headers, Param, Post, Query } from '@nestjs/common';import { Throttle } from '@nestjs/throttler';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';import { Throttle } from '@nestjs/throttler';
 
 import {
   CurrentCustomer,
-  CurrentUser,
 } from '../../common/decorators/current-user.decorator.js';
 import { Idempotent } from '../../common/decorators/idempotent.decorator.js';
-import { STEP_UP_TOKEN_HEADER } from '../../common/decorators/require-step-up.decorator.js';
 import {
   MONEY_MOVEMENT_THROTTLE_LIMIT,
   THROTTLE_WINDOW_MS,
 } from '../../common/guards/throttle.constants.js';
 import { ZodValidationPipe, zodBody } from '../../common/pipes/zod-validation.pipe.js';
-import type { AccessTokenClaims } from '../auth/application/token.service.js';
 import { BulkTransfersService } from './application/bulk-transfers.service.js';
 import { TransferQuotesService } from './application/transfer-quotes.service.js';
 import { TransfersService } from './transfers.service.js';
@@ -78,12 +75,10 @@ export class TransfersController {
   @Throttle(MONEY_MOVEMENT_THROTTLE)
   async create(
     @CurrentCustomer() customerId: string,
-    @CurrentUser() user: AccessTokenClaims,
-    @Headers(STEP_UP_TOKEN_HEADER) stepUpToken: string | undefined,
     @Body(zodBody(createTransferRequestSchema))
     body: ReturnType<typeof createTransferRequestSchema.parse>,
   ): Promise<TransferDetail> {
-    return this.transfers.create(customerId, body, { userId: user.sub, token: stepUpToken });
+    return this.transfers.create(customerId, body);
   }
 
   @Get()

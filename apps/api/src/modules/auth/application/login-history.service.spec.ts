@@ -45,7 +45,7 @@ describe('LoginHistoryService', () => {
 
     expect(model.find).toHaveBeenCalledWith({
       actorId: 'user-1',
-      action: { $in: [AUDIT_ACTIONS.Login, AUDIT_ACTIONS.LoginFailed, AUDIT_ACTIONS.RecoveryCodeUsed] },
+      action: { $in: [AUDIT_ACTIONS.Login, AUDIT_ACTIONS.LoginFailed] },
     });
     expect(model.sort).toHaveBeenCalledWith({ occurredAt: -1 });
     expect(model.limit).toHaveBeenCalledWith(LOGIN_HISTORY_LIMIT);

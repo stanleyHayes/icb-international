@@ -1,13 +1,12 @@
 import type { Model } from 'mongoose';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DomainError, StepUpRequiredError } from '../../../common/errors/index.js';
+import { DomainError } from '../../../common/errors/index.js';
 import { type AppConfiguration } from '../../../config/configuration.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { type PasswordService } from '../../auth/application/password.service.js';
-import { type TokenService } from '../../auth/application/token.service.js';
 import { type CardReader } from '../application/card-reader.js';
-import { CardSecurityService, PAN_REVEAL_PURPOSE } from '../application/card-security.service.js';
+import { CardSecurityService } from '../application/card-security.service.js';
 import { encryptField } from '../domain/pan-cipher.js';
 import type { CardDoc } from '../infrastructure/card.schemas.js';
 import { CARD_ID, CUSTOMER_ID, NOW, cardDoc } from './fixtures.js';
@@ -26,7 +25,6 @@ function setup(card: CardDoc) {
     detailOwned: vi.fn().mockResolvedValue({ id: card._id }),
   };
   const passwords = { hash: vi.fn().mockResolvedValue('argon2:new-hash') };
-  const tokens = { verifyStepUpToken: vi.fn() };
   const config = { crypto: { fieldEncryptionKey: KEY } } as unknown as AppConfiguration;
   const clock = new ClockService();
   clock.freeze(NOW);
@@ -35,11 +33,10 @@ function setup(card: CardDoc) {
     model as unknown as Model<CardDoc>,
     reader as unknown as CardReader,
     passwords as unknown as PasswordService,
-    tokens as unknown as TokenService,
     config,
     clock,
   );
-  return { service, model, reader, passwords, tokens };
+  return { service, model, reader, passwords };
 }
 
 function sealedCard(): CardDoc {
@@ -102,17 +99,12 @@ describe('CardSecurityService.clearPin', () => {
 });
 
 describe('CardSecurityService.reveal', () => {
-  function allowStepUp(deps: ReturnType<typeof setup>, sub = USER_ID): void {
-    deps.tokens.verifyStepUpToken.mockResolvedValue({ sub, purpose: PAN_REVEAL_PURPOSE });
-  }
-
-  it('opens the sealed PAN and CVV behind a fresh step-up token', async () => {
+  it('opens the sealed PAN and CVV for the card owner', async () => {
     const deps = setup(sealedCard());
-    allowStepUp(deps);
 
-    const result = await deps.service.reveal(CARD_ID, CUSTOMER_ID, USER_ID, 'token-1');
+    const result = await deps.service.reveal(CARD_ID, CUSTOMER_ID, USER_ID);
 
-    expect(deps.tokens.verifyStepUpToken).toHaveBeenCalledWith('token-1');
+    expect(deps.reader.loadOwned).toHaveBeenCalledWith(CARD_ID, CUSTOMER_ID);
     expect(result).toEqual({
       pan: PAN,
       cvv: CVV,
@@ -121,43 +113,5 @@ describe('CardSecurityService.reveal', () => {
       cardholderName: 'AMA MENSAH',
       hideAfter: new Date(NOW.getTime() + 60_000).toISOString(),
     });
-  });
-
-  it('demands step-up when the header is missing, without touching the card', async () => {
-    const deps = setup(sealedCard());
-
-    await expect(
-      deps.service.reveal(CARD_ID, CUSTOMER_ID, USER_ID, undefined),
-    ).rejects.toThrow(StepUpRequiredError);
-    expect(deps.tokens.verifyStepUpToken).not.toHaveBeenCalled();
-    expect(deps.reader.loadOwned).not.toHaveBeenCalled();
-  });
-
-  it('rejects a step-up token minted for someone else', async () => {
-    const deps = setup(sealedCard());
-    allowStepUp(deps, 'user-2');
-
-    await expect(
-      deps.service.reveal(CARD_ID, CUSTOMER_ID, USER_ID, 'token-1'),
-    ).rejects.toThrow(StepUpRequiredError);
-    expect(deps.reader.loadOwned).not.toHaveBeenCalled();
-  });
-
-  it('rejects a step-up token minted for another purpose', async () => {
-    const deps = setup(sealedCard());
-    deps.tokens.verifyStepUpToken.mockResolvedValue({ sub: USER_ID, purpose: 'transfer' });
-
-    await expect(
-      deps.service.reveal(CARD_ID, CUSTOMER_ID, USER_ID, 'token-1'),
-    ).rejects.toThrow(StepUpRequiredError);
-  });
-
-  it('maps an expired or malformed token to the same step-up demand', async () => {
-    const deps = setup(sealedCard());
-    deps.tokens.verifyStepUpToken.mockRejectedValue(new Error('jwt expired'));
-
-    await expect(
-      deps.service.reveal(CARD_ID, CUSTOMER_ID, USER_ID, 'token-1'),
-    ).rejects.toThrow(StepUpRequiredError);
   });
 });

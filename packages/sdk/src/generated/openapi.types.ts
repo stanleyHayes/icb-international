@@ -415,23 +415,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/mfa/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Complete an MFA challenge */
-        post: operations["verifyMfa"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/refresh": {
         parameters: {
             query?: never;
@@ -551,57 +534,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/totp/enrol": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Start TOTP enrolment */
-        post: operations["enrolTotp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/totp/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Confirm TOTP enrolment with a first code */
-        post: operations["confirmTotp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/totp/disable": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Disable TOTP (requires step-up) */
-        post: operations["disableTotp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/sessions": {
         parameters: {
             query?: never;
@@ -670,40 +602,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/step-up": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request a step-up challenge for a sensitive action */
-        post: operations["requestStepUp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/step-up/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Complete a step-up challenge for a single-use token */
-        post: operations["verifyStepUp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/beneficiaries": {
         parameters: {
             query?: never;
@@ -714,7 +612,7 @@ export interface paths {
         /** Saved payees */
         get: operations["listBeneficiaries"];
         put?: never;
-        /** Add a payee (requires step-up; cooling-off applies) */
+        /** Add a payee (cooling-off applies) */
         post: operations["createBeneficiary"];
         delete?: never;
         options?: never;
@@ -853,7 +751,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Reveal PAN and CVV (requires a fresh step-up token) */
+        /** Reveal PAN and CVV */
         get: operations["getCardSensitiveDetails"];
         put?: never;
         post?: never;
@@ -906,7 +804,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Set or change the PIN (requires step-up) */
+        /** Set or change the PIN */
         post: operations["setCardPin"];
         delete?: never;
         options?: never;
@@ -1628,7 +1526,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** One staff user with roles and MFA state (admin) */
+        /** One staff user with roles (admin) */
         get: operations["getStaffUser"];
         put?: never;
         post?: never;
@@ -3492,7 +3390,6 @@ export interface components {
             firstName: string;
             lastName: string;
             emailVerified: boolean;
-            mfaEnabled: boolean;
             roles: ("support" | "teller" | "operations" | "underwriter" | "fraud_analyst" | "aml_officer" | "compliance" | "admin" | "super_admin")[];
             lastLoginAt: components["schemas"]["IsoDateTime"] | null;
         };
@@ -3910,7 +3807,7 @@ export interface components {
         /** Format: email */
         Email: string;
         /** @enum {string} */
-        ErrorCode: "VALIDATION_FAILED" | "NOT_FOUND" | "CONFLICT" | "UNAUTHENTICATED" | "FORBIDDEN" | "RATE_LIMITED" | "IDEMPOTENCY_KEY_REUSED" | "INTERNAL_ERROR" | "SERVICE_UNAVAILABLE" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "EMAIL_NOT_VERIFIED" | "MFA_REQUIRED" | "MFA_INVALID" | "STEP_UP_REQUIRED" | "SESSION_EXPIRED" | "REFRESH_TOKEN_REUSED" | "PASSWORD_POLICY_VIOLATION" | "CUSTOMER_SUSPENDED" | "KYC_REQUIRED" | "KYC_TIER_INSUFFICIENT" | "KYC_DOCUMENT_REJECTED" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_FROZEN" | "ACCOUNT_CLOSED" | "ACCOUNT_NOT_EMPTY" | "ACCOUNT_CURRENCY_MISMATCH" | "INSUFFICIENT_FUNDS" | "LIMIT_EXCEEDED" | "AMOUNT_BELOW_MINIMUM" | "TRANSFER_NOT_CANCELLABLE" | "BENEFICIARY_UNVERIFIED" | "BENEFICIARY_COOLING_OFF" | "RAIL_UNAVAILABLE" | "RAIL_REJECTED" | "CUT_OFF_PASSED" | "DUPLICATE_TRANSFER" | "QUOTE_EXPIRED" | "QUOTE_ALREADY_USED" | "LEDGER_UNBALANCED" | "LEDGER_ENTRY_IMMUTABLE" | "TRANSACTION_ALREADY_REVERSED" | "HOLD_ALREADY_RELEASED" | "CARD_NOT_FOUND" | "CARD_BLOCKED" | "CARD_EXPIRED" | "CARD_CONTROL_DECLINED" | "PIN_POLICY_VIOLATION" | "LOAN_NOT_ELIGIBLE" | "LOAN_APPLICATION_CLOSED" | "LOAN_ALREADY_SETTLED" | "REPAYMENT_EXCEEDS_BALANCE" | "RISK_BLOCKED" | "RISK_REVIEW_REQUIRED" | "SANCTIONS_HIT" | "APPROVAL_REQUIRED" | "SELF_APPROVAL_FORBIDDEN" | "APPROVAL_EXPIRED" | "PERMISSION_DENIED";
+        ErrorCode: "VALIDATION_FAILED" | "NOT_FOUND" | "CONFLICT" | "UNAUTHENTICATED" | "FORBIDDEN" | "RATE_LIMITED" | "IDEMPOTENCY_KEY_REUSED" | "INTERNAL_ERROR" | "SERVICE_UNAVAILABLE" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "EMAIL_NOT_VERIFIED" | "SESSION_EXPIRED" | "REFRESH_TOKEN_REUSED" | "PASSWORD_POLICY_VIOLATION" | "CUSTOMER_SUSPENDED" | "KYC_REQUIRED" | "KYC_TIER_INSUFFICIENT" | "KYC_DOCUMENT_REJECTED" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_FROZEN" | "ACCOUNT_CLOSED" | "ACCOUNT_NOT_EMPTY" | "ACCOUNT_CURRENCY_MISMATCH" | "INSUFFICIENT_FUNDS" | "LIMIT_EXCEEDED" | "AMOUNT_BELOW_MINIMUM" | "TRANSFER_NOT_CANCELLABLE" | "BENEFICIARY_UNVERIFIED" | "BENEFICIARY_COOLING_OFF" | "RAIL_UNAVAILABLE" | "RAIL_REJECTED" | "CUT_OFF_PASSED" | "DUPLICATE_TRANSFER" | "QUOTE_EXPIRED" | "QUOTE_ALREADY_USED" | "LEDGER_UNBALANCED" | "LEDGER_ENTRY_IMMUTABLE" | "TRANSACTION_ALREADY_REVERSED" | "HOLD_ALREADY_RELEASED" | "CARD_NOT_FOUND" | "CARD_BLOCKED" | "CARD_EXPIRED" | "CARD_CONTROL_DECLINED" | "PIN_POLICY_VIOLATION" | "LOAN_NOT_ELIGIBLE" | "LOAN_APPLICATION_CLOSED" | "LOAN_ALREADY_SETTLED" | "REPAYMENT_EXCEEDS_BALANCE" | "RISK_BLOCKED" | "RISK_REVIEW_REQUIRED" | "SANCTIONS_HIT" | "APPROVAL_REQUIRED" | "SELF_APPROVAL_FORBIDDEN" | "APPROVAL_EXPIRED" | "PERMISSION_DENIED";
         ExpireHoldRequest: {
             reason: string;
         };
@@ -4260,19 +4157,6 @@ export interface components {
         Metadata: {
             [key: string]: string;
         };
-        MfaChallenge: {
-            challengeId: components["schemas"]["Ulid"];
-            /** @enum {string} */
-            method: "totp" | "sms" | "recovery_code";
-            hint?: string;
-            expiresAt: components["schemas"]["IsoDateTime"];
-        };
-        MfaVerifyRequest: {
-            challengeId: components["schemas"]["Ulid"];
-            code: string;
-            /** @default false */
-            trustDevice: boolean;
-        };
         /** @description A monetary amount in integer minor units */
         Money: {
             minorUnits: number;
@@ -4560,14 +4444,6 @@ export interface components {
         StartChatRequest: {
             visitorName?: string;
         };
-        StepUpRequest: {
-            /** @enum {string} */
-            purpose: "reveal_card" | "card_pan_reveal" | "add_beneficiary" | "high_value_transfer" | "change_security_settings" | "close_account" | "approval-decide" | "staff-manage";
-        };
-        StepUpVerifyRequest: {
-            challengeId: components["schemas"]["Ulid"];
-            code: string;
-        };
         SubmitKycRequest: {
             /** @enum {string} */
             requestedLevel: "tier_1" | "tier_2" | "tier_3";
@@ -4599,9 +4475,6 @@ export interface components {
             lastMessageAt: components["schemas"]["IsoDateTime"];
             slaDueAt: components["schemas"]["IsoDateTime"] | null;
             createdAt: components["schemas"]["IsoDateTime"];
-        };
-        TotpConfirmRequest: {
-            code: string;
         };
         /** @enum {string} */
         TransactionCategory: "income" | "salary" | "transfer" | "groceries" | "dining" | "transport" | "fuel" | "travel" | "shopping" | "entertainment" | "utilities" | "rent" | "healthcare" | "education" | "insurance" | "subscriptions" | "fees" | "interest" | "loan" | "savings" | "cash" | "other";
@@ -5235,10 +5108,6 @@ export interface components {
             outcome: "authenticated";
             tokens: components["schemas"]["AuthTokensOutput"];
             user: components["schemas"]["AuthenticatedUserOutput"];
-        } | {
-            /** @constant */
-            outcome: "mfa_required";
-            challenge: components["schemas"]["MfaChallengeOutput"];
         };
         MerchantsAnalytics: {
             period: {
@@ -5329,10 +5198,6 @@ export interface components {
                 toRate: number;
             }[];
         };
-        RecoveryCodes: {
-            codes: string[];
-            generatedAt: components["schemas"]["IsoDateTime"];
-        };
         RecurringAnalytics: {
             window: {
                 /** Format: date */
@@ -5365,7 +5230,6 @@ export interface components {
                 label: string;
                 browser: string | null;
                 os: string | null;
-                trusted: boolean;
             };
             ipAddress: string;
             location: string | null;
@@ -5431,7 +5295,6 @@ export interface components {
             lastName: string;
             roles: ("support" | "teller" | "operations" | "underwriter" | "fraud_analyst" | "aml_officer" | "compliance" | "admin" | "super_admin")[];
             active: boolean;
-            mfaEnabled: boolean;
             lastLoginAt: components["schemas"]["IsoDateTime"] | null;
             createdAt: components["schemas"]["IsoDateTime"];
         };
@@ -5470,10 +5333,6 @@ export interface components {
             transactionCount: number;
             asset: components["schemas"]["AssetRefOutput"] | null;
             generatedAt: components["schemas"]["IsoDateTime"];
-        };
-        StepUpToken: {
-            stepUpToken: string;
-            expiresAt: components["schemas"]["IsoDateTime"];
         };
         SystemHealth: {
             /** @enum {string} */
@@ -5515,11 +5374,6 @@ export interface components {
             /** @enum {string} */
             status: "active" | "matured" | "broken" | "closed";
             brokenAt: components["schemas"]["IsoDateTime"] | null;
-        };
-        TotpEnrolResponse: {
-            secret: string;
-            otpauthUri: string;
-            qrCodeDataUri: string;
         };
         TransactionDetail: {
             id: components["schemas"]["Ulid"];
@@ -5598,7 +5452,6 @@ export interface components {
             fx: components["schemas"]["FxDetailOutput"] | null;
             estimatedArrival: components["schemas"]["IsoDateTime"];
             cutOffAt: components["schemas"]["IsoDateTime"] | null;
-            requiresStepUp: boolean;
             requiresApproval: boolean;
             expiresAt: components["schemas"]["IsoDateTime"];
         };
@@ -5834,7 +5687,6 @@ export interface components {
             firstName: string;
             lastName: string;
             emailVerified: boolean;
-            mfaEnabled: boolean;
             roles: ("support" | "teller" | "operations" | "underwriter" | "fraud_analyst" | "aml_officer" | "compliance" | "admin" | "super_admin")[];
             lastLoginAt: components["schemas"]["IsoDateTime"] | null;
         };
@@ -6301,13 +6153,6 @@ export interface components {
             country: string | null;
             logoUrl: string | null;
         };
-        MfaChallengeOutput: {
-            challengeId: components["schemas"]["Ulid"];
-            /** @enum {string} */
-            method: "totp" | "sms" | "recovery_code";
-            hint?: string;
-            expiresAt: components["schemas"]["IsoDateTime"];
-        };
         /** @description A monetary amount in integer minor units */
         MoneyOutput: {
             minorUnits: number;
@@ -6730,7 +6575,7 @@ export interface operations {
                     "application/json": components["schemas"]["AccountSummary"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -6792,7 +6637,7 @@ export interface operations {
                     "application/json": components["schemas"]["AccountDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -6860,7 +6705,7 @@ export interface operations {
                     "application/json": components["schemas"]["AccountDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -6932,7 +6777,7 @@ export interface operations {
                     "application/json": components["schemas"]["AccountDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7015,7 +6860,7 @@ export interface operations {
                     "application/json": components["schemas"]["AccountDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7105,7 +6950,7 @@ export interface operations {
                     "application/json": components["schemas"]["AccountDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7186,7 +7031,7 @@ export interface operations {
                     "application/json": components["schemas"]["AccountDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7263,7 +7108,7 @@ export interface operations {
                     "application/json": components["schemas"]["AccountBalancesOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7335,7 +7180,7 @@ export interface operations {
                     "application/json": components["schemas"]["BalanceHistory"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7403,7 +7248,7 @@ export interface operations {
                     "application/json": components["schemas"]["Hold"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7470,7 +7315,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7528,7 +7373,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7584,7 +7429,7 @@ export interface operations {
                     "application/json": components["schemas"]["LedgerIntegrityReport"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7646,7 +7491,7 @@ export interface operations {
                     "application/json": components["schemas"]["ApprovalRequestOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7720,7 +7565,7 @@ export interface operations {
                     "application/json": components["schemas"]["TrialBalance"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7776,7 +7621,7 @@ export interface operations {
                     "application/json": components["schemas"]["SystemHealth"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7838,7 +7683,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardSummaryPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7900,7 +7745,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -7968,7 +7813,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8042,7 +7887,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8125,7 +7970,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8204,7 +8049,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8285,7 +8130,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8365,7 +8210,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardAuthorisationPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8441,7 +8286,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardAuthorisationOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8570,7 +8415,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Authenticated, or an MFA challenge to complete. */
+            /** @description The authenticated session. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -8579,7 +8424,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoginResponse"];
                 };
             };
-            /** @description Invalid credentials, an expired challenge, or a reused refresh token. */
+            /** @description Invalid credentials or a reused refresh token. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8590,57 +8435,6 @@ export interface operations {
             };
             /** @description Too many failed attempts. */
             423: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description An unexpected server error. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
-    };
-    verifyMfa: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["MfaVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description Authenticated session tokens and user. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LoginResponse"];
-                };
-            };
-            /** @description Invalid credentials, an expired challenge, or a reused refresh token. */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8686,7 +8480,7 @@ export interface operations {
                     "application/json": components["schemas"]["AuthTokensOutput"];
                 };
             };
-            /** @description Invalid credentials, an expired challenge, or a reused refresh token. */
+            /** @description Invalid credentials or a reused refresh token. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8731,7 +8525,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8787,7 +8581,7 @@ export interface operations {
                     "application/json": components["schemas"]["AuthenticatedUserOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -8934,7 +8728,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invalid credentials, an expired challenge, or a reused refresh token. */
+            /** @description Invalid credentials or a reused refresh token. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9030,207 +8824,6 @@ export interface operations {
             };
         };
     };
-    enrolTotp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The shared secret and provisioning URI. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TotpEnrolResponse"];
-                };
-            };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description The authenticated principal may not perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description TOTP is already enrolled. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description An unexpected server error. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
-    };
-    confirmTotp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["TotpConfirmRequest"];
-            };
-        };
-        responses: {
-            /** @description Recovery codes, shown exactly once. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RecoveryCodes"];
-                };
-            };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description The authenticated principal may not perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description The token is invalid, expired, or already used. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description An unexpected server error. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
-    };
-    disableTotp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["TotpConfirmRequest"];
-            };
-        };
-        responses: {
-            /** @description TOTP disabled. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description The authenticated principal may not perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description The token is invalid, expired, or already used. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description An unexpected server error. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
-    };
     listSessions: {
         parameters: {
             query?: never;
@@ -9249,7 +8842,7 @@ export interface operations {
                     "application/json": components["schemas"]["Session"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9305,7 +8898,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoginHistoryEntry"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9362,7 +8955,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9425,127 +9018,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description The authenticated principal may not perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description An unexpected server error. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
-    };
-    requestStepUp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["StepUpRequest"];
-            };
-        };
-        responses: {
-            /** @description The challenge to complete. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MfaChallengeOutput"];
-                };
-            };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description The authenticated principal may not perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Rate limit exceeded. Retry after `retryAfterSeconds`. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description An unexpected server error. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
-    };
-    verifyStepUp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["StepUpVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description A short-lived, single-purpose step-up token. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StepUpToken"];
-                };
-            };
-            /** @description Invalid credentials, an expired challenge, or a reused refresh token. */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9607,7 +9080,7 @@ export interface operations {
                     "application/json": components["schemas"]["BeneficiaryPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9667,7 +9140,7 @@ export interface operations {
                     "application/json": components["schemas"]["BeneficiaryOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9735,7 +9208,7 @@ export interface operations {
                     "application/json": components["schemas"]["BeneficiaryOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9801,7 +9274,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9873,7 +9346,7 @@ export interface operations {
                     "application/json": components["schemas"]["BeneficiaryOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -9943,7 +9416,7 @@ export interface operations {
                     "application/json": components["schemas"]["BeneficiaryVerification"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10026,7 +9499,7 @@ export interface operations {
                     "application/json": components["schemas"]["BeneficiaryVerification"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10112,7 +9585,7 @@ export interface operations {
                     "application/json": components["schemas"]["BeneficiaryVerification"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10177,7 +9650,7 @@ export interface operations {
                     "application/json": components["schemas"]["BudgetsOverview"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10237,7 +9710,7 @@ export interface operations {
                     "application/json": components["schemas"]["BudgetsOverview"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10308,7 +9781,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardSummaryPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10368,7 +9841,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10436,7 +9909,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10508,7 +9981,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10585,7 +10058,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardSensitiveDetails"];
                 };
             };
-            /** @description A valid step-up token is required. */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10666,7 +10139,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10747,7 +10220,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10826,7 +10299,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description A valid step-up token is required. */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10907,7 +10380,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -10988,7 +10461,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11068,7 +10541,7 @@ export interface operations {
                     "application/json": components["schemas"]["CardAuthorisationPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11187,7 +10660,7 @@ export interface operations {
                     "application/json": components["schemas"]["ChatHistoryResponse"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11252,7 +10725,7 @@ export interface operations {
                     "application/json": components["schemas"]["StaffChatInboxResponse"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11311,7 +10784,7 @@ export interface operations {
                     "application/json": components["schemas"]["ChatConversationOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11385,7 +10858,7 @@ export interface operations {
                     "application/json": components["schemas"]["WsTicketResponse"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11590,7 +11063,7 @@ export interface operations {
                     }[];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11669,7 +11142,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11735,7 +11208,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11826,7 +11299,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11913,7 +11386,7 @@ export interface operations {
                     }[];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -11999,7 +11472,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12065,7 +11538,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12163,7 +11636,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12247,7 +11720,7 @@ export interface operations {
                     }[];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12324,7 +11797,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12406,7 +11879,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12472,7 +11945,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12545,7 +12018,7 @@ export interface operations {
                     }[];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12618,7 +12091,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12684,7 +12157,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12749,7 +12222,7 @@ export interface operations {
                     "application/json": components["schemas"]["CustomerProfile"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12809,7 +12282,7 @@ export interface operations {
                     "application/json": components["schemas"]["CustomerProfile"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12878,7 +12351,7 @@ export interface operations {
                     "application/json": components["schemas"]["CustomerProfile"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12943,7 +12416,7 @@ export interface operations {
                     "application/json": components["schemas"]["DownloadLink"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13007,7 +12480,7 @@ export interface operations {
                     "application/json": components["schemas"]["CustomerAdminViewPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13066,7 +12539,7 @@ export interface operations {
                     "application/json": components["schemas"]["CustomerAdminViewOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13138,7 +12611,7 @@ export interface operations {
                     "application/json": components["schemas"]["CustomerAdminViewOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13215,7 +12688,7 @@ export interface operations {
                     "application/json": components["schemas"]["CustomerNote"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13287,7 +12760,7 @@ export interface operations {
                     "application/json": components["schemas"]["CustomerNote"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13367,7 +12840,7 @@ export interface operations {
                     "application/json": components["schemas"]["DisputePage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13429,7 +12902,7 @@ export interface operations {
                     "application/json": components["schemas"]["DisputeOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13515,7 +12988,7 @@ export interface operations {
                     "application/json": components["schemas"]["DisputeOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13589,7 +13062,7 @@ export interface operations {
                     "application/json": components["schemas"]["DisputeOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13669,7 +13142,7 @@ export interface operations {
                     "application/json": components["schemas"]["DisputePage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13728,7 +13201,7 @@ export interface operations {
                     "application/json": components["schemas"]["DisputeOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13800,7 +13273,7 @@ export interface operations {
                     "application/json": components["schemas"]["DisputeOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13885,7 +13358,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -13947,7 +13420,7 @@ export interface operations {
                     "application/json": components["schemas"]["Statement"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14015,7 +13488,7 @@ export interface operations {
                     "application/json": components["schemas"]["DownloadLink"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14082,7 +13555,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14141,7 +13614,7 @@ export interface operations {
                     "application/json": components["schemas"]["DownloadLink"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14212,7 +13685,7 @@ export interface operations {
                     "application/json": components["schemas"]["UploadSignature"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14283,7 +13756,7 @@ export interface operations {
                     "application/json": components["schemas"]["BankDocument"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14348,7 +13821,7 @@ export interface operations {
                     "application/json": components["schemas"]["StaffUser"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14408,7 +13881,7 @@ export interface operations {
                     "application/json": components["schemas"]["StaffUser"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14485,7 +13958,7 @@ export interface operations {
                     "application/json": components["schemas"]["StaffUser"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14559,7 +14032,7 @@ export interface operations {
                     "application/json": components["schemas"]["AuditEventPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14615,7 +14088,7 @@ export interface operations {
                     "application/json": components["schemas"]["AuditIntegrity"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14674,7 +14147,7 @@ export interface operations {
                     "application/json": components["schemas"]["ApprovalRequestOutput"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14733,7 +14206,7 @@ export interface operations {
                     "application/json": components["schemas"]["ApprovalRequestOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14805,7 +14278,7 @@ export interface operations {
                     "application/json": components["schemas"]["ApprovalRequestOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14879,7 +14352,7 @@ export interface operations {
                     "application/json": components["schemas"]["KycCaseOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14935,7 +14408,7 @@ export interface operations {
                     "application/json": components["schemas"]["KycLimitsResponse"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -14997,7 +14470,7 @@ export interface operations {
                     "application/json": components["schemas"]["UploadSignature"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15068,7 +14541,7 @@ export interface operations {
                     "application/json": components["schemas"]["KycCaseOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15139,7 +14612,7 @@ export interface operations {
                     "application/json": components["schemas"]["KycCaseOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15221,7 +14694,7 @@ export interface operations {
                     "application/json": components["schemas"]["KycCasePage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15280,7 +14753,7 @@ export interface operations {
                     "application/json": components["schemas"]["KycCaseOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15352,7 +14825,7 @@ export interface operations {
                     "application/json": components["schemas"]["KycCaseOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15437,7 +14910,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15497,7 +14970,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoanQuote"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15564,7 +15037,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15626,7 +15099,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoanApplicationOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15694,7 +15167,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoanApplicationOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15768,7 +15241,7 @@ export interface operations {
                     "application/json": components["schemas"]["UploadSignature"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15847,7 +15320,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoanApplicationOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15923,7 +15396,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -15982,7 +15455,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoanDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16050,7 +15523,7 @@ export interface operations {
                     "application/json": components["schemas"]["PayoffQuote"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16133,7 +15606,7 @@ export interface operations {
                     "application/json": components["schemas"]["LoanDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16221,7 +15694,7 @@ export interface operations {
                     "application/json": components["schemas"]["NotificationPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16280,7 +15753,7 @@ export interface operations {
                     "application/json": components["schemas"]["NotificationOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16343,7 +15816,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16406,7 +15879,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16473,7 +15946,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16543,7 +16016,7 @@ export interface operations {
                     "application/json": components["schemas"]["BillerPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16601,7 +16074,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16661,7 +16134,7 @@ export interface operations {
                     "application/json": components["schemas"]["LinkedBill"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16729,7 +16202,7 @@ export interface operations {
                     "application/json": components["schemas"]["LinkedBill"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16795,7 +16268,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16867,7 +16340,7 @@ export interface operations {
                     "application/json": components["schemas"]["LinkedBill"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -16950,7 +16423,7 @@ export interface operations {
                     "application/json": components["schemas"]["BillPaymentOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17031,7 +16504,7 @@ export interface operations {
                     "application/json": components["schemas"]["BillPaymentPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17090,7 +16563,7 @@ export interface operations {
                     "application/json": components["schemas"]["BillPaymentOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17160,7 +16633,7 @@ export interface operations {
                     "application/json": components["schemas"]["BillPaymentOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17359,7 +16832,7 @@ export interface operations {
                     "application/json": components["schemas"]["FxRate"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17421,7 +16894,7 @@ export interface operations {
                     "application/json": components["schemas"]["FxQuote"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17486,7 +16959,7 @@ export interface operations {
                     "application/json": components["schemas"]["RiskRuleListResponse"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17549,7 +17022,7 @@ export interface operations {
                     "application/json": components["schemas"]["RiskRuleOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17630,7 +17103,7 @@ export interface operations {
                     "application/json": components["schemas"]["RiskCasePage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17689,7 +17162,7 @@ export interface operations {
                     "application/json": components["schemas"]["RiskCaseOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17757,7 +17230,7 @@ export interface operations {
                     "application/json": components["schemas"]["RiskCaseOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17838,7 +17311,7 @@ export interface operations {
                     "application/json": components["schemas"]["RiskCaseOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17918,7 +17391,7 @@ export interface operations {
                     "application/json": components["schemas"]["AmlAlertPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -17977,7 +17450,7 @@ export interface operations {
                     "application/json": components["schemas"]["AmlAlertOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18049,7 +17522,7 @@ export interface operations {
                     "application/json": components["schemas"]["AmlAlertOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18132,7 +17605,7 @@ export interface operations {
                     "application/json": components["schemas"]["AmlAlertOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18217,7 +17690,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18279,7 +17752,7 @@ export interface operations {
                     "application/json": components["schemas"]["SavingsGoalOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18347,7 +17820,7 @@ export interface operations {
                     "application/json": components["schemas"]["SavingsGoalOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18413,7 +17886,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18485,7 +17958,7 @@ export interface operations {
                     "application/json": components["schemas"]["SavingsGoalOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18568,7 +18041,7 @@ export interface operations {
                     "application/json": components["schemas"]["SavingsGoalOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18646,7 +18119,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18704,7 +18177,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18766,7 +18239,7 @@ export interface operations {
                     "application/json": components["schemas"]["TermDeposit"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18834,7 +18307,7 @@ export interface operations {
                     "application/json": components["schemas"]["TermDeposit"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18906,7 +18379,7 @@ export interface operations {
                     "application/json": components["schemas"]["TermDeposit"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -18983,7 +18456,7 @@ export interface operations {
                     "application/json": components["schemas"]["BreakDepositQuote"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19062,7 +18535,7 @@ export interface operations {
                     "application/json": components["schemas"]["TermDeposit"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19136,7 +18609,7 @@ export interface operations {
                     "application/json": components["schemas"]["SimulationState"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19192,7 +18665,7 @@ export interface operations {
                     "application/json": components["schemas"]["ClockStateOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19252,7 +18725,7 @@ export interface operations {
                     "application/json": components["schemas"]["ClockStateOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19321,7 +18794,7 @@ export interface operations {
                     "application/json": components["schemas"]["ClockStateOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19386,7 +18859,7 @@ export interface operations {
                     "application/json": components["schemas"]["ClockStateOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19444,7 +18917,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19506,7 +18979,7 @@ export interface operations {
                     "application/json": components["schemas"]["RailProfileOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19582,7 +19055,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19642,7 +19115,7 @@ export interface operations {
                     "application/json": components["schemas"]["ScenarioRunOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19710,7 +19183,7 @@ export interface operations {
                     "application/json": components["schemas"]["ScenarioRunOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19775,7 +19248,7 @@ export interface operations {
                     "application/json": components["schemas"]["EndOfDayReport"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19831,7 +19304,7 @@ export interface operations {
                     "application/json": components["schemas"]["LedgerIntegrityReport"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19889,7 +19362,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -19951,7 +19424,7 @@ export interface operations {
                     "application/json": components["schemas"]["FeatureFlag"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20016,7 +19489,7 @@ export interface operations {
                     "application/json": components["schemas"]["SupportTicketOutput"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20076,7 +19549,7 @@ export interface operations {
                     "application/json": components["schemas"]["SupportTicketOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20144,7 +19617,7 @@ export interface operations {
                     "application/json": components["schemas"]["SupportTicketOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20212,7 +19685,7 @@ export interface operations {
                     "application/json": components["schemas"]["SupportMessageOutput"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20284,7 +19757,7 @@ export interface operations {
                     "application/json": components["schemas"]["SupportMessageOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20365,7 +19838,7 @@ export interface operations {
                     "application/json": components["schemas"]["SupportTicketOutput"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20445,7 +19918,7 @@ export interface operations {
                     "application/json": components["schemas"]["UploadSignature"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20510,7 +19983,7 @@ export interface operations {
                     "application/json": components["schemas"]["CallbackView"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20572,7 +20045,7 @@ export interface operations {
                     "application/json": components["schemas"]["CallbackView"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20642,7 +20115,7 @@ export interface operations {
                     "application/json": components["schemas"]["StaffTicketView"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20700,7 +20173,7 @@ export interface operations {
                     "application/json": components["schemas"]["CallbackView"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20763,7 +20236,7 @@ export interface operations {
                     "application/json": components["schemas"]["CallbackView"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -20840,7 +20313,7 @@ export interface operations {
                     "application/json": components["schemas"]["CallbackView"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21065,7 +20538,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransactionSummaryPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21124,7 +20597,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransactionDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21196,7 +20669,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransactionDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21276,7 +20749,7 @@ export interface operations {
                     "application/json": components["schemas"]["DownloadLink"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21345,7 +20818,7 @@ export interface operations {
                     "application/json": components["schemas"]["SpendByCategory"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21404,7 +20877,7 @@ export interface operations {
                     "application/json": components["schemas"]["Cashflow"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21464,7 +20937,7 @@ export interface operations {
                     "application/json": components["schemas"]["MerchantsAnalytics"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21522,7 +20995,7 @@ export interface operations {
                     "application/json": components["schemas"]["RecurringAnalytics"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21575,7 +21048,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The quote, including fees, FX, and step-up flags. */
+            /** @description The quote, including fees, FX, and approval flags. */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -21584,7 +21057,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransferQuote"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21685,7 +21158,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransferSummaryPage"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21747,7 +21220,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransferDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21842,7 +21315,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransferDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21916,7 +21389,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransferDetail"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -21996,7 +21469,7 @@ export interface operations {
                     "application/json": components["schemas"]["BulkTransferResult"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -22088,7 +21561,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransferTemplate"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -22148,7 +21621,7 @@ export interface operations {
                     "application/json": components["schemas"]["TransferTemplate"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -22214,7 +21687,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -22279,7 +21752,7 @@ export interface operations {
                     "application/json": components["schemas"]["StandingOrder"][];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -22338,7 +21811,7 @@ export interface operations {
                     "application/json": components["schemas"]["StandingOrder"];
                 };
             };
-            /** @description Missing, expired, or insufficient credentials (includes step-up). */
+            /** @description Missing or expired credentials. */
             401: {
                 headers: {
                     [name: string]: unknown;

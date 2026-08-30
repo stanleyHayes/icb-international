@@ -163,6 +163,16 @@ node tools/scripts/migrate.mjs create add-kyc-reason   # scaffold a new one
 - `0001-customers-schema-version` ships as a working example (backfills a field, no
   money touched).
 
+## One-off cleanups
+
+- `pnpm --filter @icb/api db:drop-mfa` — removes the retired MFA data: drops the
+  `mfa_challenges` and `trusted_devices` collections and unsets `mfaEnabled`,
+  `mfaSecretEncrypted`, `recoveryCodeHashes` on `user_credentials` and `mfaRequired`,
+  `mfaEnabled` on `staff_users`. Idempotent (a second run changes nothing) and logs
+  per-collection counts. Run it once per environment **after** the MFA-free build is
+  deployed — the old code would recreate the collections on its next write. Like the
+  other CLIs it runs compiled output, so build first: `pnpm --filter @icb/api build`.
+
 ## Full-stack containers
 
 `docker-compose.prod.yml` runs the whole system — api + marketing + client + admin +

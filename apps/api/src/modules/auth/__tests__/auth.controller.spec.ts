@@ -47,8 +47,7 @@ function replyDouble(): { setCookie: ReturnType<typeof vi.fn>; clearCookie: Retu
 function setup(isProduction = false) {
   const registration = { register: vi.fn().mockResolvedValue(USER) };
   const logins = {
-    login: vi.fn(),
-    verifyMfa: vi.fn().mockResolvedValue(ISSUED),
+    login: vi.fn().mockResolvedValue(ISSUED),
   };
   const auth = {
     refresh: vi.fn().mockResolvedValue(ISSUED),
@@ -90,23 +89,7 @@ describe('AuthController', () => {
     expect(result).toBe(USER);
   });
 
-  it('returns the MFA challenge without touching cookies when login requires a second factor', async () => {
-    const challenge = { id: 'challenge-1', channel: 'totp' };
-    deps.logins.login.mockResolvedValue({ outcome: 'mfa_required', challenge });
-    const reply = replyDouble();
-
-    const result = await deps.controller.login(
-      { email: 'ada@example.com', password: 'x' },
-      requestDouble(),
-      reply as unknown as FastifyReply,
-    );
-
-    expect(result).toEqual({ outcome: 'mfa_required', challenge });
-    expect(reply.setCookie).not.toHaveBeenCalled();
-  });
-
   it('sets the refresh cookie and returns access tokens on a successful login', async () => {
-    deps.logins.login.mockResolvedValue({ outcome: 'authenticated', session: ISSUED });
     const reply = replyDouble();
 
     const result = await deps.controller.login(
@@ -131,7 +114,6 @@ describe('AuthController', () => {
 
   it('marks the refresh cookie secure in production', async () => {
     const prod = setup(true);
-    prod.logins.login.mockResolvedValue({ outcome: 'authenticated', session: ISSUED });
     const reply = replyDouble();
 
     await prod.controller.login(
@@ -145,27 +127,6 @@ describe('AuthController', () => {
       'refresh-token',
       expect.objectContaining({ secure: true }),
     );
-  });
-
-  it('completes MFA by setting the cookie and returning the session body', async () => {
-    const reply = replyDouble();
-
-    const result = await deps.controller.verifyMfa(
-      { challengeId: 'challenge-1', code: '123456' } as never,
-      reply as unknown as FastifyReply,
-    );
-
-    expect(deps.logins.verifyMfa).toHaveBeenCalledWith({
-      challengeId: 'challenge-1',
-      code: '123456',
-    });
-    expect(reply.setCookie).toHaveBeenCalledWith(
-      REFRESH_COOKIE_NAME,
-      'refresh-token',
-      expect.objectContaining({ httpOnly: true }),
-    );
-    expect(result.tokens.accessToken).toBe('access-token');
-    expect(result.user).toBe(USER);
   });
 
   it('rotates the refresh cookie from the incoming cookie on refresh', async () => {

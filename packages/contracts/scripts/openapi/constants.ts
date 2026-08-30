@@ -88,7 +88,7 @@ export type StatusCode = (typeof STATUS)[keyof typeof STATUS];
 
 /** Default prose for each error status. An operation may override per occurrence. */
 export const ERROR_DESCRIPTIONS: Readonly<Partial<Record<StatusCode, string>>> = {
-  [STATUS.unauthorized]: 'Missing, expired, or insufficient credentials (includes step-up).',
+  [STATUS.unauthorized]: 'Missing or expired credentials.',
   [STATUS.forbidden]: 'The authenticated principal may not perform this action.',
   [STATUS.notFound]: 'The requested resource does not exist.',
   [STATUS.conflict]: 'The request conflicts with current state or a processed idempotency key.',

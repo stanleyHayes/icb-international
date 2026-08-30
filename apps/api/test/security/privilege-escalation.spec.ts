@@ -58,7 +58,7 @@ const STAFF_ROUTES: readonly StaffRoute[] = [
   { area: 'audit', method: 'get', path: '/v1/admin/audit/integrity' },
 ];
 
-/** Denied is 403 (role/permission) or 401 (step-up-first routes); 2xx is the only failure. */
+/** Denied is 403 (role/permission) or 401 (unauthenticated); 2xx is the only failure. */
 const DENIED = [401, 403];
 
 describe('SEC-02 privilege escalation — staff surface vs non-staff principals', () => {

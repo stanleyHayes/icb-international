@@ -63,12 +63,4 @@ export const DEFAULT_FEATURE_FLAGS: readonly FeatureFlagSeed[] = [
     rolloutPercentage: 100,
     audience: 'tier_premier_plus',
   },
-  {
-    key: 'step_up_on_new_payee',
-    label: 'Step-up on a new payee',
-    description: 'Require re-authentication the first time money is sent to a new beneficiary.',
-    enabled: true,
-    rolloutPercentage: 100,
-    audience: 'all',
-  },
 ];

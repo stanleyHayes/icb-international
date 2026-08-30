@@ -11,7 +11,6 @@ export function toStaffUser(doc: StaffUserDoc): StaffUser {
     lastName: doc.lastName,
     roles: doc.roles as StaffRole[],
     active: doc.active,
-    mfaEnabled: doc.mfaEnabled,
     lastLoginAt: doc.lastLoginAt === null ? null : doc.lastLoginAt.toISOString(),
     createdAt: doc.createdAt.toISOString(),
   };

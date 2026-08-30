@@ -32,9 +32,6 @@ export function loginAndResolveAccounts() {
     );
   }
   const body = login.json();
-  if (body.outcome !== 'authenticated') {
-    fail(`login for ${DEMO_EMAIL} returned outcome "${body.outcome}" — MFA must be off for load personas`);
-  }
   const token = body.tokens.accessToken;
 
   const accounts = http.get(`${BASE_URL}/v1/accounts`, {

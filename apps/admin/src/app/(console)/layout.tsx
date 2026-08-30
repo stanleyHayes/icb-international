@@ -11,11 +11,5 @@ export default async function ConsoleLayout({ children }: Readonly<{ children: R
     redirect('/login');
   }
 
-  // Staff policy: no console without an enrolled second factor. The gate page is the only
-  // authenticated surface reachable until this flips.
-  if (session.user.roles.length > 0 && !session.user.mfaEnabled) {
-    redirect('/mfa-enrol');
-  }
-
   return <ConsoleShell user={session.user}>{children}</ConsoleShell>;
 }

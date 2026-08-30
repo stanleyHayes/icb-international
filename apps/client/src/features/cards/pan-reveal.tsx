@@ -2,56 +2,36 @@
 
 import { Button } from '@icb/ui';
 import { Eye, EyeOff } from 'lucide-react';
-import { useEffect, useId, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 
 import { FormError } from '../form-controls';
-import {
-  requestRevealAction,
-  verifyAndRevealAction,
-  type StepUpState,
-} from './reveal-actions';
+import { revealCardAction, type RevealState } from './reveal-actions';
 
 const AUTO_HIDE_FALLBACK_MS = 60_000;
 
 /**
- * The full card number, behind a fresh second factor.
+ * The full card number, fetched on demand over the customer's session.
  *
- * Nothing is fetched until the customer asks; the challenge must be answered before the PAN
- * exists anywhere in the UI; and once shown, the details hide themselves at the `hideAfter`
- * deadline the API set — they are never cached, never written to storage.
+ * Nothing is fetched until the customer asks; and once shown, the details hide themselves at the
+ * `hideAfter` deadline the API set — they are never cached, never written to storage.
  */
 export function PanReveal({ cardId }: Readonly<{ cardId: string }>) {
-  const [state, setState] = useState<StepUpState>({
+  const [state, setState] = useState<RevealState>({
     status: 'idle',
     error: null,
-    challenge: null,
     details: null,
   });
   const [pending, startTransition] = useTransition();
 
-  const begin = () => {
-    startTransition(async () => setState(await requestRevealAction()));
+  const reveal = () => {
+    startTransition(async () => setState(await revealCardAction(cardId)));
   };
 
   if (state.status === 'revealed' && state.details) {
     return (
       <RevealedDetails
         details={state.details}
-        onHide={() =>
-          setState({ status: 'idle', error: null, challenge: null, details: null })
-        }
-      />
-    );
-  }
-
-  if (state.status === 'challenge' && state.challenge) {
-    return (
-      <CodeEntry
-        cardId={cardId}
-        challengeId={state.challenge.challengeId}
-        hint={state.challenge.hint ?? null}
-        pending={pending}
-        onResult={setState}
+        onHide={() => setState({ status: 'idle', error: null, details: null })}
       />
     );
   }
@@ -63,7 +43,7 @@ export function PanReveal({ cardId }: Readonly<{ cardId: string }>) {
         size="sm"
         leadingIcon={<Eye size={15} />}
         loading={pending}
-        onClick={begin}
+        onClick={reveal}
       >
         Show card number
       </Button>
@@ -73,66 +53,10 @@ export function PanReveal({ cardId }: Readonly<{ cardId: string }>) {
         </div>
       ) : (
         <p className="mt-2 text-xs text-[var(--icb-text-subtle)]">
-          We will ask you to verify before showing the number.
+          The details hide themselves again after a short time.
         </p>
       )}
     </div>
-  );
-}
-
-function CodeEntry({
-  cardId,
-  challengeId,
-  hint,
-  pending,
-  onResult,
-}: Readonly<{
-  cardId: string;
-  challengeId: string;
-  hint: string | null;
-  pending: boolean;
-  onResult: (state: StepUpState) => void;
-}>) {
-  const codeId = useId();
-  const [submitting, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  const submit = (formData: FormData) => {
-    const codeValue = formData.get('code');
-    const code = typeof codeValue === 'string' ? codeValue : '';
-    startTransition(async () => {
-      const result = await verifyAndRevealAction(cardId, challengeId, code);
-      if (result.status === 'error') {
-        setError(result.error);
-        return;
-      }
-      onResult(result);
-    });
-  };
-
-  return (
-    <form action={submit} className="space-y-3" noValidate>
-      <FormError message={error} />
-      <div>
-        <label htmlFor={codeId} className="block text-sm font-medium">
-          Verification code
-        </label>
-        <input
-          id={codeId}
-          name="code"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          required
-          minLength={6}
-          maxLength={16}
-          placeholder={hint ? `Sent to ${hint}` : 'From your authenticator'}
-          className="mt-1.5 h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 font-mono text-sm tracking-[0.2em] outline-none focus:border-[var(--icb-primary)]"
-        />
-      </div>
-      <Button type="submit" size="sm" loading={pending || submitting}>
-        Verify and show
-      </Button>
-    </form>
   );
 }
 

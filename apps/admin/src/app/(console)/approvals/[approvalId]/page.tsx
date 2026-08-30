@@ -27,7 +27,7 @@ function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode 
 
 /**
  * One approval request, reviewed the way a checker actually works: what is being asked, what
- * changes, who asked, how long is left — then the decision, behind a fresh second factor.
+ * changes, who asked, how long is left — then the decision.
  */
 export default async function ApprovalDetailPage({
   params,

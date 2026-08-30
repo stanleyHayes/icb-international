@@ -30,7 +30,7 @@ describe('gather', () => {
 
     expect(credentials.findOne).toHaveBeenCalledWith({ customerId: '01J8ZCQ0R0K3M4N5P6Q7R8S9T0' });
     const chain = credentials.findOne.mock.results[0]?.value as ReturnType<typeof chainQuery>;
-    expect(chain['select']).toHaveBeenCalledWith('emailVerified mfaEnabled lastLoginAt');
+    expect(chain['select']).toHaveBeenCalledWith('emailVerified lastLoginAt');
   });
 
   it('queries sessions by the credential id, not the customer id', async () => {

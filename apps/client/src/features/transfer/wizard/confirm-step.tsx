@@ -151,16 +151,9 @@ export function ConfirmStep({
           Back
         </Button>
         <Button size="lg" block loading={busy} disabled={busy} onClick={onConfirm}>
-          {confirmLabel(busy, quote.requiresStepUp)}
+          {busy ? 'Sending…' : 'Confirm transfer'}
         </Button>
       </div>
     </div>
   );
-}
-
-function confirmLabel(busy: boolean, requiresStepUp: boolean): string {
-  if (busy) {
-    return 'Sending…';
-  }
-  return requiresStepUp ? 'Verify and confirm' : 'Confirm transfer';
 }

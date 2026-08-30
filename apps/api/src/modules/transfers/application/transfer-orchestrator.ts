@@ -14,7 +14,6 @@ import { TransferDoc } from '../infrastructure/transfer.schemas.js';
 import { TRANSFER_EVENTS } from '../domain/transfers.constants.js';
 import { StandingOrdersService } from './standing-orders.service.js';
 import { TransferPreparationService } from './transfer-preparation.service.js';
-import type { StepUpProof } from './transfer-step-up.service.js';
 import type { PreparedTransfer, TransferExecution } from './transfer-pipeline.types.js';
 import { RAIL_USE_CASES, type RailTransferUseCase } from './use-cases/rail-transfer.use-case.js';
 
@@ -45,9 +44,8 @@ export class TransferOrchestrator {
   async initiate(
     customerId: string,
     request: CreateTransferRequest,
-    proof?: StepUpProof,
   ): Promise<TransferDoc> {
-    const prepared = await this.preparation.prepare(customerId, request, proof);
+    const prepared = await this.preparation.prepare(customerId, request);
     if (request.schedule) {
       return this.recordScheduled(prepared, request.schedule);
     }

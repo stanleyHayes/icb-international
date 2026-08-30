@@ -9,7 +9,7 @@ import {
   type CardSensitiveDetails,
   type CursorPage,
 } from '@icb/contracts';
-import { Body, Controller, Get, Headers, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 
 import { CurrentCustomer, CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
@@ -29,8 +29,7 @@ const CARD_ID = 'cardId';
  * Controls, limits, PIN, travel notices, the authorisation history, and the PAN reveal.
  *
  * Split from the lifecycle controller because these are the endpoints a customer touches
- * repeatedly, while issuing and reporting happen once or twice in a card's life — and because the
- * step-up path below deserves to be read on its own rather than buried among eight siblings.
+ * repeatedly, while issuing and reporting happen once or twice in a card's life.
  */
 @Controller('cards')
 export class CardSettingsController {
@@ -87,19 +86,14 @@ export class CardSettingsController {
   }
 
   /**
-   * The full PAN, CVV and expiry.
-   *
-   * Guarded by a step-up token carried in `x-step-up-token` and bound to the calling principal.
-   * Without one — or with one minted for somebody else — the request fails with
-   * STEP_UP_REQUIRED and the client re-authenticates before asking again.
+   * The full PAN, CVV and expiry — for the card's owner, on their authenticated session.
    */
   @Get(':cardId/sensitive')
   async sensitive(
     @CurrentUser() user: AccessTokenClaims,
     @CurrentCustomer() customerId: string,
     @Param(CARD_ID) cardId: string,
-    @Headers('x-step-up-token') stepUpToken?: string,
   ): Promise<CardSensitiveDetails> {
-    return this.security.reveal(cardId, customerId, user.sub, stepUpToken);
+    return this.security.reveal(cardId, customerId, user.sub);
   }
 }

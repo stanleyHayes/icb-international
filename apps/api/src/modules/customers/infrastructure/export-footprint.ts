@@ -29,7 +29,7 @@ export interface FootprintInput {
   /** Login metadata only — hashes and secrets never enter a footprint. */
   readonly credential: Pick<
     UserCredentialDoc,
-    'emailVerified' | 'mfaEnabled' | 'lastLoginAt'
+    'emailVerified' | 'lastLoginAt'
   > | null;
   readonly sessions: readonly SessionDoc[];
   readonly accounts: readonly AccountDoc[];
@@ -67,7 +67,7 @@ function flatten(record: Record<string, unknown> | null): [string, string][] {
 /**
  * The customer's full footprint, normalised for rendering.
  *
- * What is deliberately *not* here matters as much as what is: no password hash, no MFA secret,
+ * What is deliberately *not* here matters as much as what is: no password hash, no secrets,
  * no session token — a data export must never become the thing it is meant to protect against.
  * Balances are excluded because they are ledger facts with their own export (statements), not
  * personal data.
@@ -144,7 +144,6 @@ function verificationRows(customer: CustomerDoc): [string, string][] {
 function signInRows(credential: FootprintInput['credential']): [string, string][] {
   return [
     ['Email verified', bool(credential?.emailVerified ?? false)],
-    ['MFA enabled', bool(credential?.mfaEnabled ?? false)],
     ['Last sign-in', instant(credential?.lastLoginAt)],
   ];
 }

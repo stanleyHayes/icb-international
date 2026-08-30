@@ -10,7 +10,7 @@ No source code was changed; the only addition is the redaction tripwire test in 
 | --- | --- |
 | Secrets hygiene | **Pass** — no real secrets in the tree; `.env` gitignored; `.env.example` placeholder-only |
 | PII redaction | **Pass with one confirmed gap** — `dateOfBirth` escapes both redaction layers (tripwire test added) |
-| Encryption at rest | **Pass** — PAN/CVV/TOTP AES-256-GCM verified; national ID never collected; DOB in clear (hardening item) |
+| Encryption at rest | **Pass** — PAN/CVV AES-256-GCM verified; national ID never collected; DOB in clear (hardening item) |
 | Dependencies | **12 vulnerabilities: 6 high, 4 moderate, 2 low** — all transitive; one runtime-reachable (`find-my-way`) |
 
 ---
@@ -60,8 +60,8 @@ Two layers exist, by design:
    (`pan, cvv, password, token, authorization, dob, nationalid` — case-insensitive,
    suffix-matched) with `[redacted]`, depth-capped at 8.
 2. **pino layer** (`apps/api/src/common/observability/redaction.ts` + `logger.config.ts`) —
-   `REDACT_PATHS` (40 paths: auth/cookie/step-up/idempotency headers, `passwordHash`, `pin`,
-   `pan`, `cvv`, tokens, `dateOfBirth`, `nationalId`, `mfaSecretEncrypted`, …) plus
+   `REDACT_PATHS` (auth/cookie/idempotency headers, `passwordHash`, `pin`,
+   `pan`, `cvv`, tokens, `dateOfBirth`, `nationalId`, …) plus
    `scrubText`, which masks PAN-shaped digit runs, Bearer tokens, and emails inside
    free-text log messages.
 
@@ -110,7 +110,7 @@ Test Files  3 passed (3) · Tests 16 passed | 2 expected fail (18)
 
 ## 3. Encryption at rest
 
-**Verdict: PASS for PAN/CVV/TOTP; national ID is never collected; DOB is in clear.**
+**Verdict: PASS for PAN/CVV; national ID is never collected; DOB is in clear.**
 
 - **PAN + CVV — AES-256-GCM, verified.** `apps/api/src/modules/cards/domain/pan-cipher.ts`:
   `createCipheriv('aes-256-gcm')`, fresh random 12-byte IV per encryption (no equality
@@ -118,12 +118,10 @@ Test Files  3 passed (3) · Tests 16 passed | 2 expected fail (18)
   (tamper ⇒ throw, not garbage). Applied at issuance —
   `card-issuance.service.ts:158,161` stores `panEncrypted`/`cvvEncrypted`; equality
   ("no two live cards share a PAN") uses a keyed HMAC `fingerprint()`, never the
-  ciphertext. Decryption only behind step-up (`card-security.service.ts`).
+  ciphertext. Decryption happens only in the reveal path (`card-security.service.ts`),
+  which runs on session auth — the step-up check that previously gated it was removed
+  with MFA (2026-08).
   Responses expose only `panLast4` (`card.mapper.ts:56`).
-- **TOTP secret — AES-256-GCM, verified.** `common/crypto/field-crypto.ts` (versioned
-  `v1.<iv>.<tag>.<ct>` payload, 16-byte tag) via `FieldEncryptionService`, used by
-  `totp.service.ts`; stored as `mfaSecretEncrypted`, commented "never returned by any
-  query that reaches a controller".
 - **Passwords / tokens — hashed, not encrypted** (argon2id; refresh/reset/verification
   tokens stored as hashes). Correct by design.
 - **National ID — not collected anywhere** in the current tree; the redaction keys are

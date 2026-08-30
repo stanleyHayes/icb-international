@@ -48,7 +48,7 @@ export function DecisionSection({
     <Card>
       <CardHeader
         title="Your decision"
-        description="Requires a fresh verification code. Approving executes the action; rejecting cancels it."
+        description="Approving executes the action; rejecting cancels it."
       />
       <CardBody className="pt-0">
         <DecisionPanel approvalId={approval.id} isSelf={isSelf} />

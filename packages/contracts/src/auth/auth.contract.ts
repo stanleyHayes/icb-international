@@ -34,23 +34,8 @@ export const registerRequestSchema = z.object({
 export const loginRequestSchema = z.object({
   email: emailSchema,
   password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
-  /** Opaque, client-generated, stable per browser. Used for trusted-device recognition. */
+  /** Opaque, client-generated, stable per browser. Recorded on the session row. */
   deviceId: z.string().min(8).max(128).optional(),
-});
-
-export const mfaChallengeSchema = z.object({
-  challengeId: idSchema,
-  method: z.enum(['totp', 'sms', 'recovery_code']),
-  /** Masked destination for SMS, e.g. `+233 ** *** 4521`. Absent for TOTP. */
-  hint: z.string().optional(),
-  expiresAt: isoDateTimeSchema,
-});
-
-export const mfaVerifyRequestSchema = z.object({
-  challengeId: idSchema,
-  code: z.string().min(6).max(16),
-  /** Remember this device for 30 days, skipping MFA on subsequent logins. */
-  trustDevice: z.boolean().default(false),
 });
 
 export const authTokensSchema = z.object({
@@ -67,23 +52,16 @@ export const authenticatedUserSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   emailVerified: z.boolean(),
-  mfaEnabled: z.boolean(),
   roles: z.array(staffRoleSchema),
   lastLoginAt: isoDateTimeSchema.nullable(),
 });
 
-/** Login either completes, or hands back a challenge. Never both. */
-export const loginResponseSchema = z.discriminatedUnion('outcome', [
-  z.object({
-    outcome: z.literal('authenticated'),
-    tokens: authTokensSchema,
-    user: authenticatedUserSchema,
-  }),
-  z.object({
-    outcome: z.literal('mfa_required'),
-    challenge: mfaChallengeSchema,
-  }),
-]);
+/** Login always completes with an authenticated session. */
+export const loginResponseSchema = z.object({
+  outcome: z.literal('authenticated'),
+  tokens: authTokensSchema,
+  user: authenticatedUserSchema,
+});
 
 export const forgotPasswordRequestSchema = z.object({ email: emailSchema });
 
@@ -99,56 +77,18 @@ export const changePasswordRequestSchema = z.object({
 
 export const verifyEmailRequestSchema = z.object({ token: z.string().min(16).max(256) });
 
-export const totpEnrolResponseSchema = z.object({
-  secret: z.string(),
-  otpauthUri: z.string(),
-  qrCodeDataUri: z.string(),
-});
-
-export const totpConfirmRequestSchema = z.object({ code: z.string().length(6) });
-
-export const recoveryCodesSchema = z.object({
-  codes: z.array(z.string()).length(10),
-  generatedAt: isoDateTimeSchema,
-});
-
 export const sessionSchema = z.object({
   id: idSchema,
   device: z.object({
     label: z.string(),
     browser: z.string().nullable(),
     os: z.string().nullable(),
-    trusted: z.boolean(),
   }),
   ipAddress: z.string(),
   location: z.string().nullable(),
   createdAt: isoDateTimeSchema,
   lastSeenAt: isoDateTimeSchema,
   current: z.boolean(),
-});
-
-/** Re-authentication for a sensitive action. Valid for a few minutes, single purpose. */
-export const stepUpRequestSchema = z.object({
-  purpose: z.enum([
-    'reveal_card',
-    'card_pan_reveal',
-    'add_beneficiary',
-    'high_value_transfer',
-    'change_security_settings',
-    'close_account',
-    'approval-decide',
-    'staff-manage',
-  ]),
-});
-
-export const stepUpVerifyRequestSchema = z.object({
-  challengeId: idSchema,
-  code: z.string().min(6).max(16),
-});
-
-export const stepUpTokenSchema = z.object({
-  stepUpToken: z.string(),
-  expiresAt: isoDateTimeSchema,
 });
 
 /**
@@ -169,10 +109,5 @@ export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 export type AuthTokens = z.infer<typeof authTokensSchema>;
 export type AuthenticatedUser = z.infer<typeof authenticatedUserSchema>;
-export type MfaChallenge = z.infer<typeof mfaChallengeSchema>;
-export type MfaVerifyRequest = z.infer<typeof mfaVerifyRequestSchema>;
 export type Session = z.infer<typeof sessionSchema>;
-export type StepUpRequest = z.infer<typeof stepUpRequestSchema>;
-export type StepUpToken = z.infer<typeof stepUpTokenSchema>;
 export type LoginHistoryEntry = z.infer<typeof loginHistoryEntrySchema>;
-export type RecoveryCodes = z.infer<typeof recoveryCodesSchema>;

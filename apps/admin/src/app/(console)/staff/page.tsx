@@ -13,9 +13,8 @@ export const metadata: Metadata = { title: 'Staff' };
 /**
  * The staff directory.
  *
- * Who can operate the console, with what roles, and whether their second factor is on — the
- * three facts an administrator scans for. Provisioning and per-person changes happen on the
- * detail and new pages.
+ * Who can operate the console and with what roles — the facts an administrator scans for.
+ * Provisioning and per-person changes happen on the detail and new pages.
  */
 export default async function StaffPage() {
   let staff: StaffUser[];
@@ -59,7 +58,6 @@ export default async function StaffPage() {
                   <th scope="col" className="px-5 py-2.5 font-medium">Operator</th>
                   <th scope="col" className="px-3 py-2.5 font-medium">Roles</th>
                   <th scope="col" className="px-3 py-2.5 font-medium">Status</th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">2FA</th>
                   <th scope="col" className="px-5 py-2.5 text-right font-medium">Last sign-in</th>
                 </tr>
               </thead>
@@ -79,13 +77,6 @@ export default async function StaffPage() {
                     </td>
                     <td className="px-3 py-3">
                       <StatusBadge status={member.active ? 'active' : 'suspended'} />
-                    </td>
-                    <td className="px-3 py-3 text-xs">
-                      {member.mfaEnabled ? (
-                        <span className="text-[var(--icb-success-fg)]">Enrolled</span>
-                      ) : (
-                        <span className="font-medium text-[var(--icb-warning-fg)]">Pending</span>
-                      )}
                     </td>
                     <td className="px-5 py-3 text-right text-xs text-[var(--icb-text-subtle)]">
                       {member.lastLoginAt ? formatDate(member.lastLoginAt, 'medium') : 'Never'}

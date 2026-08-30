@@ -31,7 +31,6 @@ const USER = {
   firstName: 'Ama',
   lastName: 'Mensah',
   emailVerified: false,
-  mfaEnabled: false,
   roles: [],
   lastLoginAt: null,
 };

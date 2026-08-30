@@ -5,9 +5,6 @@ import { Button } from '@icb/ui';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useActionState, useId } from 'react';
 
-import { STEP_UP_PURPOSE } from '@/features/step-up/step-up.constants';
-import { useStepUpSubmit } from '@/features/step-up/use-step-up-submit';
-
 import { updateStaffAction, type StaffFormState } from './actions';
 import { RoleCheckboxes } from './role-checkboxes';
 
@@ -18,27 +15,17 @@ const INITIAL_STAFF_FORM_STATE: StaffFormState = { status: 'idle', message: null
 /**
  * Role assignment and activation for one operator.
  *
- * Both changes go through the same PATCH and the same step-up gate. The "active" choice is a
- * pair of radio options rather than a switch: suspending a colleague's access should read as a
- * decision, not a toggle.
+ * Both changes go through the same PATCH. The "active" choice is a pair of radio options rather
+ * than a switch: suspending a colleague's access should read as a decision, not a toggle.
  */
 export function EditStaffForm({ staff, isSelf }: Readonly<{ staff: StaffUser; isSelf: boolean }>) {
   const [state, action, pending] = useActionState(updateStaffAction, INITIAL_STAFF_FORM_STATE);
-  const stepUp = useStepUpSubmit(STEP_UP_PURPOSE.staffManage, 'Changing staff access');
   const activeId = useId();
   const banner = statusBanner(state);
 
   return (
-    <form
-      ref={stepUp.formRef}
-      action={action}
-      onSubmit={stepUp.handleSubmit}
-      className="space-y-5"
-      noValidate
-    >
+    <form action={action} className="space-y-5" noValidate>
       <input type="hidden" name="staffId" value={staff.id} />
-      <input type="hidden" name="stepUpToken" ref={stepUp.tokenInputRef} />
-      {stepUp.dialog}
 
       {banner}
 

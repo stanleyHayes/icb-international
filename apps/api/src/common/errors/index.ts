@@ -11,6 +11,5 @@ export {
   NotFoundError,
   RailRejectedError,
   RateLimitedError,
-  StepUpRequiredError,
   ValidationError,
 } from './domain-errors.js';

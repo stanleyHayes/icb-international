@@ -21,17 +21,11 @@ function toErrorState(error: unknown, fallback: string): StaffFormState {
   };
 }
 
-function stepUpTokenFrom(formData: FormData): string | undefined {
-  const value = formData.get('stepUpToken');
-  return typeof value === 'string' && value.length > 0 ? value : undefined;
-}
-
 /**
  * Provision a staff account.
  *
  * Role assignment happens here, at creation, so an account never exists with no answer to
- * "what can this person do?". The API additionally demands a step-up proof, which the form
- * collects before submit.
+ * "what can this person do?".
  */
 export async function createStaffAction(
   _previous: StaffFormState,
@@ -58,7 +52,6 @@ export async function createStaffAction(
     await api('/admin/staff', {
       method: 'POST',
       body: parsed.data,
-      stepUpToken: stepUpTokenFrom(formData),
     });
     revalidatePath('/staff');
     return { status: 'saved', message: null, fieldErrors: {} };
@@ -97,7 +90,6 @@ export async function updateStaffAction(
     await api(`/admin/staff/${staffId}`, {
       method: 'PATCH',
       body: { roles, active },
-      stepUpToken: stepUpTokenFrom(formData),
     });
     revalidatePath(`/staff/${staffId}`);
     revalidatePath('/staff');

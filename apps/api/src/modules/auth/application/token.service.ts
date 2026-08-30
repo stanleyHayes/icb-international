@@ -14,11 +14,6 @@ export interface AccessTokenClaims {
   readonly sessionId: string;
 }
 
-export interface StepUpClaims {
-  readonly sub: string;
-  readonly purpose: string;
-}
-
 /**
  * Token issuance.
  *
@@ -73,29 +68,5 @@ export class TokenService {
 
   hashRefreshToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
-  }
-
-  async issueStepUpToken(claims: StepUpClaims): Promise<{ token: string; expiresAt: Date }> {
-    const token = await this.jwt.signAsync(
-      { ...claims, typ: 'step_up' },
-      {
-        secret: this.config.jwt.accessSecret,
-        expiresIn: this.config.jwt.stepUpTtlSeconds,
-        issuer: 'icb',
-        audience: 'icb-step-up',
-      },
-    );
-    return {
-      token,
-      expiresAt: new Date(this.clock.epochMs() + this.config.jwt.stepUpTtlSeconds * 1000),
-    };
-  }
-
-  async verifyStepUpToken(token: string): Promise<StepUpClaims> {
-    return this.jwt.verifyAsync<StepUpClaims>(token, {
-      secret: this.config.jwt.accessSecret,
-      issuer: 'icb',
-      audience: 'icb-step-up',
-    });
   }
 }

@@ -23,7 +23,6 @@ import {
 import { feesFor, totalFees, type FeeLine } from '../domain/transfer-fees.js';
 import {
   APPROVAL_THRESHOLD_MAJOR_UNITS,
-  STEP_UP_THRESHOLD_MAJOR_UNITS,
   TRANSFER_QUOTE_TTL_MS,
 } from '../domain/transfers.constants.js';
 import {
@@ -58,7 +57,7 @@ interface PersistInput {
  *
  * A quote fixes the amounts in both directions, the fee, the rail and the arrival estimate, and
  * signs all of it — the price the customer was shown is the price they get. Issuing lives here;
- * spending (redemption, binding checks, step-up) lives in `TransferQuoteRedemptionService`.
+ * spending (redemption, binding checks) lives in `TransferQuoteRedemptionService`.
  */
 @Injectable()
 export class TransferQuotesService {
@@ -93,7 +92,6 @@ export class TransferQuotesService {
 
     this.logger.log({ quoteId, rail }, 'Transfer quote issued');
     return toQuoteContract(doc, {
-      stepUpMinorUnits: thresholdMinorUnits(STEP_UP_THRESHOLD_MAJOR_UNITS, priced.debit.currency),
       approvalMinorUnits: thresholdMinorUnits(APPROVAL_THRESHOLD_MAJOR_UNITS, priced.debit.currency),
     });
   }
@@ -180,7 +178,7 @@ export class TransferQuotesService {
     };
   }
 
-  /** Spend-time behaviour — redemption, binding, step-up — lives in TransferQuoteRedemptionService. */
+  /** Spend-time behaviour — redemption and binding — lives in TransferQuoteRedemptionService. */
   private key(): string {
     return this.config.crypto.fieldEncryptionKey;
   }

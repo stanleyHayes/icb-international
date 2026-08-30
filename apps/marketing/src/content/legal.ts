@@ -32,7 +32,7 @@ export const LEGAL_DOCUMENTS = {
       {
         heading: 'Your account',
         paragraphs: [
-          'You must provide accurate information when opening an account and keep it current. You are responsible for keeping your password and second factor secret. We will never ask you for either.',
+          'You must provide accurate information when opening an account and keep it current. You are responsible for keeping your password secret. We will never ask you for it.',
           'We may suspend or close an account where we reasonably believe it is being used unlawfully, where verification cannot be completed, or where you ask us to. We will tell you why unless we are prevented from doing so.',
         ],
       },

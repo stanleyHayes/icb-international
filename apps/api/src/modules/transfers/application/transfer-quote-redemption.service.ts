@@ -1,5 +1,4 @@
 import type { TransferDestination } from '@icb/contracts';
-import type { Money } from '@icb/money';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
@@ -13,10 +12,7 @@ import {
   TransferQuoteExpiredError,
   TransferQuoteSignatureInvalidError,
 } from '../domain/transfer-errors.js';
-import { STEP_UP_THRESHOLD_MAJOR_UNITS } from '../domain/transfers.constants.js';
 import {
-  quoteRequiresStepUp,
-  thresholdMinorUnits,
   toRedeemedQuote,
   toSignedQuoteTerms,
   type RedeemedTransferQuote,
@@ -25,7 +21,6 @@ import {
   TRANSFER_QUOTE_STATUSES,
   TransferQuoteDoc,
 } from '../infrastructure/transfer-quote.schemas.js';
-import { TransferStepUpService, type StepUpProof } from './transfer-step-up.service.js';
 
 /** What a redemption binds the quote to — the account and payee it was issued for. */
 export interface QuoteBinding {
@@ -36,45 +31,24 @@ export interface QuoteBinding {
 /**
  * Spending transfer quotes.
  *
- * Redemption is single-use — a conditional update, so two confirms race and one loses — which
- * is why the step-up check runs *before* the spend: a customer who has no second-factor proof
- * yet must find out with their quote intact, then retry holding the token. The same threshold
- * also guards quote-less inline terms, because skipping the quote must not skip the check.
+ * Redemption is single-use — a conditional update, so two confirms race and one loses.
  */
 @Injectable()
 export class TransferQuoteRedemptionService {
   constructor(
     @InjectModel(TransferQuoteDoc.name) private readonly quotes: Model<TransferQuoteDoc>,
-    private readonly stepUp: TransferStepUpService,
     private readonly clock: ClockService,
     @Inject(CONFIG) private readonly config: AppConfiguration,
   ) {}
 
-  /** Confirm and spend a quote that flagged step-up only once the proof has verified. */
+  /** Confirm and spend a quote. */
   async confirm(
     customerId: string,
     quoteId: string,
     binding: QuoteBinding,
-    proof?: StepUpProof,
   ): Promise<RedeemedTransferQuote> {
     const doc = await this.loadRedeemable(customerId, quoteId, binding);
-    if (quoteRequiresStepUp(doc)) {
-      await this.stepUp.assert(proof);
-    }
     return this.spend(doc);
-  }
-
-  /** The high-value check for inline terms — the same threshold a flagged quote applies. */
-  async assertHighValueStepUp(
-    debit: Money,
-    fees: Money,
-    proof: StepUpProof | undefined,
-  ): Promise<void> {
-    const threshold = thresholdMinorUnits(STEP_UP_THRESHOLD_MAJOR_UNITS, debit.currency);
-    if (debit.minorUnits + fees.minorUnits < threshold) {
-      return;
-    }
-    await this.stepUp.assert(proof);
   }
 
   /** Spend the quote — the conditional update makes it single-use under a double confirm. */

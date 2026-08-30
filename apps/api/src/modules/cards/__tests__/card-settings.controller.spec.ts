@@ -87,16 +87,10 @@ describe('CardSettingsController', () => {
     expect(page.hasMore).toBe(false);
   });
 
-  it('reveals the PAN with the principal sub and step-up token', async () => {
-    const result = await controller.sensitive(USER, CUSTOMER_ID, CARD_ID, 'step-up-token');
+  it('reveals the PAN for the calling principal', async () => {
+    const result = await controller.sensitive(USER, CUSTOMER_ID, CARD_ID);
 
-    expect(security.reveal).toHaveBeenCalledWith(CARD_ID, CUSTOMER_ID, 'user-1', 'step-up-token');
+    expect(security.reveal).toHaveBeenCalledWith(CARD_ID, CUSTOMER_ID, 'user-1');
     expect(result).toBe(SENSITIVE);
-  });
-
-  it('reveals without a step-up token so the service can reject it', async () => {
-    await controller.sensitive(USER, CUSTOMER_ID, CARD_ID);
-
-    expect(security.reveal).toHaveBeenCalledWith(CARD_ID, CUSTOMER_ID, 'user-1', undefined);
   });
 });

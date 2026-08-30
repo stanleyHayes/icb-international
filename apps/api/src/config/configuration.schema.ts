@@ -32,7 +32,6 @@ export const configurationSchema = z
     JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
     JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(900),
     JWT_REFRESH_TTL_SECONDS: z.coerce.number().int().positive().default(604_800),
-    STEP_UP_TTL_SECONDS: z.coerce.number().int().positive().default(300),
     FIELD_ENCRYPTION_KEY: z
       .string()
       .regex(/^[0-9a-f]{64}$/i, 'FIELD_ENCRYPTION_KEY must be 64 hex characters (32 bytes)'),

@@ -4,7 +4,6 @@ import { fromMinorUnits, getMinorUnitFactor, type CurrencyCode, type Money } fro
 import { toMoneyDto } from '../../accounts/infrastructure/account.mapper.js';
 import type { SignedTransferQuoteTerms } from '../domain/quote-signature.js';
 import type { FeeLine } from '../domain/transfer-fees.js';
-import { STEP_UP_THRESHOLD_MAJOR_UNITS } from '../domain/transfers.constants.js';
 import type { TransferQuoteDoc } from './transfer-quote.schemas.js';
 
 /** What redeeming a quote hands to the pipeline — the exact terms the customer confirmed. */
@@ -21,7 +20,7 @@ export interface RedeemedTransferQuote {
 /** Persistence → wire, for a freshly issued quote. */
 export function toQuoteContract(
   doc: TransferQuoteDoc,
-  thresholds: { stepUpMinorUnits: number; approvalMinorUnits: number },
+  thresholds: { approvalMinorUnits: number },
 ): TransferQuote {
   const totalDebitMinorUnits = doc.feeMinorUnits + doc.debit.minorUnits;
   return {
@@ -39,7 +38,6 @@ export function toQuoteContract(
     fx: fxDetail(doc),
     estimatedArrival: doc.estimatedArrival.toISOString(),
     cutOffAt: doc.cutOffAt?.toISOString() ?? null,
-    requiresStepUp: totalDebitMinorUnits >= thresholds.stepUpMinorUnits,
     requiresApproval: totalDebitMinorUnits >= thresholds.approvalMinorUnits,
     expiresAt: doc.expiresAt.toISOString(),
   };
@@ -99,14 +97,4 @@ export function toSignedQuoteTerms(doc: TransferQuoteDoc): SignedTransferQuoteTe
     fxRate: doc.fxRate,
     expiresAtMs: doc.expiresAt.getTime(),
   };
-}
-
-/** The high-value rule the issue-time contract flags with the same computation. */
-export function quoteRequiresStepUp(doc: TransferQuoteDoc): boolean {
-  const totalMinorUnits = doc.feeMinorUnits + doc.debit.minorUnits;
-  const threshold = thresholdMinorUnits(
-    STEP_UP_THRESHOLD_MAJOR_UNITS,
-    doc.debit.currency as CurrencyCode,
-  );
-  return totalMinorUnits >= threshold;
 }

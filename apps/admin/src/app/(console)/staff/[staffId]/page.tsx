@@ -72,20 +72,6 @@ export default async function StaffDetailPage({
         </Card>
 
         <div className="space-y-6">
-          <Card>
-            <CardHeader title="Two-factor authentication" />
-            <CardBody>
-              {staff.mfaEnabled ? (
-                <p className="text-sm text-[var(--icb-success-fg)]">Enrolled</p>
-              ) : (
-                <p className="text-sm text-[var(--icb-warning-fg)]">
-                  Not yet enrolled — the console stays locked for this operator until enrolment is
-                  complete.
-                </p>
-              )}
-            </CardBody>
-          </Card>
-
           {sessions ? (
             <Card>
               <CardHeader title="Your sessions" description="Revoking signs that device out." />

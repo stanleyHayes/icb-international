@@ -13,7 +13,7 @@ const ASSET = { provider: 'local', publicId: 'icb/statements/01J8ZCQ0R0K3M4N5P6Q
 function footprintInput(): FootprintInput {
   return {
     customer: customerDoc(),
-    credential: { emailVerified: true, mfaEnabled: false, lastLoginAt: NOW },
+    credential: { emailVerified: true, lastLoginAt: NOW },
     sessions: [],
     accounts: [],
     generatedAt: NOW,

@@ -38,7 +38,7 @@ export async function createConfiguredApp(
   app.enableCors({
     origin: [...config.http.corsOrigins],
     credentials: true,
-    allowedHeaders: ['content-type', 'authorization', 'idempotency-key', 'x-correlation-id', 'x-step-up-token'],
+    allowedHeaders: ['content-type', 'authorization', 'idempotency-key', 'x-correlation-id'],
     exposedHeaders: ['x-correlation-id', 'x-icb-environment'],
   });
 

@@ -4,9 +4,6 @@ import { Button } from '@icb/ui';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useActionState, useId } from 'react';
 
-import { STEP_UP_PURPOSE } from '@/features/step-up/step-up.constants';
-import { useStepUpSubmit } from '@/features/step-up/use-step-up-submit';
-
 import { createStaffAction, type StaffFormState } from './actions';
 import { RoleCheckboxes } from './role-checkboxes';
 
@@ -17,12 +14,11 @@ const INITIAL_STAFF_FORM_STATE: StaffFormState = { status: 'idle', message: null
 /**
  * Provision a new operator.
  *
- * Creating a login that can touch other people's money is a sensitive operation, so the submit
- * passes through forced re-authentication (step-up) before the API is called.
+ * Creating a login that can touch other people's money is a sensitive operation; every
+ * submission is attributed to the signed-in operator in the audit trail.
  */
 export function CreateStaffForm() {
   const [state, action, pending] = useActionState(createStaffAction, INITIAL_STAFF_FORM_STATE);
-  const stepUp = useStepUpSubmit(STEP_UP_PURPOSE.staffManage, 'Adding a staff member');
   const emailId = useId();
   const firstNameId = useId();
   const lastNameId = useId();
@@ -31,22 +27,13 @@ export function CreateStaffForm() {
     return (
       <p className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--icb-success-border)] bg-[var(--icb-success-bg)] px-4 py-3 text-sm text-[var(--icb-success-fg)]">
         <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-        Staff account created. They must set up two-factor authentication on first sign-in.
+        Staff account created.
       </p>
     );
   }
 
   return (
-    <form
-      ref={stepUp.formRef}
-      action={action}
-      onSubmit={stepUp.handleSubmit}
-      className="space-y-5"
-      noValidate
-    >
-      <input type="hidden" name="stepUpToken" ref={stepUp.tokenInputRef} />
-      {stepUp.dialog}
-
+    <form action={action} className="space-y-5" noValidate>
       {state.message ? (
         <p
           role="alert"

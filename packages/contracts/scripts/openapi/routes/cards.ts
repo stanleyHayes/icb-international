@@ -65,7 +65,7 @@ export const cardsOperations = defineOperations([
     path: '/cards/{cardId}/sensitive',
     tag: TAG.cards,
     operationId: 'getCardSensitiveDetails',
-    summary: 'Reveal PAN and CVV (requires a fresh step-up token)',
+    summary: 'Reveal PAN and CVV',
     pathParams: CARD_ID,
     response: success(
       STATUS.ok,
@@ -73,7 +73,6 @@ export const cardsOperations = defineOperations([
       cardSensitiveDetailsSchema,
     ),
     errors: [
-      { status: STATUS.unauthorized, description: 'A valid step-up token is required.' },
       { status: STATUS.notFound },
       { status: STATUS.conflict, description: 'The card is blocked or cancelled.' },
     ],
@@ -105,12 +104,11 @@ export const cardsOperations = defineOperations([
     path: '/cards/{cardId}/pin',
     tag: TAG.cards,
     operationId: 'setCardPin',
-    summary: 'Set or change the PIN (requires step-up)',
+    summary: 'Set or change the PIN',
     pathParams: CARD_ID,
     request: setCardPinRequestSchema,
     response: success(STATUS.noContent, 'PIN set.'),
     errors: [
-      { status: STATUS.unauthorized, description: 'A valid step-up token is required.' },
       { status: STATUS.notFound },
       { status: STATUS.unprocessable, description: 'The PIN fails the policy.' },
     ],

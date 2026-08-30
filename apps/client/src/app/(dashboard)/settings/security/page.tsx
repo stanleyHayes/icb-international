@@ -1,10 +1,9 @@
-import type { AuthenticatedUser, Session } from '@icb/contracts';
+import type { Session } from '@icb/contracts';
 import { Card, CardBody, CardHeader } from '@icb/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { ExportDataButton } from '@/features/settings/export-data-button';
-import { MfaPanel } from '@/features/settings/mfa-panel';
 import { PasswordForm } from '@/features/settings/password-form';
 import { SessionsPanel } from '@/features/settings/sessions-panel';
 import { SignOutEverywhere } from '@/features/settings/sign-out-everywhere';
@@ -17,10 +16,7 @@ export const metadata: Metadata = { title: 'Security' };
  * sign-out-everywhere under the lot of them.
  */
 export default async function SecurityPage() {
-  const [user, sessions] = await Promise.all([
-    api<AuthenticatedUser>('/auth/me', { tags: ['profile'] }),
-    api<Session[]>('/auth/sessions', { tags: ['sessions'] }),
-  ]);
+  const sessions = await api<Session[]>('/auth/sessions', { tags: ['sessions'] });
 
   return (
     <>
@@ -31,25 +27,16 @@ export default async function SecurityPage() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Password" />
-          <CardBody className="pt-0">
-            <PasswordForm />
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader title="Two-factor authentication" />
-          <CardBody className="pt-0">
-            <MfaPanel enabled={user.mfaEnabled} />
-          </CardBody>
-        </Card>
-      </div>
+      <Card className="mt-8">
+        <CardHeader title="Password" />
+        <CardBody className="pt-0">
+          <PasswordForm />
+        </CardBody>
+      </Card>
 
       <Card className="mt-6 overflow-hidden">
         <CardHeader
-          title="Sessions and trusted devices"
+          title="Sessions"
           description="Everywhere you are signed in. End anything you do not recognise."
         />
         <SessionsPanel sessions={sessions} />

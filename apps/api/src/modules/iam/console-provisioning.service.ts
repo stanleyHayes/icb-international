@@ -68,15 +68,13 @@ export class ConsoleProvisioningService {
       { email },
       {
         $set: { roles, active: true },
-        // Names and the MFA requirement are initial values: an operator who has since renamed the
-        // account or enrolled a factor should not have that undone by a re-run.
+        // Names are initial values: an operator who has since renamed the account should not
+        // have that undone by a re-run.
         $setOnInsert: {
           _id: newId(),
           email,
           firstName: account.firstName,
           lastName: account.lastName,
-          mfaRequired: true,
-          mfaEnabled: false,
           lastLoginAt: null,
         },
       },

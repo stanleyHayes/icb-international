@@ -18,7 +18,7 @@ import { UserProfileReader } from './user-profile-reader.js';
  *
  * Registration creates the customer and credential records and sends a verification email; it
  * does *not* log the customer in — the contract returns the user, and the first session comes
- * from an explicit login, which is also where MFA policy first applies.
+ * from an explicit login.
  */
 @Injectable()
 export class RegistrationService {

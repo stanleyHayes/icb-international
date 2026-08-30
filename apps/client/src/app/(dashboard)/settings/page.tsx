@@ -1,6 +1,6 @@
 import type { AuthenticatedUser } from '@icb/contracts';
 import { Card, CardBody, CardHeader, StatusBadge, formatDate } from '@icb/ui';
-import { Bell, ChevronRight, KeyRound, Palette, Smartphone, User } from 'lucide-react';
+import { Bell, ChevronRight, KeyRound, Palette, User } from 'lucide-react';
 import type { Metadata, Route } from 'next';
 import Link from 'next/link';
 
@@ -19,7 +19,7 @@ const SECTIONS = [
     href: '/settings/security',
     icon: KeyRound,
     title: 'Security',
-    detail: 'Password, two-factor authentication, sessions and your data.',
+    detail: 'Password, sessions and your data.',
   },
   {
     href: '/settings/notifications',
@@ -81,17 +81,6 @@ export default async function SettingsPage() {
                   <span className="text-[var(--icb-text-muted)]">
                     Argon2id hashed — we cannot read it, and neither can anyone who reaches our
                     database.
-                  </span>
-                </p>
-              </li>
-              <li className="flex items-start gap-3">
-                <Smartphone size={17} className="mt-0.5 shrink-0 text-[var(--icb-text-subtle)]" />
-                <p>
-                  <span className="font-medium">Two-factor authentication.</span>{' '}
-                  <span className="text-[var(--icb-text-muted)]">
-                    {user.mfaEnabled
-                      ? 'Enabled. Required at sign-in and for sensitive actions.'
-                      : 'Not enabled — turn it on under Security.'}
                   </span>
                 </p>
               </li>

@@ -109,7 +109,7 @@ function setup(order: string[]) {
     model as never,
     accounts as never,
     destinations,
-    { confirm: vi.fn(), assertHighValueStepUp: vi.fn().mockResolvedValue(undefined) } as never,
+    { confirm: vi.fn() } as never,
     fraud,
     clock,
   );

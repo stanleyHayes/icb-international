@@ -24,7 +24,7 @@ const TOUR_STOPS = [
     href: '/account/security',
     icon: ShieldCheck,
     title: 'Security',
-    detail: 'Turn on two-factor authentication and see every device signed in to your account.',
+    detail: 'See every device signed in to your account, and sign out the ones you do not recognise.',
   },
 ] as const;
 

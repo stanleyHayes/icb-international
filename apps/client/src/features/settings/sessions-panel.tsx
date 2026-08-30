@@ -8,7 +8,7 @@ import { useState, useTransition } from 'react';
 import { revokeSessionAction } from './security-actions';
 
 /**
- * Active sessions and trusted devices. The current session cannot be revoked from here —
+ * Active sessions. The current session cannot be revoked from here —
  * signing out everywhere covers that case — because a control that kills the page you are
  * looking at invites the question of whether it worked.
  */
@@ -47,7 +47,6 @@ function SessionRow({ session }: Readonly<{ session: Session }>) {
         <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
           {session.device.label}
           {session.current ? <StatusBadge status="this device" /> : null}
-          {session.device.trusted ? <StatusBadge status="trusted" /> : null}
         </p>
         <p className="mt-0.5 text-xs text-[var(--icb-text-subtle)]">
           {[session.device.browser, session.device.os].filter(Boolean).join(' · ') || 'Unknown client'}

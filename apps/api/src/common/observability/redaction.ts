@@ -19,7 +19,6 @@
 export const REDACT_PATHS: readonly string[] = [
   'req.headers.authorization',
   'req.headers.cookie',
-  'req.headers["x-step-up-token"]',
   'req.headers["idempotency-key"]',
   'res.headers["set-cookie"]',
   'password',
@@ -39,8 +38,6 @@ export const REDACT_PATHS: readonly string[] = [
   '*.cvv',
   'panToken',
   '*.panToken',
-  'mfaSecretEncrypted',
-  '*.mfaSecretEncrypted',
   'accessToken',
   '*.accessToken',
   'refreshToken',
@@ -60,8 +57,6 @@ export const REDACT_PATHS: readonly string[] = [
   '*.nationalId',
   'documentNumber',
   '*.documentNumber',
-  'recoveryCodeHashes',
-  '*.recoveryCodeHashes',
 ];
 
 /** 13–19 digits, optionally grouped — the shape of a card number wherever it appears. */

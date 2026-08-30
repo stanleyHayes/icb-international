@@ -1,11 +1,8 @@
-import { authenticator } from 'otplib';
 import request from 'supertest';
 import { ulid } from 'ulid';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { z } from 'zod';
 
 import type {
-  totpEnrolResponseSchema,
   AuthenticatedUser,
   Session,
 } from '@icb/contracts';
@@ -13,8 +10,6 @@ import { authOperations } from '@icb/contracts/openapi/routes/auth';
 import { TokenService } from '../../../src/modules/auth/application/token.service.js';
 import { ContractContext, fillPath, operationOf, requireInfra } from '../contract-context.js';
 import { bootContractApp, closeContractApp, type BootResult, type ContractApp } from '../harness.js';
-
-type TotpEnrolResponse = z.infer<typeof totpEnrolResponseSchema>;
 
 /** The fixture login secret this suite registers and rotates with. Meets the password policy:
  * 12+ chars, both cases, a digit. */
@@ -139,8 +134,6 @@ describe('contract: auth', () => {
     ctx.expectContract('register', res);
   });
 
-  // Must run before the TOTP tests: once MFA is enrolled the controller takes the challenge
-  // path, which returns a challenge instead of the declared session shape.
   it('login — the seeded persona signs in and gets the declared session shape', async (t) => {
     requireInfra(t, boot);
     const res = await ctx.post(operationOf('login').path, {
@@ -148,25 +141,6 @@ describe('contract: auth', () => {
       password: customerPassword,
     }, 'none');
     ctx.expectContract('login', res);
-  });
-
-  it('requestStepUp — a sensitive-action challenge matches the declared shape', async (t) => {
-    requireInfra(t, boot);
-    const res = await asUser('post', operationOf('requestStepUp').path).send({
-      purpose: 'change_security_settings',
-    });
-    ctx.expectContract('requestStepUp', res);
-  });
-
-  it('enrolTotp / confirmTotp — enrolment round-trips with a real authenticator code', async (t) => {
-    requireInfra(t, boot);
-    const enrolRes = await asUser('post', operationOf('enrolTotp').path).send({});
-    const enrol = ctx.expectContract('enrolTotp', enrolRes) as TotpEnrolResponse;
-
-    // Same library the server verifies with, so the generated code is guaranteed fresh.
-    const code = authenticator.generate(enrol.secret);
-    const confirmRes = await asUser('post', operationOf('confirmTotp').path).send({ code });
-    ctx.expectContract('confirmTotp', confirmRes);
   });
 
   it('logout — signing out answers the declared no-content response', async (t) => {
@@ -211,14 +185,8 @@ describe('contract: auth', () => {
     ctx.expectContract('verifyEmail', res);
   });
 
-  // KNOWN DRIFT: same class as above — the table declares DELETE /auth/totp and DELETE
-  // /auth/sessions, but the controllers mount POST /auth/totp/disable and POST /auth/logout-all.
-  it.fails('disableTotp [DRIFT: declared DELETE /auth/totp; controller is POST /auth/totp/disable]', async (t) => {
-    requireInfra(t, boot);
-    const res = await asUser('delete', operationOf('disableTotp').path);
-    ctx.expectContract('disableTotp', res);
-  });
-
+  // KNOWN DRIFT: same class as above — the table declares DELETE /auth/sessions, but the
+  // controller mounts POST /auth/logout-all.
   it.fails('revokeAllSessions [DRIFT: declared DELETE /auth/sessions; controller is POST /auth/logout-all]', async (t) => {
     requireInfra(t, boot);
     const res = await asUser('delete', operationOf('revokeAllSessions').path);
@@ -237,7 +205,6 @@ async function insertSession(app: ContractApp, userId: string, sessionId: string
     device: { label: 'Contract test device', userAgent: 'contract-test', deviceId: null },
     ipAddress: '127.0.0.1',
     location: null,
-    trusted: false,
     lastSeenAt: now,
     expiresAt: new Date(now.getTime() + 86_400_000),
     revokedAt: null,

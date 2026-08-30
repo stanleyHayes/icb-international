@@ -18,7 +18,6 @@ import { DestinationResolver, type ResolvedDestination } from './destination-res
 import { FRAUD_CHECK_PORT, type FraudCheckPort } from './fraud-check.port.js';
 import { TransferQuoteRedemptionService } from './transfer-quote-redemption.service.js';
 import type { RedeemedTransferQuote } from './transfer-quotes.service.js';
-import type { StepUpProof } from './transfer-step-up.service.js';
 import type { PreparedTransfer } from './transfer-pipeline.types.js';
 
 type ResolvedTerms = Omit<RedeemedTransferQuote, 'quoteId'> & {
@@ -47,11 +46,10 @@ export class TransferPreparationService {
   async prepare(
     customerId: string,
     request: CreateTransferRequest,
-    proof?: StepUpProof,
   ): Promise<PreparedTransfer> {
     const resolved = await this.destinations.resolve(request.destination, customerId);
     const source = await this.accounts.loadSpendable(request.fromAccountId, customerId);
-    const terms = await this.resolveTerms(customerId, request, resolved.destination, proof);
+    const terms = await this.resolveTerms(customerId, request, resolved.destination);
 
     assertPerTransactionLimit(terms.rail, terms.debit);
     const spent = await spentOnRailToday(this.transfers, customerId, terms.rail, this.clock);
@@ -83,24 +81,17 @@ export class TransferPreparationService {
     };
   }
 
-  /**
-   * Quote redemption, or the inline same-currency terms. The redemption service owns the
-   * step-up rule: a quote that flagged `requiresStepUp` is checked before it is spent, and
-   * the inline path applies the same threshold, because skipping the quote must not skip
-   * the check.
-   */
+  /** Quote redemption, or the inline same-currency terms. */
   private async resolveTerms(
     customerId: string,
     request: CreateTransferRequest,
     destination: CreateTransferRequest['destination'],
-    proof: StepUpProof | undefined,
   ): Promise<ResolvedTerms> {
     if (request.quoteId) {
       const quote = await this.redemption.confirm(
         customerId,
         request.quoteId,
         { fromAccountId: request.fromAccountId, destination },
-        proof,
       );
       return { ...quote, totalFees: totalFees(quote.fees, quote.debit.currency) };
     }
@@ -109,7 +100,6 @@ export class TransferPreparationService {
     const rail = resolveRail(destination);
     const fees = feesFor(rail, debit.currency);
     const total = totalFees(fees, debit.currency);
-    await this.redemption.assertHighValueStepUp(debit, total, proof);
     return {
       quoteId: null,
       rail,

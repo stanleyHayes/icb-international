@@ -15,8 +15,8 @@ import { bootContractApp, closeContractApp, type BootResult, type ContractApp } 
  * when the routes are mounted as declared these tests go red and must be converted back to
  * `it` (and the matching `ctx.gap` removed).
  *
- * The domain's mutations (`createStaffUser`, `decideApproval`) sit behind @RequireStepUp, so
- * no valid payload is feasible from the harness's plain staff token; they are not exercised.
+ * The domain's mutations (`createStaffUser`, `decideApproval`) are not exercised from the
+ * harness's plain staff token.
  */
 describe('contract: governance', () => {
   let boot: BootResult;

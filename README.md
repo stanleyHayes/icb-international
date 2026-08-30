@@ -109,7 +109,7 @@ absent) · `@icb/sdk` · `@icb/testing`.
 | Area | Modules |
 | --- | --- |
 | Core | ledger (postings, holds, reversal, journal, trial balance, integrity), accounts, transactions, transfers |
-| Identity | auth (argon2id, rotating refresh with family-reuse detection, step-up), customers, KYC (tiered limits, screening, review queue) |
+| Identity | auth (argon2id, rotating refresh with family-reuse detection), customers, KYC (tiered limits, screening, review queue) |
 | Products | cards (PAN encrypted at rest, controls enforced at authorisation, auth → hold → capture), loans (amortisation, explainable scorecard, arrears), savings goals and term deposits, bill pay, FX, products/pricing |
 | Servicing | notifications (**Resend**, with a recording transport offline), documents and statements (**Cloudinary**, PDF written from the ledger), beneficiaries with cooling-off and micro-deposit verification |
 | Risk | fraud rule engine with per-rule attribution, risk cases, disputes with provisional credit |
@@ -126,7 +126,7 @@ replica-set integration job, a production build, and a secret scan.
 
 ### Honest gaps
 
-MFA enrolment, the approvals inbox, AML cases, secure messaging and every admin queue now have
+The approvals inbox, AML cases, secure messaging and every admin queue now have
 screens. What is genuinely still open:
 
 - **Role-boundary proof.** The contract suite signs in holding every staff role, so it proves

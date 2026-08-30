@@ -1,7 +1,6 @@
 import { Card, CardBody, Reveal } from '@icb/ui';
 import {
   ArrowRight,
-  Fingerprint,
   KeyRound,
   Landmark,
   Lock,
@@ -19,7 +18,7 @@ import { pageMetadata } from '@/lib/seo/metadata';
 export const metadata: Metadata = pageMetadata({
   title: 'Security centre',
   description:
-    'How ICB protects your account: rotating sessions, step-up authentication, enforced card controls, and an immutable audit trail.',
+    'How ICB protects your account: rotating sessions, enforced card controls, and an immutable audit trail.',
   path: '/security',
 });
 
@@ -28,11 +27,6 @@ const CONTROLS = [
     icon: KeyRound,
     title: 'Sessions that rotate',
     body: 'Your refresh token is replaced every time it is used and stored only as a hash. If an old one is ever presented, every session in that family is revoked immediately — because the only way that happens is theft.',
-  },
-  {
-    icon: Fingerprint,
-    title: 'Step-up on what matters',
-    body: 'Revealing a card number, adding a payee, moving a large sum or changing a security setting all require a fresh second factor. A stolen session is not enough.',
   },
   {
     icon: Lock,

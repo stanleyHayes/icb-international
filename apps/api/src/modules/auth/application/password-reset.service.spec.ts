@@ -100,7 +100,7 @@ describe('resetPassword', () => {
     expect(credentials.updateOne).not.toHaveBeenCalled();
   });
 
-  it('resets the credential and kills every session and trusted device', async () => {
+  it('resets the credential and kills every session', async () => {
     const { credentials, mailer, sessions, audit, service } = setup();
     credentials.findOne.mockReturnValue(leanQuery(live));
 

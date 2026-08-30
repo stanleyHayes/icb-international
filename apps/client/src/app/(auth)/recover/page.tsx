@@ -1,4 +1,4 @@
-import { KeyRound, LifeBuoy, ShieldQuestion } from 'lucide-react';
+import { KeyRound, LifeBuoy } from 'lucide-react';
 import type { Metadata } from 'next';
 
 import { AuthCard } from '@/features/auth/auth-card';
@@ -20,15 +20,9 @@ const OPTIONS = [
     detail: 'We email you a one-time code, you choose a new password, and every other session is signed out.',
   },
   {
-    href: '/login',
-    icon: ShieldQuestion,
-    title: 'Lost your phone or authenticator',
-    detail: 'Sign in with your password, then choose “use a recovery code” at the verification step.',
-  },
-  {
     href: `${MARKETING_URL}/help`,
     icon: LifeBuoy,
-    title: 'No password and no recovery codes',
+    title: 'No password, or no access to your email',
     detail: 'Contact support. Regaining access takes identity checks — that delay is your money staying safe.',
   },
 ] as const;

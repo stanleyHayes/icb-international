@@ -17,8 +17,8 @@ import { SessionManagerService } from './session-manager.service.js';
  *
  * `forgotPassword` always succeeds from the outside — the response cannot reveal whether an
  * email is registered (enumeration). `resetPassword` is the full security reset: new hash,
- * lockout cleared, every session and trusted device killed, because whoever resets a password
- * must re-establish every trust decision from scratch.
+ * lockout cleared, every session killed, because whoever resets a password must sign in fresh
+ * everywhere.
  */
 @Injectable()
 export class PasswordResetService {

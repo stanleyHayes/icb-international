@@ -78,12 +78,6 @@ export class LedgerUnbalancedError extends DomainError {
   }
 }
 
-export class StepUpRequiredError extends DomainError {
-  constructor(purpose: string) {
-    super('STEP_UP_REQUIRED', 'This action requires re-authentication', { context: { purpose } });
-  }
-}
-
 export class KycTierInsufficientError extends DomainError {
   constructor(required: string, current: string | null) {
     super('KYC_TIER_INSUFFICIENT', `This action requires ${required} verification`, {

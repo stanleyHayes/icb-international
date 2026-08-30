@@ -51,8 +51,6 @@ export function useTransferFlow(props: FlowProps) {
   const [result, setResult] = useState<TransferDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [stepUpOpen, setStepUpOpen] = useState(false);
-  const [stepUpDone, setStepUpDone] = useState(false);
 
   const patch = (changes: Partial<TransferDraft>) =>
     setDraft((current) => ({ ...current, ...changes }));
@@ -93,10 +91,6 @@ export function useTransferFlow(props: FlowProps) {
     if (!quote) {
       return;
     }
-    if (quote.requiresStepUp && !stepUpDone) {
-      setStepUpOpen(true);
-      return;
-    }
     await execute();
   }
 
@@ -124,19 +118,12 @@ export function useTransferFlow(props: FlowProps) {
     }
   }
 
-  function onStepUpVerified() {
-    setStepUpOpen(false);
-    setStepUpDone(true);
-    void execute();
-  }
-
   function reset() {
     setDraft(initialDraft(props.initialRail, props.initialFrom || (props.accounts[0]?.id ?? '')));
     setQuote(null);
     setResult(null);
     setError(null);
     setQuoteExpired(false);
-    setStepUpDone(false);
     setStep('details');
   }
 
@@ -148,14 +135,11 @@ export function useTransferFlow(props: FlowProps) {
     result,
     error,
     busy,
-    stepUpOpen,
     patch,
     setStep,
     setQuoteExpired,
-    setStepUpOpen,
     requestQuote,
     confirm,
-    onStepUpVerified,
     reset,
   };
 }

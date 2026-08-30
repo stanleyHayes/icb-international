@@ -33,10 +33,8 @@ export const MONGO_URI =
 
 export const AVAILABILITY_FILE = path.join(AUTH_DIR, 'availability.json');
 export const IDS_FILE = path.join(AUTH_DIR, 'dynamic-ids.json');
-export const ADMIN_TOTP_FILE = path.join(AUTH_DIR, 'admin-totp.json');
 
-export const STORAGE_STATE: Record<'client' | 'admin' | 'adminUnenrolled', string> = {
+export const STORAGE_STATE: Record<'client' | 'admin', string> = {
   client: path.join(AUTH_DIR, 'client.json'),
   admin: path.join(AUTH_DIR, 'admin.json'),
-  adminUnenrolled: path.join(AUTH_DIR, 'admin-unenrolled.json'),
 };

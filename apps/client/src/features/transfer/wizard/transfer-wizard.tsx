@@ -7,7 +7,6 @@ import { DetailsStep } from './details-step';
 import { QuoteStep } from './quote-step';
 import { ReceiptStep } from './receipt-step';
 import { StepIndicator } from './step-indicator';
-import { StepUpDialog } from './step-up-dialog';
 import { useTransferFlow } from './use-transfer-flow';
 
 interface TransferWizardProps {
@@ -74,12 +73,6 @@ export function TransferWizard(props: Readonly<TransferWizardProps>) {
       {flow.step === 'receipt' && flow.result ? (
         <ReceiptStep transfer={flow.result} onReset={flow.reset} />
       ) : null}
-
-      <StepUpDialog
-        open={flow.stepUpOpen}
-        onClose={() => flow.setStepUpOpen(false)}
-        onVerified={flow.onStepUpVerified}
-      />
     </div>
   );
 }

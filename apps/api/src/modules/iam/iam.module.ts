@@ -22,8 +22,7 @@ import { StaffService } from './staff.service.js';
  * Identity & access for the back office.
  *
  * Owns staff lifecycle, the permission matrix exposed as data, the maker-checker engine and
- * staff session policy. Depends on AuthModule for the step-up tokens that guard privileged
- * mutations; the ClockService is global. Other modules integrate by injecting
+ * staff session policy. Other modules integrate by injecting
  * `ApprovalsService.requestApproval` (transfers, ledger, limits, refunds) and by enforcing
  * `StaffSessionPolicy` in the auth flow.
  */

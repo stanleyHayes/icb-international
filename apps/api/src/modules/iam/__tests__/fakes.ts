@@ -109,8 +109,6 @@ export function staffDoc(overrides: Partial<StaffUserDoc> = {}): StaffUserDoc {
     lastName: 'Maker',
     roles: ['operations'],
     active: true,
-    mfaRequired: true,
-    mfaEnabled: false,
     lastLoginAt: null,
     createdAt: now,
     updatedAt: now,

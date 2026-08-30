@@ -22,7 +22,7 @@ export const HELP_CATEGORIES = [
   { name: CATEGORY_PAYMENTS, description: 'Rails, arrival times, limits and recalls' },
   { name: CATEGORY_CARDS, description: 'Controls, declines, lost cards and PINs' },
   { name: CATEGORY_ACCOUNTS, description: 'Ledger vs available, statements, overdrafts' },
-  { name: CATEGORY_SECURITY, description: 'Step-up checks, scams, sign-in problems' },
+  { name: CATEGORY_SECURITY, description: 'Sessions, scams, sign-in problems' },
 ] as const;
 
 export const HELP_ARTICLES: readonly HelpArticle[] = [
@@ -79,7 +79,7 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     category: CATEGORY_CARDS,
     title: 'Setting or changing a card PIN',
     summary:
-      'Set or change your PIN in the app after a step-up check. We will never ask what your PIN is, and neither should anyone else.',
+      'Set or change your PIN in the app. We will never ask what your PIN is, and neither should anyone else.',
     keywords: ['pin', 'change', 'forgot', 'unlock', 'card'],
   },
   {
@@ -121,14 +121,6 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     summary:
       'Eligible deposits are protected up to 250,000 per depositor across all ICB accounts combined. See the deposit protection page for what is and is not covered.',
     keywords: ['protected', 'safe', 'guarantee', 'insured', 'deposit', 'fail'],
-  },
-  {
-    slug: 'step-up-checks',
-    category: CATEGORY_SECURITY,
-    title: 'Why we ask for a second factor again',
-    summary:
-      'Revealing a card number, adding a payee or moving a large sum requires a fresh second factor even when you are signed in. A stolen session is not enough to act.',
-    keywords: ['code', 'otp', 'mfa', 'two factor', 'verify', 'step up', 'authenticator'],
   },
   {
     slug: 'sign-out-everywhere',

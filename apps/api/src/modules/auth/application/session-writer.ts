@@ -15,8 +15,6 @@ export interface RecordSessionInput {
   device: DeviceContext;
   /** Present when rotating: the new session joins the existing token family. */
   familyId: string | undefined;
-  /** True when the login satisfied MFA or came from a trusted device. */
-  trusted: boolean;
 }
 
 /**
@@ -49,7 +47,6 @@ export class SessionWriter {
         },
         ipAddress: input.device.ipAddress,
         location: null,
-        trusted: input.trusted,
         lastSeenAt: now,
         expiresAt: new Date(now.getTime() + input.refresh.ttlMs),
         revokedAt: null,

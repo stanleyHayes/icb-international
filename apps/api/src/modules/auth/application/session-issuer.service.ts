@@ -12,14 +12,12 @@ import { UserProfileReader } from './user-profile-reader.js';
 export interface IssueOptions {
   /** Present when rotating: the new session joins the existing token family. */
   readonly familyId?: string;
-  /** True when the login satisfied MFA or came from a trusted device. */
-  readonly trusted?: boolean;
 }
 
 /**
  * The single way a session comes into existence.
  *
- * Registration, login, MFA completion, and refresh rotation all funnel through here, so the
+ * Registration, login, and refresh rotation all funnel through here, so the
  * invariants — session row first, access token claims pointing at it — hold in exactly one
  * place.
  */
@@ -46,7 +44,6 @@ export class SessionIssuer {
       refresh,
       device,
       familyId: options.familyId,
-      trusted: options.trusted ?? false,
     });
 
     const user = await this.profiles.toAuthenticatedUser(credential);

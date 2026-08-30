@@ -6,11 +6,6 @@ import { AUDIT_ACTION_KEY, AuditAction } from './audit-action.decorator.js';
 import { IDEMPOTENT_KEY, Idempotent } from './idempotent.decorator.js';
 import { PERMISSIONS_KEY, Permissions } from './permissions.decorator.js';
 import { IS_PUBLIC_KEY, Public } from './public.decorator.js';
-import {
-  STEP_UP_KEY,
-  STEP_UP_TOKEN_HEADER,
-  RequireStepUp,
-} from './require-step-up.decorator.js';
 import { ROLES_KEY, Roles } from './roles.decorator.js';
 
 @Public()
@@ -23,7 +18,6 @@ class PublicController {
 
 class Sample {
   @Permissions('transactions:reverse', 'accounts:freeze')
-  @RequireStepUp('transaction-reverse')
   @Idempotent()
   @AuditAction('transaction.reverse')
   reverse(): void {
@@ -41,20 +35,12 @@ describe('cross-cutting decorators', () => {
     expect(metadataOn(PERMISSIONS_KEY)).toEqual(['transactions:reverse', 'accounts:freeze']);
   });
 
-  it('stores the step-up purpose', () => {
-    expect(metadataOn(STEP_UP_KEY)).toBe('transaction-reverse');
-  });
-
   it('marks the handler idempotent', () => {
     expect(metadataOn(IDEMPOTENT_KEY)).toBe(true);
   });
 
   it('stores the audit action name', () => {
     expect(metadataOn(AUDIT_ACTION_KEY)).toBe('transaction.reverse');
-  });
-
-  it('names the step-up header the guard reads', () => {
-    expect(STEP_UP_TOKEN_HEADER).toBe('x-step-up-token');
   });
 
   it('marks a controller public', () => {

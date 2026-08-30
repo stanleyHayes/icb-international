@@ -13,7 +13,7 @@ import { SessionWriter, type RecordSessionInput } from './session-writer.js';
 
 type CredentialView = Pick<
   UserCredentialDoc,
-  '_id' | 'customerId' | 'email' | 'emailVerified' | 'mfaEnabled' | 'roles' | 'lastLoginAt'
+  '_id' | 'customerId' | 'email' | 'emailVerified' | 'roles' | 'lastLoginAt'
 >;
 
 /**
@@ -75,15 +75,6 @@ export class UserProfileReader {
     await this.sessionWriter.record(input);
   }
 
-  /** SMS OTP destination. Null for staff principals, who have no customer record. */
-  async phoneForCustomer(customerId: string | null): Promise<string | null> {
-    if (customerId === null) {
-      return null;
-    }
-    const customer = await this.customers.findById(customerId).select('phone').lean();
-    return customer?.phone ?? null;
-  }
-
   async toAuthenticatedUser(credential: CredentialView): Promise<AuthenticatedUser> {
     const customer = credential.customerId
       ? await this.customers.findById(credential.customerId).lean()
@@ -97,7 +88,6 @@ export class UserProfileReader {
       firstName: individual?.firstName ?? '',
       lastName: individual?.lastName ?? '',
       emailVerified: credential.emailVerified,
-      mfaEnabled: credential.mfaEnabled,
       roles: credential.roles as StaffRole[],
       lastLoginAt: credential.lastLoginAt?.toISOString() ?? null,
     };

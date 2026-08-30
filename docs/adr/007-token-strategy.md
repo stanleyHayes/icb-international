@@ -3,6 +3,11 @@
 - **Status:** Accepted
 - **Date:** 2026-08-02
 
+> **Updated (2026-08):** the step-up challenges referenced below were removed along with
+> all MFA (TOTP, recovery codes, trusted devices). The token strategy itself — 15-minute
+> access JWTs with rotating, reuse-detected refresh tokens — is unchanged; sensitive
+> operations now proceed on session auth alone.
+
 ## Context
 
 Client and admin sessions need an auth token strategy that limits the blast radius of token

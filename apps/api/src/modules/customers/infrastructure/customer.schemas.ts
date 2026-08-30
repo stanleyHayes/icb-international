@@ -139,16 +139,6 @@ export class UserCredentialDoc {
   @Prop({ type: Date, default: null })
   passwordResetExpiresAt!: Date | null;
 
-  @Prop({ type: Boolean, required: true, default: false })
-  mfaEnabled!: boolean;
-
-  /** Encrypted at rest — never returned by any query that reaches a controller. */
-  @Prop({ type: String, default: null })
-  mfaSecretEncrypted!: string | null;
-
-  @Prop({ type: [String], default: [] })
-  recoveryCodeHashes!: string[];
-
   @Prop({ type: Number, required: true, default: 0 })
   failedAttempts!: number;
 
@@ -198,9 +188,6 @@ export class SessionDoc {
 
   @Prop({ type: String, default: null })
   location!: string | null;
-
-  @Prop({ type: Boolean, required: true, default: false })
-  trusted!: boolean;
 
   @Prop({ type: Date, required: true })
   lastSeenAt!: Date;

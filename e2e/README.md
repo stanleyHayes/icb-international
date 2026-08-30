@@ -15,9 +15,6 @@ The four §10 journeys against the real stack:
   `GET /v1/accounts` as a bare array. Journey 2 issues the card via API until fixed.
 - **`/loans/[loanId]` 500s** (WEB track): same envelope bug in `LoanDetailPage`. Journey 3
   repays via API until fixed.
-- **Staff logins are TOTP-enrolled** after a fresh seed: `fixtures/mfa.ts` completes the
-  challenge by decrypting the seed secret with `FIELD_ENCRYPTION_KEY` — the same construction
-  as `apps/api/src/common/crypto/field-crypto.ts`.
 - **Auth endpoints throttle at 5/min/IP** (`throttle.constants.ts`): the suite caches sessions
   for 8 minutes in `fixtures/api.ts`; do not add per-test logins.
 - **Risk engine does not score card authorisations** — only transfers and loans. The

@@ -31,12 +31,9 @@ describe('StaffService', () => {
 
     expect(created.email).toBe('ada@icb.example');
     expect(created.active).toBe(true);
-    expect(created.mfaEnabled).toBe(false);
     expect(created.lastLoginAt).toBeNull();
     expect(created.createdAt).toBe(START.toISOString());
     expect(created.roles).toEqual(['admin']);
-    const persisted = await store.findById(created.id);
-    expect(persisted?.mfaRequired).toBe(true);
   });
 
   it('rejects a duplicate email regardless of case', async () => {

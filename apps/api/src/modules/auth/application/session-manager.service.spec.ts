@@ -7,7 +7,6 @@ import { type SessionDoc } from '../../customers/infrastructure/customer.schemas
 import { asAudit, frozenClock, leanQuery, mockAudit, TEST_NOW } from '../__tests__/helpers.js';
 import { REVOKE_REASONS } from '../auth.constants.js';
 import { SessionManagerService } from './session-manager.service.js';
-import type { TrustedDeviceService } from './trusted-device.service.js';
 
 const CHROME_MAC =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126.0.0.0 Safari/537.36';
@@ -21,7 +20,6 @@ function sessionRow(overrides: Record<string, unknown> = {}) {
     device: { label: 'Chrome on macOS', userAgent: CHROME_MAC, deviceId: 'dev-1' },
     ipAddress: '10.0.0.1',
     location: null,
-    trusted: true,
     lastSeenAt: TEST_NOW,
     createdAt: TEST_NOW,
     expiresAt: new Date(TEST_NOW.getTime() + 86_400_000),
@@ -33,21 +31,19 @@ function sessionRow(overrides: Record<string, unknown> = {}) {
 
 function setup() {
   const sessions = { find: vi.fn(), findOne: vi.fn(), updateOne: vi.fn(), updateMany: vi.fn() };
-  const trustedDevices = { revokeAllForUser: vi.fn().mockResolvedValue(1) };
   const audit = mockAudit();
   const service = new SessionManagerService(
     sessions as unknown as Model<SessionDoc>,
-    trustedDevices as unknown as TrustedDeviceService,
     frozenClock(),
     asAudit(audit),
   );
-  return { sessions, trustedDevices, audit, service };
+  return { sessions, audit, service };
 }
 
 describe('list', () => {
   it('maps live sessions to the contract shape and flags the current one', async () => {
     const { sessions, service } = setup();
-    const rows = [sessionRow(), sessionRow({ _id: 'ses-2', trusted: false })];
+    const rows = [sessionRow(), sessionRow({ _id: 'ses-2' })];
     sessions.find.mockReturnValue({
       sort: vi.fn().mockReturnValue({ lean: vi.fn().mockResolvedValue(rows) }),
     });
@@ -57,7 +53,7 @@ describe('list', () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toMatchObject({
       id: 'ses-1',
-      device: { label: 'Chrome on macOS', browser: 'Chrome', os: 'macOS', trusted: true },
+      device: { label: 'Chrome on macOS', browser: 'Chrome', os: 'macOS' },
       ipAddress: '10.0.0.1',
       current: false,
     });
@@ -102,8 +98,8 @@ describe('revoke', () => {
 });
 
 describe('revokeAll', () => {
-  it('spares the current session when asked and drops trusted devices', async () => {
-    const { sessions, trustedDevices, service } = setup();
+  it('spares the current session when asked', async () => {
+    const { sessions, service } = setup();
     sessions.updateMany.mockResolvedValue({ modifiedCount: 4 });
 
     const count = await service.revokeAll('usr-1', REVOKE_REASONS.PasswordChange, 'ses-1');
@@ -113,7 +109,6 @@ describe('revokeAll', () => {
       { userId: 'usr-1', revokedAt: null, _id: { $ne: 'ses-1' } },
       { $set: { revokedAt: TEST_NOW, revokedReason: REVOKE_REASONS.PasswordChange } },
     );
-    expect(trustedDevices.revokeAllForUser).toHaveBeenCalledWith('usr-1');
   });
 
   it('revokes everything when no session is spared', async () => {

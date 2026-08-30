@@ -82,12 +82,6 @@ export function QuoteStep({
           as pending approval after you confirm.
         </p>
       ) : null}
-      {quote.requiresStepUp ? (
-        <p className="rounded-[var(--radius-md)] bg-[var(--icb-bg-muted)] px-4 py-3 text-sm text-[var(--icb-text-muted)]">
-          This transfer is above your verified limit — we will ask for a fresh authentication
-          code at the next step.
-        </p>
-      ) : null}
 
       {expired ? (
         <p role="alert" className="text-sm font-medium text-[var(--icb-danger-fg)]">

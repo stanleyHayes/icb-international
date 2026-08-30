@@ -23,7 +23,7 @@ const JSON_INDENT = 2;
 
 /** One-line description per bounded-context tag, surfaced in API docs and the SDK. */
 const TAG_DESCRIPTIONS: Readonly<Record<TagName, string>> = {
-  [TAG.auth]: 'Registration, login, MFA, sessions, and step-up authentication.',
+  [TAG.auth]: 'Registration, login, and sessions.',
   [TAG.customers]: 'Customer profiles, preferences, and the staff 360° view.',
   [TAG.kyc]: 'Identity verification cases, documents, and the review queue.',
   [TAG.accounts]: 'Bank accounts, balances, holds, and lifecycle actions.',

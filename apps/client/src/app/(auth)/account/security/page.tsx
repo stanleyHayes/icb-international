@@ -1,8 +1,6 @@
-import type { AuthenticatedUser, Session } from '@icb/contracts';
-import { Card, CardBody, CardHeader, StatusBadge } from '@icb/ui';
-import { ShieldCheck, ShieldOff } from 'lucide-react';
+import type { Session } from '@icb/contracts';
+import { Card, CardBody, CardHeader } from '@icb/ui';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 
 import { SessionList } from '@/features/auth/session-list';
 import { SignOutEverywhere } from '@/features/settings/sign-out-everywhere';
@@ -11,16 +9,13 @@ import { api } from '@/lib/api';
 export const metadata: Metadata = { title: 'Security' };
 
 /**
- * Sign-in security: the second factor, and every live session.
+ * Sign-in security: every live session in one place.
  *
  * This is the screen a worried customer needs at 2am — "is anyone else in my account, and can I
  * throw them out?" — so sessions lead and the controls sit beside the facts they act on.
  */
 export default async function SecurityPage() {
-  const [user, sessions] = await Promise.all([
-    api<AuthenticatedUser>('/auth/me'),
-    api<Session[]>('/auth/sessions'),
-  ]);
+  const sessions = await api<Session[]>('/auth/sessions');
 
   const otherSessions = sessions.filter((session) => !session.current).length;
   let sessionSummary = 'Only this device is signed in.';
@@ -40,37 +35,6 @@ export default async function SecurityPage() {
       </header>
 
       <Card className="mt-8">
-        <CardHeader
-          title="Two-factor authentication"
-          description="Required at sign-in on new devices and before sensitive actions."
-        />
-        <CardBody className="pt-0">
-          <div className="flex flex-wrap items-center gap-4">
-            <span
-              aria-hidden="true"
-              className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--icb-bg-muted)] text-[var(--icb-text-muted)]"
-            >
-              {user.mfaEnabled ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}
-            </span>
-            <div className="min-w-0 flex-1">
-              <StatusBadge status={user.mfaEnabled ? 'active' : 'not_started'} />
-              <p className="mt-1.5 text-sm text-[var(--icb-text-muted)]">
-                {user.mfaEnabled
-                  ? 'Your authenticator app is linked. Keep your recovery codes somewhere safe.'
-                  : 'Link an authenticator app so a stolen password alone cannot open your account.'}
-              </p>
-            </div>
-            <Link
-              href="/account/security/mfa"
-              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--icb-primary)] px-4 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors hover:bg-[var(--icb-primary-hover)]"
-            >
-              {user.mfaEnabled ? 'Manage' : 'Set up two-factor authentication'}
-            </Link>
-          </div>
-        </CardBody>
-      </Card>
-
-      <Card className="mt-6">
         <CardHeader title="Active sessions" description={sessionSummary} />
         <CardBody className="pt-0">
           <SessionList sessions={sessions} />

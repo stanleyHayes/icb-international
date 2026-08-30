@@ -2,8 +2,6 @@
 
 import {
   transferQuoteRequestSchema,
-  type MfaChallenge,
-  type StepUpToken,
   type TransferDetail,
   type TransferQuote,
 } from '@icb/contracts';
@@ -19,7 +17,6 @@ import type {
   ConfirmOutput,
   QuoteInput,
   QuoteOutput,
-  StepUpChallenge,
 } from './wizard/action-types';
 
 function errorMessage(error: unknown, fallback: string): string {
@@ -63,8 +60,7 @@ export async function requestQuoteAction(input: QuoteInput): Promise<ActionResul
  * Execute a quoted transfer.
  *
  * A fresh idempotency key per confirmation: a retried submission replays the same instruction,
- * a second deliberate send is a new one. The step-up proof (when the quote required one) is
- * gathered by the wizard before this action runs.
+ * a second deliberate send is a new one.
  */
 export async function confirmTransferAction(
   input: ConfirmInput,
@@ -115,41 +111,5 @@ async function saveTemplateQuietly(input: ConfirmInput): Promise<void> {
     revalidateTag('transfer-templates', 'max');
   } catch {
     // Deliberately swallowed — the receipt reports the transfer, not the template.
-  }
-}
-
-/** Begin a step-up challenge for a high-value transfer (TOTP or SMS, chosen by the API). */
-export async function requestStepUpAction(): Promise<ActionResult<StepUpChallenge>> {
-  try {
-    const challenge = await api<MfaChallenge>('/auth/step-up', {
-      method: 'POST',
-      body: { purpose: 'high_value_transfer' },
-    });
-    return {
-      ok: true,
-      data: {
-        challengeId: challenge.challengeId,
-        method: challenge.method,
-        hint: challenge.hint ?? null,
-      },
-    };
-  } catch (error) {
-    return { ok: false, error: errorMessage(error, 'We could not start verification. Please try again.') };
-  }
-}
-
-/** Answer the challenge. The minted token proves presence; the wizard then confirms. */
-export async function verifyStepUpAction(input: {
-  challengeId: string;
-  code: string;
-}): Promise<ActionResult<{ verified: true }>> {
-  try {
-    await api<StepUpToken>('/auth/step-up/verify', {
-      method: 'POST',
-      body: { challengeId: input.challengeId, code: input.code },
-    });
-    return { ok: true, data: { verified: true } };
-  } catch (error) {
-    return { ok: false, error: errorMessage(error, 'That code was not accepted. Check it and try again.') };
   }
 }

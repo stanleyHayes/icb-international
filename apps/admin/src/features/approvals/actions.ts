@@ -4,23 +4,12 @@ import { decideApprovalRequestSchema } from '@icb/contracts';
 import { revalidatePath } from 'next/cache';
 
 import { ApiError } from '@/lib/api';
-import {
-  decideApproval,
-  requestDecisionChallenge,
-  verifyDecisionChallenge,
-} from '@/features/approvals/api';
-
-export interface ChallengeView {
-  id: string;
-  method: string;
-  hint: string | null;
-}
+import { decideApproval } from '@/features/approvals/api';
 
 export interface DecisionResult {
   ok: boolean;
   message: string | null;
   fieldErrors: Record<string, string>;
-  challenge: ChallengeView | null;
 }
 
 export interface DecideInput {
@@ -29,13 +18,8 @@ export interface DecideInput {
   reason: string;
 }
 
-export interface CompleteInput extends DecideInput {
-  challengeId: string;
-  code: string;
-}
-
 function failure(message: string | null, fieldErrors: Record<string, string> = {}): DecisionResult {
-  return { ok: false, message, fieldErrors, challenge: null };
+  return { ok: false, message, fieldErrors };
 }
 
 function errorMessage(error: unknown, fallback: string): string {
@@ -57,43 +41,22 @@ function validate(input: DecideInput) {
 }
 
 /**
- * Step one of a decision: validate the decision and mint the step-up challenge.
+ * Record an approve/reject decision.
  *
  * Four-eyes is a server-side control (the maker can never decide), but the reason is validated
- * here too so a malformed submission never consumes an MFA challenge.
+ * here too so a malformed submission never reaches the API.
  */
-export async function beginDecision(input: DecideInput): Promise<DecisionResult> {
+export async function decide(input: DecideInput): Promise<DecisionResult> {
   const { data, fieldErrors } = validate(input);
   if (!data) {
     return failure(null, fieldErrors ?? {});
   }
 
   try {
-    const challenge = await requestDecisionChallenge();
-    return {
-      ok: true,
-      message: null,
-      fieldErrors: {},
-      challenge: { id: challenge.challengeId, method: challenge.method, hint: challenge.hint ?? null },
-    };
-  } catch (error) {
-    return failure(errorMessage(error, 'The verification challenge could not be started.'));
-  }
-}
-
-/** Step two: verify the operator's second factor, then record the decision with the proof. */
-export async function completeDecision(input: CompleteInput): Promise<DecisionResult> {
-  const { data, fieldErrors } = validate(input);
-  if (!data) {
-    return failure(null, fieldErrors ?? {});
-  }
-
-  try {
-    const proof = await verifyDecisionChallenge(input.challengeId, input.code);
-    await decideApproval(input.approvalId, data, proof.stepUpToken);
+    await decideApproval(input.approvalId, data);
     revalidatePath('/approvals');
     revalidatePath(`/approvals/${input.approvalId}`);
-    return { ok: true, message: null, fieldErrors: {}, challenge: null };
+    return { ok: true, message: null, fieldErrors: {} };
   } catch (error) {
     return failure(errorMessage(error, 'The decision could not be recorded. Please try again.'));
   }

@@ -97,9 +97,6 @@ export async function login(
     .expect(200);
 
   const body = response.body as LoginResponse;
-  if (body.outcome !== 'authenticated') {
-    throw new Error(`Expected an authenticated login for ${email}, got ${body.outcome}`);
-  }
 
   const refreshCookie = setCookies(response.headers).find((cookie) =>
     cookie.startsWith('icb_refresh='),

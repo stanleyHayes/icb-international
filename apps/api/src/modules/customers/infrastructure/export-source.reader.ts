@@ -35,7 +35,7 @@ export class ExportSourceReader {
     const [credential, accounts] = await Promise.all([
       this.credentials
         .findOne({ customerId })
-        .select('emailVerified mfaEnabled lastLoginAt')
+        .select('emailVerified lastLoginAt')
         .lean(),
       this.accounts.find({ customerId }).sort({ openedAt: 1 }).lean(),
     ]);

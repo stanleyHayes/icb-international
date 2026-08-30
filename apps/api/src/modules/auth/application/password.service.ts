@@ -68,12 +68,4 @@ export class PasswordService {
     const stored = Buffer.from(storedHash, 'hex');
     return candidate.length === stored.length && timingSafeEqual(candidate, stored);
   }
-
-  /** Recovery codes are shown once at enrolment and stored only as hashes. */
-  createRecoveryCodes(count = 10): { codes: string[]; hashes: string[] } {
-    const codes = Array.from({ length: count }, () =>
-      randomBytes(5).toString('hex').toUpperCase().match(/.{1,5}/g)?.join('-') ?? '',
-    );
-    return { codes, hashes: codes.map((code) => this.hashToken(code)) };
-  }
 }

@@ -4,7 +4,6 @@ import { Injectable } from '@nestjs/common';
 import { ConflictError, ForbiddenError, NotFoundError } from '../../common/errors/index.js';
 import { newId } from '../../infrastructure/database/identifier.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
-import { STAFF_SESSION_POLICY } from './iam.constants.js';
 import type { StaffUserDoc } from './infrastructure/iam.schemas.js';
 import { StaffStore } from './infrastructure/staff.repository.js';
 import { toStaffUser } from './staff.mapper.js';
@@ -110,8 +109,6 @@ export class StaffService {
       lastName: input.lastName,
       roles: [...input.roles],
       active: true,
-      mfaRequired: STAFF_SESSION_POLICY.mfaRequired,
-      mfaEnabled: false,
       lastLoginAt: null,
       createdAt: now,
       updatedAt: now,

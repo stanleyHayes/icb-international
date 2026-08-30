@@ -95,14 +95,12 @@ describe('ConsoleProvisioningService', () => {
     }
   });
 
-  it('does not reset a name or an enrolled second factor on a rerun', async () => {
+  it('does not reset a name on a rerun', async () => {
     await service.provisionAll(INPUT);
 
     for (const { update } of staff.calls) {
-      expect(update.$set).not.toHaveProperty('mfaEnabled');
       expect(update.$set).not.toHaveProperty('firstName');
-      expect(update.$setOnInsert).toHaveProperty('mfaEnabled', false);
-      expect(update.$setOnInsert).toHaveProperty('mfaRequired', true);
+      expect(update.$setOnInsert).toHaveProperty('firstName');
     }
   });
 

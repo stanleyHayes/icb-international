@@ -22,7 +22,6 @@ export interface AppConfiguration {
     readonly refreshSecret: string;
     readonly accessTtlSeconds: number;
     readonly refreshTtlSeconds: number;
-    readonly stepUpTtlSeconds: number;
   };
   readonly crypto: {
     readonly fieldEncryptionKey: string;
@@ -129,7 +128,6 @@ function jwtSection(raw: RawConfiguration): AppConfiguration['jwt'] {
     refreshSecret: raw.JWT_REFRESH_SECRET,
     accessTtlSeconds: raw.JWT_ACCESS_TTL_SECONDS,
     refreshTtlSeconds: raw.JWT_REFRESH_TTL_SECONDS,
-    stepUpTtlSeconds: raw.STEP_UP_TTL_SECONDS,
   };
 }
 

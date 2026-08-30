@@ -61,13 +61,12 @@ describe('issue', () => {
     const { credentials, profiles, tokens, service } = setup();
     credentials.findById.mockReturnValue(leanQuery(CREDENTIAL));
 
-    const issued = await service.issue('usr-1', DEVICE, { familyId: 'fam-1', trusted: true });
+    const issued = await service.issue('usr-1', DEVICE, { familyId: 'fam-1' });
 
     expect(profiles.recordSession).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'usr-1',
         familyId: 'fam-1',
-        trusted: true,
         device: DEVICE,
       }),
     );

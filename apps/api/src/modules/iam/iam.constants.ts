@@ -23,14 +23,6 @@ export const STAFF_SESSION_POLICY = {
   idleTimeoutMs: 15 * 60_000,
   /** Hard cap on a staff session, even with continuous activity. Re-authenticate after. */
   absoluteSessionMs: 8 * 3_600_000,
-  /** Staff must enrol a second factor before their account goes live. */
-  mfaRequired: true,
-} as const;
-
-/** Step-up token purposes for the forced re-authentication hook on privileged IAM actions. */
-export const STEP_UP_PURPOSES = {
-  staffManage: 'staff-manage',
-  approvalDecide: 'approval-decide',
 } as const;
 
 /** Approval statuses that no longer accept a decision. */

@@ -71,7 +71,6 @@ export const transferQuoteSchema = z.object({
   fx: fxDetailSchema.nullable(),
   estimatedArrival: isoDateTimeSchema,
   cutOffAt: isoDateTimeSchema.nullable(),
-  requiresStepUp: z.boolean(),
   requiresApproval: z.boolean(),
   expiresAt: isoDateTimeSchema,
 });

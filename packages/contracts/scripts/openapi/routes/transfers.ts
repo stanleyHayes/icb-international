@@ -39,7 +39,7 @@ export const transfersOperations = defineOperations([
     idempotent: true,
     response: success(
       STATUS.created,
-      'The quote, including fees, FX, and step-up flags.',
+      'The quote, including fees, FX, and approval flags.',
       transferQuoteSchema,
     ),
     errors: MONEY_MOVEMENT_ERRORS,

@@ -296,9 +296,9 @@ documents carry `version` for optimistic concurrency.
 | Collection | Purpose | Key fields | Notable indexes |
 | --- | --- | --- | --- |
 | `customers` | Person or business identity | `type`, `status`, `tier`, `profile`, `addresses[]`, `taxIds[]`, `riskRating` | `email` (unique), `status`, `riskRating` |
-| `user_credentials` | Login material, separate from profile | `customerId`, `email`, `passwordHash`(argon2id), `mfa`, `failedAttempts`, `lockedUntil` | `email` (unique) |
+| `user_credentials` | Login material, separate from profile | `customerId`, `email`, `passwordHash` (argon2id), `failedAttempts`, `lockedUntil` | `email` (unique) |
 | `sessions` | Refresh-token family | `userId`, `familyId`, `tokenHash`, `device`, `ip`, `expiresAt`, `revokedAt` | `tokenHash` (unique), TTL on `expiresAt` |
-| `staff_users` | Admin/back-office operators | `email`, `roles[]`, `mfaRequired`, `lastLoginAt` | `email` (unique) |
+| `staff_users` | Admin/back-office operators | `email`, `roles[]`, `lastLoginAt` | `email` (unique) |
 | `kyc_cases` | Onboarding & periodic review | `customerId`, `level`, `status`, `documents[]`, `checks[]`, `decision`, `reviewer` | `status`, `customerId` |
 | `products` | Product catalogue (configurable) | `code`, `kind`, `currency`, `interestRate`, `fees[]`, `limits`, `eligibility` | `code` (unique) |
 | `accounts` | Customer accounts | `customerId`, `productCode`, `number`, `iban`, `currency`, `status`, `overdraftLimit`, `nickname` | `number` (unique), `customerId+status` |
@@ -358,13 +358,13 @@ Requirements: SSG/ISR, Lighthouse ≥ 95 all four, full `<meta>`/OG/JSON-LD (`Ba
 | Area | Detail |
 | --- | --- |
 | Onboarding | Signup → email verify → identity capture → document upload → liveness (simulated) → account opening → first-login tour |
-| Auth | Login, MFA (TOTP + simulated SMS OTP), remembered devices, forgot/reset password, account recovery, session list, "sign out everywhere" |
+| Auth | Login, forgot/reset password, account recovery, session list, "sign out everywhere" |
 | Overview | Net position, per-account cards, available vs ledger, upcoming payments, recent activity, spend-vs-last-month, quick actions |
 | Accounts | Detail, balance history chart, statements, account details sheet (IBAN/SWIFT/sort code), nickname, close/freeze request, standing orders on this account |
 | Transactions | Infinite list, full-text search, filters (date, amount range, type, category, status, account), running balance, receipt view, split/annotate, tag, attach note, export CSV/OFX/PDF, dispute launch |
-| Transfers | Between own accounts · to ICB customer (instant) · domestic (ACH T+1) · wire (same-day) · international (SWIFT + FX quote with countdown + fee breakdown) · scheduled · recurring · bulk upload (CSV) · templates · confirmation step with rail/ETA/fee summary · MFA step-up over threshold |
+| Transfers | Between own accounts · to ICB customer (instant) · domestic (ACH T+1) · wire (same-day) · international (SWIFT + FX quote with countdown + fee breakdown) · scheduled · recurring · bulk upload (CSV) · templates · confirmation step with rail/ETA/fee summary |
 | Beneficiaries | Add (with micro-deposit verification simulation), edit, delete, favourite, recent, cooling-off period on new payees |
-| Cards | List, virtual card creation, PAN reveal (step-up auth, auto-hide), freeze/unfreeze, report lost/stolen → reissue, PIN set/change, per-category and per-channel controls, spend limits, travel notice, transaction feed per card |
+| Cards | List, virtual card creation, PAN reveal (session auth, audited, auto-hide), freeze/unfreeze, report lost/stolen → reissue, PIN set/change, per-category and per-channel controls, spend limits, travel notice, transaction feed per card |
 | Payments | Billers directory, add bill, one-off pay, autopay, due reminders, payment history |
 | Loans | Product browse, eligibility check, application wizard, document upload, status tracker, active loan view (schedule, next payment, payoff quote), extra/early repayment, statements |
 | Savings & deposits | Open savings, goals with progress, round-up rules, open fixed deposit (term/rate matrix), maturity instructions, early withdrawal penalty preview |
@@ -372,7 +372,7 @@ Requirements: SSG/ISR, Lighthouse ≥ 95 all four, full `<meta>`/OG/JSON-LD (`Ba
 | Documents | Statements archive, tax documents, letters, generated PDFs |
 | Support | Ticket list + create, secure message thread with attachments, callback request, FAQ deep links, dispute tracker |
 | Profile | Personal details, addresses, contact, employment, marketing preferences |
-| Security | Password change, MFA enrol/reset, trusted devices, active sessions, login history, security alerts, data export request, close account request |
+| Security | Password change, active sessions, login history, security alerts, data export request, close account request |
 | Notifications | Centre with filters, per-channel preference matrix (push/email/SMS/in-app × event type), quiet hours |
 | Accessibility & UX | Keyboard-complete, screen-reader labelled, dark mode, currency/locale switch, offline-tolerant reads, optimistic UI on safe actions only |
 
@@ -380,7 +380,7 @@ Requirements: SSG/ISR, Lighthouse ≥ 95 all four, full `<meta>`/OG/JSON-LD (`Ba
 
 | Area | Detail |
 | --- | --- |
-| Auth | Staff SSO-style login, mandatory MFA, IP allowlist (simulated), forced re-auth for sensitive ops |
+| Auth | Staff login, IP allowlist (simulated), session revocation and progressive lockout |
 | Dashboard | Live KPIs: balances under management, txn volume/value, new customers, approval queue depths, fraud alert rate, system health |
 | Customers | Search (name/email/phone/account/IBAN), 360° profile, relationship tree, notes, flags, freeze/unfreeze, impersonate-as-read-only (audited, banner shown), lifecycle actions |
 | KYC/onboarding | Work queue with SLA timers, document viewer, check results, approve/reject/request-more-info, tier assignment, periodic-review scheduler |
@@ -548,9 +548,8 @@ Each with unit tests. No file over 120 lines.
 **Owns:** `apps/api/src/modules/auth/**`.
 **Needs:** BE-02, BE-03, SDK-01. **Unblocks:** APP-01, ADM-01.
 **DoD:** Register, verify email, login, refresh (rotating, **reuse detection revokes the whole
-family**), logout, logout-all, forgot/reset password, change password, TOTP enrol/verify/disable
-+ recovery codes, simulated SMS OTP, trusted-device registration, step-up challenge for sensitive
-ops, session listing + revoke. argon2id hashing. Progressive lockout after 5 failures. Password
+family**), logout, logout-all, forgot/reset password, change password, session listing + revoke.
+argon2id hashing. Progressive lockout after 5 failures. Password
 policy incl. a breached-password check against a local list. Every auth event audited.
 
 **BE-05 · Customers** — *Backend · W1 · M* · **Owns:** `modules/customers/**`
@@ -615,7 +614,7 @@ rate query, exposure report.
 
 **BE-15 · Cards** — *Backend · W2 · L* · **Owns:** `modules/cards/**`
 Issue (physical/virtual), PAN generation with a valid Luhn check digit, tokenised storage
-(PAN encrypted at rest, only last-4 in reads), PAN reveal behind step-up, activate, freeze,
+(PAN encrypted at rest, only last-4 in reads), audited PAN reveal behind session auth, activate, freeze,
 report lost/stolen → reissue, PIN set/change (hashed), controls (online/contactless/ATM/
 international/per-MCC), limits (per-txn/daily/monthly), travel notices, and the **authorisation
 flow**: `authorise → hold → capture → clear` with partial capture, reversal, and expiry.
@@ -775,8 +774,8 @@ fallback, OfflineIndicator. **No simulation banner** — see N1.
 
 ### Track APP — Client dashboard
 
-**APP-01** auth screens (login/MFA/reset/recovery) · **APP-02** signup & onboarding wizard ·
-**APP-03** app shell + nav + session handling + step-up flow · **APP-04** overview ·
+**APP-01** auth screens (login/reset/recovery) · **APP-02** signup & onboarding wizard ·
+**APP-03** app shell + nav + session handling · **APP-04** overview ·
 **APP-05** accounts list + detail · **APP-06** transactions list, search, filters, detail, export ·
 **APP-07** transfer flows (all rails, quote, confirm, receipt) · **APP-08** beneficiaries ·
 **APP-09** cards · **APP-10** bill pay · **APP-11** loans (browse → apply → service) ·
@@ -880,11 +879,13 @@ and the seeded factories from `@icb/testing`.
 Simulated money still means real security practice — the point is to model a bank faithfully.
 
 - **AuthN** — argon2id (m=64MiB, t=3, p=4), rotating refresh tokens with family reuse detection,
-  TOTP + recovery codes, device binding, progressive lockout, breached-password rejection.
+  session device metadata, progressive lockout, breached-password rejection.
 - **AuthZ** — deny by default. Every resource handler re-checks ownership server-side
   (`customerId` from the token, never from the body). SEC-02 sweeps every endpoint for IDOR.
-- **Step-up** — PAN reveal, new payee, transfers over threshold, security-setting changes, and all
-  admin destructive ops require a fresh second factor (< 5 min old).
+- **Session-only sensitive operations** — MFA and step-up were retired by product decision in
+  August 2026. PAN reveal, transfers, security settings and privileged admin actions rely on the
+  authenticated session, RBAC/ownership checks, maker-checker controls and audit logging. The
+  increased stolen-session risk is recorded as G8 in `docs/security/threat-model.md`.
 - **Input** — Zod at the edge, Mongo operator stripping (`$`/`.` keys rejected), explicit
   allow-list mapping into Mongoose documents (no mass assignment), upload MIME sniffing + size
   caps, no user-controlled URLs fetched server-side.
@@ -953,15 +954,15 @@ pnpm db:reset              # drop + reseed
 
 Legend: ⬜ not started · 🟡 partial · ✅ done · ⛔ blocked
 
-**State as of 4 Aug 2026.** Counted from the tree and run, not estimated. Where a gate is red it
+**State as of 30 Aug 2026.** Counted from the tree and run, not estimated. Where a gate is red it
 says so.
 
 | Gate | Result |
 | --- | --- |
 | `pnpm -r typecheck` | ✅ clean, all ten workspaces |
 | `pnpm -r build` | ✅ clean, all ten workspaces |
-| `pnpm -r test` (unit) | ✅ **3,472 passing** — API 2,763 across 345 files, packages 709 |
-| `pnpm test:security` | ✅ **157 passing** — privilege escalation, IDOR sweep, token replay, step-up |
+| `pnpm -r test` (unit) | ✅ **3,439 passing** — API 2,730 across 338 files, packages 709 |
+| `pnpm test:security` | ⚠️ **147 discovered, 147 skipped** — MongoDB was unavailable for the 30 Aug verification run; the obsolete 10-test step-up suite has been deleted |
 | `pnpm test:integration` | ✅ **21 passing** across 5 suites |
 | `pnpm test:contract` | ⚠️ **1 suite red** — `accounts.contract.spec.ts` fails with `VALIDATION_FAILED`; the other 22 pass. Undiagnosed. See *Open* below. |
 | `pnpm -r lint` | ✅ clean at the time of writing |
@@ -1027,7 +1028,8 @@ into the open, which is why they are recorded rather than quietly closed:
 | **The whole `test/` tree was unchecked.** `tsconfig.json` included only `src/**`, so tsc never saw the contract layer and eslint could not parse it. | Vitest transforms independently, so the tests ran regardless. | `rootDir`/`outDir` moved to `tsconfig.build.json`; base config now covers `src` + `test`. Lint and typecheck cover both. |
 | **Three WCAG AA contrast failures** on the marketing site. Brand gold as body text measured **2.42:1** against a 4.5:1 floor. | axe only runs in the a11y job, and its findings were recorded rather than gating. | New `--icb-accent-text` (gold-700, 5.72:1); `--icb-text-subtle` moved to slate-600. Contrast is now asserted in `packages/ui` unit tests, and the three brand-token copies are pinned byte-identical so a fix cannot reach one app and miss another. |
 | **The audit collision left residue.** Rows written under the wrong schema stayed in `audit_events`, and because the trail is hashed head-to-tail, the first genuine governance append chained onto one — `verifyIntegrity` reported the chain broken. `db:reset` also never cleared either trail, so a reset destroyed every customer and left an audit history pointing at them. | `verifyIntegrity` is not called by any automated check. | Migration `0002-split-security-events` *moves* the authentication rows (an append-only trail is not a migration's to delete); both trails added to `SEEDED_COLLECTIONS`. Chain now verifies: `{"verified": true}`. |
-| **The SEC-02 security suite could never run.** 157 tests across privilege escalation, IDOR sweep, token replay and step-up existed with their own vitest config — and no npm script pointing at it. | Nothing referenced it, so nothing reported it missing. | `test:security` added at both the API and repo root, alongside `test:contract` and `test:integration` which were also unreachable from the root. All 157 pass. |
+| **The SEC-02 security suite could never run.** It existed with its own vitest config — and no npm script pointing at it. | Nothing referenced it, so nothing reported it missing. | `test:security` added at both the API and repo root, alongside `test:contract` and `test:integration` which were also unreachable from the root. The suite now contains 147 privilege-escalation, IDOR and token-replay cases after the retired step-up tests were deleted. |
+| **MFA and step-up retired by product decision.** TOTP, recovery codes, trusted devices and second-factor challenges previously spanned API schemas/services/controllers, contracts, SDK endpoints, both authenticated apps and end-to-end harnesses. | Leaving any one layer behind would publish dead routes or strand users in an obsolete challenge flow. | Removed the feature end to end, regenerated OpenAPI/SDK artifacts, removed OTP-only dependencies, documented accepted risk G8, and added the idempotent `db:drop-mfa` cleanup for persisted legacy fields and collections. |
 | **The SDK mock fabricated data its own contract rejects.** Zod 4 records integer-ness two ways — `z.int()` sets `format: 'safeint'`, `z.number().int()` files a `number_format` check — and the fabricator read only the format, so the second spelling produced a float. | The mock smoke test caught it, but only once the suite was run; a consumer would have built against invalid data. | Fabricator honours both spellings. |
 | **A date-fragile test** asserting `toEpochDay('2026-08-04') === 20_638` — the value for 2026-07-04. | The date string was updated to "today"; the literal beside it was not. | Pinned to a fixed leap day, which also covers leap-year handling. |
 
@@ -1096,7 +1098,7 @@ into the open, which is why they are recorded rather than quietly closed:
 | ADM-01…19 | Admin console | 3 | XL | DS-01…06, SDK-03 | ✅ | 41 pages |
 | QA-01 | `@icb/testing` | 0 | M | PLT-01 | ✅ | 49 tests |
 | QA-02…08 | Test suites | 4 | XL | respective tracks | ✅ | 3,454 tests · 23 contract suites · 4 e2e journeys · a11y sweeps |
-| SEC-01…04 | Security hardening | 4 | L | BE-* | ✅ | argon2id, rotating refresh with reuse detection, step-up, sealed cookies, PII redaction, secret scan · **SEC-02 proven: 157 tests** (privilege escalation, IDOR sweep, token replay, step-up) |
+| SEC-01…04 | Security hardening | 4 | L | BE-* | ✅ | argon2id, rotating refresh with reuse detection, sealed cookies, PII redaction, secret scan · MFA/step-up retired with accepted risk G8 · **SEC-02: 147 tests** (privilege escalation, IDOR sweep, token replay) |
 | OPS-01…04 | Ops & observability | 4 | L | BE-01 | ✅ | pino + PII redaction, correlation ids through requests/jobs/audit, Prometheus metrics at `/metrics`, health + readiness |
 
 ---
@@ -1113,7 +1115,7 @@ into the open, which is why they are recorded rather than quietly closed:
 | **Rail** | The (simulated) network a transfer travels on: internal, on-us, ACH, wire, SWIFT, card. |
 | **Cut-off** | The time after which a transfer moves to the next business day. |
 | **Maker-checker** | Four-eyes control: the requester cannot approve their own request. |
-| **Step-up** | Re-authentication with a second factor for a sensitive action. |
+| **Step-up** | Retired second-factor re-authentication mechanism; removed by product decision in August 2026 (risk G8). |
 | **T+1 / T+2** | Settles one / two business days after the transaction date. |
 | **MCC** | Merchant category code — drives categorisation and card controls. |
 | **Suspense** | Temporary balancing account. Must be zero at end of day. |

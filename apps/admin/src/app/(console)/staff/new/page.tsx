@@ -21,8 +21,7 @@ export default function NewStaffPage() {
           New staff member
         </h1>
         <p className="mt-1.5 max-w-prose text-sm text-[var(--icb-text-muted)]">
-          The account is created active but cannot sign in until the operator sets up two-factor
-          authentication on first login. Creating it requires you to re-authenticate.
+          The account is created active. Access is granted by the roles you assign here.
         </p>
       </header>
 

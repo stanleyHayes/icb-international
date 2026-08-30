@@ -1,7 +1,6 @@
 import { request, type APIRequestContext } from 'playwright/test';
 
 import { env } from './env';
-import { staffTotpCode } from './mfa';
 
 /**
  * Minimal typed client for the ICB API, used for staff-side steps and test setup.
@@ -59,35 +58,6 @@ export class ApiClient {
     const body = (await response.json()) as LoginResponse;
     if (body.outcome === 'authenticated') {
       const client = new ApiClient(ctx, body.tokens.accessToken);
-      sessionCache.set(email, { client, expiresAt: Date.now() + SESSION_REUSE_MS });
-      return client;
-    }
-    if (body.outcome === 'mfa_required') {
-      // Staff roles are MFA-enrolled by policy; complete the challenge the way the staff
-      // member's authenticator would (fixtures/mfa.ts derives the code from the seed secret).
-      const challenge = (body as { challenge?: { challengeId: string } }).challenge;
-      if (!challenge) {
-        await ctx.dispose();
-        throw new Error(`mfa_required for ${email} carried no challenge`);
-      }
-      const code = await staffTotpCode(email);
-      const verified = await ctx.post('/v1/auth/mfa/verify', {
-        data: { challengeId: challenge.challengeId, code, trustDevice: false },
-      });
-      if (!verified.ok()) {
-        const detail = await verified.text();
-        await ctx.dispose();
-        throw new Error(`mfa verify failed for ${email}: ${verified.status()} ${detail.slice(0, 200)}`);
-      }
-      const session = (await verified.json()) as LoginResponse & {
-        tokens?: { accessToken: string };
-      };
-      const token = session.tokens?.accessToken;
-      if (!token) {
-        await ctx.dispose();
-        throw new Error(`mfa verify for ${email} returned no access token`);
-      }
-      const client = new ApiClient(ctx, token);
       sessionCache.set(email, { client, expiresAt: Date.now() + SESSION_REUSE_MS });
       return client;
     }

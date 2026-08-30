@@ -52,8 +52,7 @@ async function main(): Promise<void> {
       );
     }
     process.stdout.write(
-      '\n  Password: as set in CONSOLE_ACCOUNT_PASSWORD (not printed).\n' +
-        '  Each account must enrol a second factor on first sign-in before the console opens.\n\n',
+      '\n  Password: as set in CONSOLE_ACCOUNT_PASSWORD (not printed).\n\n',
     );
   } finally {
     await app.close();

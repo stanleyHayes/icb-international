@@ -34,8 +34,6 @@ export interface RequestOptions {
   /** Requests without a session, e.g. login. */
   anonymous?: boolean;
   idempotencyKey?: string;
-  /** Fresh second-factor proof for step-up-guarded mutations (`x-step-up-token`). */
-  stepUpToken?: string | undefined;
   /** Next.js cache tags so a mutation can invalidate exactly what it changed. */
   tags?: string[];
   revalidate?: number | false;
@@ -58,9 +56,6 @@ async function buildHeaders(options: RequestOptions): Promise<Record<string, str
   }
   if (options.idempotencyKey) {
     headers['idempotency-key'] = options.idempotencyKey;
-  }
-  if (options.stepUpToken) {
-    headers['x-step-up-token'] = options.stepUpToken;
   }
   if (!options.anonymous) {
     const session = await readSession();

@@ -3,7 +3,6 @@ import { expect, test } from 'playwright/test';
 import { formatViolation, scanPage, seriousOrCritical } from './axe';
 import type { RouteEntry } from './inventory';
 import type { AppName } from './paths';
-import { STORAGE_STATE } from './paths';
 import { materialize, readAvailability, readIds, underA11yConfig } from './state';
 
 /**
@@ -17,7 +16,7 @@ export function describeRouteScans(app: AppName, entries: readonly RouteEntry[])
   const ids = app === 'marketing' ? {} : readIds(app);
 
   for (const entry of entries) {
-    test(`${entry.path}`, async ({ page, browser }) => {
+    test(`${entry.path}`, async ({ page }) => {
       test.skip(!underA11yConfig(), 'run via pnpm test:a11y (e2e/a11y/playwright.config.ts)');
       test.skip(
         availability.apps[app] !== true,
@@ -29,27 +28,15 @@ export function describeRouteScans(app: AppName, entries: readonly RouteEntry[])
         return;
       }
 
-      // The staff MFA gate only renders for a staff login without an enrolled factor.
-      let context: Awaited<ReturnType<typeof browser.newContext>> | null = null;
-      let target = page;
-      if (entry.app === 'admin' && entry.auth === 'staff-unenrolled') {
-        context = await browser.newContext({ storageState: STORAGE_STATE.adminUnenrolled });
-        target = await context.newPage();
+      const response = await page.goto(resolved, { waitUntil: 'load', timeout: 45_000 });
+      test.skip(response?.status() === 404, `${resolved} returned 404 (entity missing)`);
+      if (entry.auth !== 'public' && new URL(page.url()).pathname.startsWith('/login')) {
+        test.skip(true, `session bounced to /login for ${resolved}; rerun auth setup`);
       }
 
-      try {
-        const response = await target.goto(resolved, { waitUntil: 'load', timeout: 45_000 });
-        test.skip(response?.status() === 404, `${resolved} returned 404 (entity missing)`);
-        if (entry.auth !== 'public' && new URL(target.url()).pathname.startsWith('/login')) {
-          test.skip(true, `session bounced to /login for ${resolved}; rerun auth setup`);
-        }
-
-        const records = await scanPage(target, app, resolved);
-        const gated = seriousOrCritical(records);
-        expect(gated, gated.map(formatViolation).join('\n')).toEqual([]);
-      } finally {
-        await context?.close();
-      }
+      const records = await scanPage(page, app, resolved);
+      const gated = seriousOrCritical(records);
+      expect(gated, gated.map(formatViolation).join('\n')).toEqual([]);
     });
   }
 }

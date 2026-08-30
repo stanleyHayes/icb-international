@@ -66,7 +66,7 @@ describeIntegration(suite, 'quote to confirm (integration)', () => {
     expect(quote.rail).toBe('internal');
     expect(quote.debitAmount.minorUnits).toBe(15_000);
     expect(quote.totalDebit.minorUnits).toBe(15_000);
-    expect(quote.requiresStepUp).toBe(false);
+    expect(quote.requiresApproval).toBe(false);
 
     const confirmResponse = await session.agent
       .post('/v1/transfers')

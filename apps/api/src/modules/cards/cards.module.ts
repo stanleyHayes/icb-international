@@ -34,8 +34,8 @@ import { CardDoc, CardSchema } from './infrastructure/card.schemas.js';
  * authorisation places and `LedgerService` for the posting a capture makes — and AccountsModule
  * supplies the ownership and available-balance checks. Nothing here touches a balance directly.
  *
- * `PasswordService` and `TokenService` arrive through the global AuthModule, so PIN hashing and
- * step-up verification use the same primitives as login rather than a second implementation.
+ * `PasswordService` arrives through the global AuthModule, so PIN hashing uses the same
+ * primitive as login rather than a second implementation.
  */
 @Module({
   imports: [

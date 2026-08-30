@@ -1,5 +1,4 @@
 import type {
-  MfaChallenge,
   TransferDestination,
   TransferDetail,
   TransferQuote,
@@ -30,12 +29,6 @@ export interface ConfirmInput extends QuoteInput {
   saveBeneficiary: boolean;
   /** When set, the confirmed terms are also saved as a reusable template. */
   templateName?: string;
-}
-
-export interface StepUpChallenge {
-  challengeId: string;
-  method: MfaChallenge['method'];
-  hint: string | null;
 }
 
 export interface ConfirmOutput {

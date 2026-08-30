@@ -1,7 +1,6 @@
 import type { TransferDetail } from '@icb/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AccessTokenClaims } from '../../auth/application/token.service.js';
 import type { BulkTransfersService } from '../application/bulk-transfers.service.js';
 import type { TransferQuotesService } from '../application/transfer-quotes.service.js';
 import { TransfersController } from '../transfers.controller.js';
@@ -11,14 +10,6 @@ const CUSTOMER_ID = 'cust-1';
 const TRANSFER_ID = 'trf-1';
 
 const DETAIL = { id: TRANSFER_ID } as unknown as TransferDetail;
-
-const USER: AccessTokenClaims = {
-  sub: 'user-1',
-  customerId: CUSTOMER_ID,
-  email: 'ama@example.com',
-  roles: ['customer'],
-  sessionId: 'sess-1',
-};
 
 describe('TransfersController', () => {
   let transfers: Record<'create' | 'list' | 'get' | 'cancel', ReturnType<typeof vi.fn>>;
@@ -61,27 +52,13 @@ describe('TransfersController', () => {
     expect(result).toEqual({ batchId: 'batch-1', items: [] });
   });
 
-  it('creates a transfer with the step-up proof bound to the principal', async () => {
+  it('creates a transfer for the token customer', async () => {
     const body = { quoteId: 'quote-1' };
 
-    const result = await controller.create(CUSTOMER_ID, USER, 'step-up-token', body as never);
+    const result = await controller.create(CUSTOMER_ID, body as never);
 
-    expect(transfers.create).toHaveBeenCalledWith(CUSTOMER_ID, body, {
-      userId: 'user-1',
-      token: 'step-up-token',
-    });
+    expect(transfers.create).toHaveBeenCalledWith(CUSTOMER_ID, body);
     expect(result).toBe(DETAIL);
-  });
-
-  it('creates a transfer with no step-up token when none is sent', async () => {
-    const body = { quoteId: 'quote-1' };
-
-    await controller.create(CUSTOMER_ID, USER, undefined, body as never);
-
-    expect(transfers.create).toHaveBeenCalledWith(CUSTOMER_ID, body, {
-      userId: 'user-1',
-      token: undefined,
-    });
   });
 
   it('lists transfers with the parsed query', async () => {

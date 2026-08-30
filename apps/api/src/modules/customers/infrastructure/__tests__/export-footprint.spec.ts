@@ -33,7 +33,7 @@ function session(overrides: Record<string, unknown> = {}): SessionDoc {
 function build(overrides: Partial<Parameters<typeof buildFootprint>[0]> = {}) {
   return buildFootprint({
     customer: customerDoc(),
-    credential: { emailVerified: true, mfaEnabled: false, lastLoginAt: NOW },
+    credential: { emailVerified: true, lastLoginAt: NOW },
     sessions: [session()],
     accounts: [account()],
     generatedAt: NOW,

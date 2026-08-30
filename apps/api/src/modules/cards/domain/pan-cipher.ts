@@ -7,7 +7,7 @@ import { DomainError } from '../../../common/errors/index.js';
  *
  * A PAN is the one value in this system that is worth stealing on its own, so it is never stored
  * in the clear: it is sealed with AES-256-GCM under `config.crypto.fieldEncryptionKey` and only
- * ever opened behind step-up authentication. GCM rather than CBC because the authentication tag
+ * ever opened for the card's owner. GCM rather than CBC because the authentication tag
  * makes a tampered ciphertext fail loudly instead of decrypting to garbage that later gets
  * charged to somebody.
  *

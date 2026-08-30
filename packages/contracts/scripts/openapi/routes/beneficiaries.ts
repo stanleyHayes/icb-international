@@ -28,7 +28,7 @@ export const beneficiariesOperations = defineOperations([
     path: '/beneficiaries',
     tag: TAG.beneficiaries,
     operationId: 'createBeneficiary',
-    summary: 'Add a payee (requires step-up; cooling-off applies)',
+    summary: 'Add a payee (cooling-off applies)',
     request: createBeneficiaryRequestSchema,
     response: success(STATUS.created, 'The beneficiary, in cooling-off.', beneficiarySchema),
     errors: [{ status: STATUS.unprocessable }],

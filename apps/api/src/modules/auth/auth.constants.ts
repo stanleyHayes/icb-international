@@ -32,22 +32,6 @@ export const DUMMY_PASSWORD_HASH =
 export const EMAIL_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 export const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
-/** Trusted devices skip MFA for this long. */
-export const TRUSTED_DEVICE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
-
-/** MFA and step-up challenges: validity window and how many wrong codes kill one. */
-export const MFA_CHALLENGE_TTL_MS = 10 * 60 * 1000;
-export const MFA_MAX_ATTEMPTS = 5;
-
-/** Simulated SMS one-time passcodes are six digits (DoD: simulated SMS OTP). */
-export const SMS_OTP_LENGTH = 6;
-
-/** TOTP codes one step either side of the current one are accepted, for clock drift. */
-export const TOTP_WINDOW_STEPS = 1;
-
-/** The contract fixes the recovery-code count at exactly ten. */
-export const RECOVERY_CODE_COUNT = 10;
-
 export const REFRESH_COOKIE_NAME = 'icb_refresh';
 
 /** Why a session ended — written to `sessions.revokedReason` and surfaced in the audit trail. */
@@ -69,8 +53,6 @@ export const AUDIT_ACTIONS = {
   Register: 'auth.register',
   Login: 'auth.login',
   LoginFailed: 'auth.login_failed',
-  MfaChallengeIssued: 'auth.mfa_challenge_issued',
-  RecoveryCodeUsed: 'auth.recovery_code_used',
   Logout: 'auth.logout',
   LogoutAll: 'auth.logout_all',
   RefreshRotated: 'auth.refresh_rotated',
@@ -80,23 +62,16 @@ export const AUDIT_ACTIONS = {
   PasswordResetRequested: 'auth.password_reset_requested',
   PasswordResetCompleted: 'auth.password_reset_completed',
   PasswordChanged: 'auth.password_changed',
-  TotpEnrolled: 'auth.totp_enrolled',
-  TotpDisabled: 'auth.totp_disabled',
-  DeviceTrusted: 'auth.device_trusted',
   SessionRevoked: 'auth.session_revoked',
-  StepUpRequested: 'auth.step_up_requested',
-  StepUpVerified: 'auth.step_up_verified',
 } as const;
 
 /**
  * The audit actions that count as a login event for the customer's own login history:
- * a successful sign-in, a failed one against their credential, and a recovery-code sign-in
- * (which the customer should treat as noteworthy rather than routine).
+ * a successful sign-in or a failed one against their credential.
  */
 export const LOGIN_HISTORY_ACTIONS: readonly string[] = [
   AUDIT_ACTIONS.Login,
   AUDIT_ACTIONS.LoginFailed,
-  AUDIT_ACTIONS.RecoveryCodeUsed,
 ];
 
 /** How many entries the login-history endpoint returns — one screen of recent activity. */

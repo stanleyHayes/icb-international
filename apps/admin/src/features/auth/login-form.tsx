@@ -4,36 +4,17 @@ import { Button } from '@icb/ui';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useActionState, useId, useState } from 'react';
 
-import { loginAction, verifyMfaAction, type LoginState } from './actions';
+import { loginAction, type LoginState } from './actions';
 
 // Kept locally: server-action modules may only export async functions, so this cannot be
 // imported from './actions'.
 const INITIAL_LOGIN_STATE: LoginState = {
-  step: 'credentials',
   error: null,
   fieldErrors: {},
-  challenge: null,
 };
 
 export function LoginForm() {
   const [state, action, pending] = useActionState(loginAction, INITIAL_LOGIN_STATE);
-
-  if (state.step === 'mfa' && state.challenge) {
-    return <MfaForm challenge={state.challenge} />;
-  }
-
-  return <CredentialsForm state={state} action={action} pending={pending} />;
-}
-
-function CredentialsForm({
-  state,
-  action,
-  pending,
-}: Readonly<{
-  state: LoginState;
-  action: (formData: FormData) => void;
-  pending: boolean;
-}>) {
   const [revealed, setRevealed] = useState(false);
   const emailId = useId();
   const passwordId = useId();
@@ -102,52 +83,6 @@ function CredentialsForm({
       </p>
     </form>
   );
-}
-
-function MfaForm({ challenge }: Readonly<{ challenge: NonNullable<LoginState['challenge']> }>) {
-  const [state, action, pending] = useActionState(verifyMfaAction, INITIAL_LOGIN_STATE);
-  const codeId = useId();
-
-  return (
-    <form action={action} className="mt-8 space-y-5" noValidate>
-      <input type="hidden" name="challengeId" value={challenge.challengeId} />
-      <input type="hidden" name="method" value={challenge.method} />
-      <input type="hidden" name="expiresAt" value={challenge.expiresAt} />
-
-      <FormError message={state.error} />
-
-      <div>
-        <label htmlFor={codeId} className="block text-sm font-medium">
-          Verification code
-        </label>
-        <p className="mt-1 text-xs text-[var(--icb-text-subtle)]">{challengeHint(challenge)}</p>
-        <input
-          id={codeId}
-          name="code"
-          type="text"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          placeholder="123456"
-          required
-          minLength={6}
-          maxLength={16}
-          className="tabular mt-2 h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-sm tracking-[0.3em] outline-none focus:border-[var(--icb-primary)]"
-        />
-      </div>
-
-      <Button type="submit" size="lg" block loading={pending}>
-        {pending ? 'Verifying…' : 'Verify and sign in'}
-      </Button>
-    </form>
-  );
-}
-
-/** Where the second-factor code comes from, in one plain sentence. */
-function challengeHint(challenge: NonNullable<LoginState['challenge']>): string {
-  if (challenge.method !== 'sms') {
-    return 'From your authenticator app.';
-  }
-  return challenge.hint ? `Sent by text message to ${challenge.hint}.` : 'Sent by text message.';
 }
 
 function FormError({ message }: Readonly<{ message: string | null }>) {

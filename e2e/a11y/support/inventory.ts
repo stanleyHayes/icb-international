@@ -12,7 +12,7 @@ import { APP_DIRS, REPO_ROOT, type AppName } from './paths';
  * tokens are resolved at runtime from the seeded database (see resolvers.ts).
  */
 
-export type AuthLevel = 'public' | 'customer' | 'staff' | 'staff-unenrolled';
+export type AuthLevel = 'public' | 'customer' | 'staff';
 
 export interface RouteEntry {
   readonly app: AppName;
@@ -24,7 +24,6 @@ export interface RouteEntry {
 
 const CLIENT_PUBLIC_PATHS = new Set([
   '/login',
-  '/login/mfa',
   '/signup',
   '/forgot-password',
   '/reset-password',
@@ -37,11 +36,7 @@ function authFor(app: AppName, routePath: string): AuthLevel {
     return 'public';
   }
   if (app === 'admin') {
-    if (routePath === '/login') {
-      return 'public';
-    }
-    // The MFA gate is only reachable by a staff member who has NOT enrolled yet.
-    return routePath === '/mfa-enrol' ? 'staff-unenrolled' : 'staff';
+    return routePath === '/login' ? 'public' : 'staff';
   }
   return CLIENT_PUBLIC_PATHS.has(routePath) ? 'public' : 'customer';
 }

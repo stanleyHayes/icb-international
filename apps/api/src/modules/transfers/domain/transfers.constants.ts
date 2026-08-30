@@ -52,8 +52,7 @@ export const DAILY_DEBIT_CAP_MAJOR_UNITS: Readonly<Record<TransferRail, number>>
   swift: 500_000,
 };
 
-/** Above this a quote flags `requiresStepUp`; above the approval mark, `requiresApproval`. */
-export const STEP_UP_THRESHOLD_MAJOR_UNITS = 10_000;
+/** Above this a quote flags `requiresApproval` for maker-checker review. */
 export const APPROVAL_THRESHOLD_MAJOR_UNITS = 100_000;
 
 /** How long a transfer quote stays redeemable. */

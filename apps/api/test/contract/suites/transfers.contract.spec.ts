@@ -18,7 +18,7 @@ const DAY_MS = 86_400_000;
  * Contract suite: transfers, transfer templates, and standing orders.
  *
  * The seeded bank has no transfer history, so every read is fed by a send the suite makes
- * itself — small own-account transfers, far below the step-up and per-transaction thresholds.
+ * itself — small own-account transfers, far below the approval and per-transaction thresholds.
  * Background jobs are off in the harness, so a future-dated send stays `scheduled`: exactly the
  * state cancellation needs, and an RRULE send is what creates a standing order. The start date
  * comes from a fresh quote's `expiresAt` — the bank's own clock, never a hard-coded date.
@@ -154,7 +154,7 @@ describe('contract: transfers', () => {
   });
 });
 
-/** Small amounts, far under the step-up threshold (10,000 major units) and every rail cap. */
+/** Small amounts, far under the approval threshold (100,000 major units) and every rail cap. */
 function minor(minorUnits: number, currency: string) {
   return { minorUnits, currency, scale: 2 };
 }

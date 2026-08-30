@@ -96,8 +96,6 @@ function credentialDocument(userId: string, customerId: string, email: string): 
     // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- inert placeholder, never authenticated against: these identities use minted JWTs
     passwordHash: '$argon2id$sec02-unused-password-hash',
     emailVerified: true,
-    mfaEnabled: false,
-    recoveryCodeHashes: [],
     failedAttempts: 0,
     lockedUntil: null,
     lastLoginAt: null,

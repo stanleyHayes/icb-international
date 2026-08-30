@@ -195,7 +195,6 @@ async function seedSession(handle: SecurityTestApp, owner: TestIdentity): Promis
     tokenHash: 'sec02-session-not-a-real-hash',
     device: {},
     ipAddress: '127.0.0.1',
-    trusted: false,
     lastSeenAt: new Date('2024-01-02T09:30:00.000Z'),
     expiresAt: new Date('2099-01-01T00:00:00.000Z'),
     revokedAt: null,

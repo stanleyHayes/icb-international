@@ -30,8 +30,7 @@ move the books, so it is treated as privileged.
         └──────────────────────────────────┼──────────────────────────────────┘
                                            │ HTTPS — access JWT (Bearer),
                                            │ httpOnly SameSite=Strict refresh cookie,
-                                           │ CORS allowlist, idempotency-key,
-                                           │ x-step-up-token
+                                           │ CORS allowlist, idempotency-key
    ════════════════ TB2: edge → service, unauthenticated → authenticated ════
                                   ┌────────▼────────┐
                                   │   API :4100/v1   │
@@ -61,7 +60,7 @@ move the books, so it is treated as privileged.
   authorised, validated, rate-limited, and (for money movement) idempotency-checked here.
   The API never trusts a `customerId` from a request body.
 - **TB3 — API ↔ MongoDB.** Data-at-rest boundary, and since the Redis removal the only
-  datastore boundary. PAN/CVV/TOTP secrets cross it only encrypted; logs crossing it are
+  datastore boundary. PAN/CVV cross it only encrypted; logs crossing it are
   redacted first.
 - **TB4 — domain ↔ simulation (in-process).** A confused-deputy boundary: simulation
   controls (time travel, EOD, scenario injection) run with the same privileges as real
@@ -88,13 +87,13 @@ move the books, so it is treated as privileged.
 
 | STRIDE | Threat | Mitigation in place | Status |
 | --- | --- | --- | --- |
-| Spoofing | Credential stuffing, weak/reused passwords, MFA bypass | argon2id hashing; breached-password rejection (`password.service.ts:41`); TOTP + recovery codes; progressive lockout (`failedAttempts`/`lockedUntil`); device binding on sessions | Verified |
-| Spoofing | Forged/step-up bypass on sensitive ops | `StepUpGuard` requires a second factor < 5 min old (`STEP_UP_TTL_SECONDS=300`) for PAN reveal, new payees, large transfers, security changes, destructive admin ops | Verified |
+| Spoofing | Credential stuffing, weak/reused passwords | argon2id hashing; breached-password rejection (`password.service.ts:41`); progressive lockout (`failedAttempts`/`lockedUntil`); device binding on sessions | Verified |
+| Spoofing | Stolen session used for sensitive ops (PAN reveal, new payees, large transfers, security changes, destructive admin ops) | Session auth alone — there is no second factor or step-up re-auth (removed with MFA, 2026-08); limited by 15-min access tokens, refresh family-reuse revocation, and new-payee cooling-off | Accepted risk (G8) |
 | Tampering | NoSQL injection / mass assignment | Zod schemas at the edge strip unknown keys (`zod-validation.pipe.ts`); queries built from allow-listed fields (e.g. `buildEntryFilter`); no dedicated `$`/`.` operator-strip middleware found — see gap G3 | Partial |
 | Tampering | Double-spend / replayed money mutation | `IdempotencyInterceptor` on money paths; double-entry postings only via `LedgerService`; hash-chained audit | Verified |
 | Repudiation | Insider denies an admin action | Maker–checker approvals (ADM-05/ADM-07), hash-chained audit verified by ADM-18 + nightly job | Verified |
 | Info disclosure | PII/secrets in logs | Two-layer redaction: `redactPii` key filter + pino `REDACT_PATHS` + free-text `scrubText` (PAN/Bearer/email patterns) | Verified, one gap (G1) |
-| Info disclosure | PAN/PII read from a database dump | AES-256-GCM field encryption with per-write random IV (PAN, CVV, TOTP secret); HMAC fingerprint for equality lookups | Verified for PAN/CVV/TOTP; DOB stored in clear (G5) |
+| Info disclosure | PAN/PII read from a database dump | AES-256-GCM field encryption with per-write random IV (PAN, CVV); HMAC fingerprint for equality lookups | Verified for PAN/CVV; DOB stored in clear (G5) |
 | DoS | Request floods, oversized bodies | Throttle guard (typed `RateLimitedError` + `retryAfterSeconds`); 10 MB body limit; multipart `fileSize`/`files: 1` caps | Partial (G2: no tighter auth/money tiers) |
 | Elevation | IDOR — customerId taken from the body | `customerId` always from the token (`@CurrentCustomer`), ownership re-checked server-side per query (`{ customerId, _id }` filters) | Verified (SEC-02 sweeps) |
 | Elevation | SSRF via user-controlled URL fetch | No server-side fetch of user URLs; uploads are MIME-allow-listed with size caps (`packages/media/src/allow-list.ts`) | Verified |
@@ -104,7 +103,7 @@ move the books, so it is treated as privileged.
 | STRIDE | Threat | Mitigation in place | Status |
 | --- | --- | --- | --- |
 | Tampering | Direct write bypassing ledger invariants | All postings go through `LedgerService` (double-entry); transactions on the replica set; audit hash chain detects after-the-fact edits | Verified |
-| Info disclosure | Dump/theft of the data volume | PAN/CVV/TOTP AES-256-GCM at rest; credentials collection split from profile (`user_credentials`); token *hashes* stored, never tokens | Verified; DOB + profile PII in clear (G5) |
+| Info disclosure | Dump/theft of the data volume | PAN/CVV AES-256-GCM at rest; credentials collection split from profile (`user_credentials`); token *hashes* stored, never tokens | Verified; DOB + profile PII in clear (G5) |
 | Repudiation | Silent edit of history | Hash-chained audit entries, integrity verification (ADM-18, nightly) | Verified |
 
 ### 2.4 Redis (cache / queue) — removed 2026-08-21
@@ -156,18 +155,18 @@ is single-instance in practice (Render free plan). Scaling out would need this r
 | --- | --- | --- |
 | argon2id (m=64MiB, t=3, p=4) | `modules/auth/application/password.service.ts`, `auth.constants.ts` | Verified |
 | Rotating refresh + family reuse detection | `modules/auth/application/token.service.ts`, `SessionDoc.familyId` | Verified |
-| TOTP + recovery codes | `modules/auth/application/totp.service.ts`, `recoveryCodeHashes` | Verified |
+| TOTP + recovery codes | Removed 2026-08 — MFA dropped entirely; `totp.service.ts`, `recoveryCodeHashes` deleted | **Removed** — see G8 |
 | Device binding | `SessionDoc.device` | Verified |
 | Progressive lockout | `UserCredentialDoc.failedAttempts/lockedUntil` | Verified |
 | Breached-password rejection | `password.service.ts:41`, `auth.constants.ts` | Verified |
 | Deny-by-default AuthZ, server-side ownership | `common/guards/{jwt-auth,roles,permissions}.guard.ts`, `@CurrentCustomer` | Verified |
-| Step-up (<5 min) | `common/guards/step-up.guard.ts`, `STEP_UP_TTL_SECONDS=300` | Verified |
+| Step-up (<5 min) | Removed 2026-08 with MFA — `step-up.guard.ts` and `STEP_UP_TTL_SECONDS` deleted; sensitive ops run on session auth alone | **Removed** — see G8 |
 | Zod at the edge | `common/pipes/zod-validation.pipe.ts` | Verified |
 | Mongo operator stripping (`$`/`.` rejected) | **Not found as a dedicated middleware** — defense is Zod narrowing + allow-list query builders | **Gap G3** |
 | Mass-assignment allow-list mapping | Zod strip + explicit mappers (e.g. `card.mapper.ts`) | Verified |
 | Upload MIME sniffing + size caps | `packages/media/src/allow-list.ts`, `main.ts:42` | Verified |
 | No user-controlled URLs fetched server-side | No such fetch path found; uploads via signed grants | Verified |
-| PAN/national ID encrypted at rest (AES-256-GCM) | `modules/cards/domain/pan-cipher.ts`, `common/crypto/field-crypto.ts` | PAN/CVV/TOTP verified; national ID is never collected; DOB in clear (G5) |
+| PAN/national ID encrypted at rest (AES-256-GCM) | `modules/cards/domain/pan-cipher.ts`, `common/crypto/field-crypto.ts` | PAN/CVV verified; national ID is never collected; DOB in clear (G5) |
 | Log redaction serialiser | `common/interceptors/redact.ts`, `common/observability/redaction.ts` | Verified, `dateOfBirth` gap (G1) |
 | Responses never include a full PAN | `modules/cards/infrastructure/card.mapper.ts` (`panLast4` only) | Verified |
 | Helmet, HSTS | `main.ts:35` (helmet incl. HSTS) | Verified |
@@ -192,7 +191,10 @@ is single-instance in practice (Render free plan). Scaling out would need this r
 | G5 | DOB and profile PII stored unencrypted (loosely-typed `individual` sub-document) | Database dump exposes PII (§11 only mandates PAN + national IDs, so this is a hardening item) | BE customers owner |
 | G6 | §11's "outbound HTTP blocked at the agent level" not implemented | A compromised dependency could exfiltrate to arbitrary hosts | OPS/security |
 | G7 | Dependency vulnerabilities: 12 (6 high) — see `sec-04-audit.md` §4 | Mostly build-time; `find-my-way` is runtime-reachable | All — upgrade pass |
+| G8 | No second factor anywhere: MFA (TOTP, recovery codes, trusted devices) and step-up re-auth were removed 2026-08 by product decision | Card PAN reveal, high-value transfers, staff management and approval decisions are gated by session auth alone — a stolen session is sufficient for the highest-impact actions | Security/product — deliberate; revisit if a second factor is reintroduced |
 
 Accepted risks: Mongo network isolation is a deployment property, not code; the
 demo seed passwords (`apps/api/src/simulation/seed/seed.data.ts`) are deliberate and
 point at `@icb.example` personas that must never exist outside a seeded dev database.
+The 2026-08 MFA removal (G8) is likewise accepted: session theft now carries the full
+impact of any action the account can take, with no step-up check in front of it.

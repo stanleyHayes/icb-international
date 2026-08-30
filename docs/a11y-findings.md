@@ -37,8 +37,8 @@ the 12, admin `/staff/new`, was the QA-07 `'use server'` fix — verified render
 - **Same bug class, admin `/staff/new`:** `INITIAL_STAFF_FORM_STATE` exported from
   `features/staff/actions.ts` (`'use server'`) crashed `CreateStaffForm`/`EditStaffForm`.
   Same fix applied; `/staff/new` verified rendering (only the systemic contrast finding
-  remains). Two more files still export value constants from `'use server'` modules
-  (`features/auth/mfa-actions.ts`, `features/system/actions.ts`) — they render today, but
+  remains). One more file still exports a value constant from a `'use server'` module
+  (`features/system/actions.ts`) — it renders today, but
   the pattern is a landmine; recommend the same treatment.
 
 ## Open findings
@@ -119,8 +119,7 @@ seed, so no id resolves:
 To close: create one entity per collection through the product UI or API (the suite's
 fixture bootstrap already does this for beneficiaries, savings goals, term deposits,
 bills, support tickets and loan applications — see `e2e/a11y/support/resolve.ts`), or
-extend the seed. `staff_users` is empty because the seed never writes staff profiles and
-staff creation requires step-up MFA.
+extend the seed. `staff_users` is empty because the seed never writes staff profiles.
 
 ## Reproduce
 

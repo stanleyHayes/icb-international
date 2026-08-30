@@ -7,7 +7,7 @@ import { writeSession } from '@/lib/session';
 /**
  * Seal a freshly issued token pair into the session cookie.
  *
- * Shared by the login and MFA-verify actions, which are the only two places a session is born.
+ * Used by the login action, the only place a session is born.
  * The refresh token travels back as the API's `Set-Cookie` header and is stored verbatim — this
  * server forwards it on refresh without ever parsing it.
  */

@@ -5,7 +5,7 @@ import type { FactoryContext } from '../core/context.js';
 /**
  * Staff user factory.
  *
- * Default: an active support agent with MFA on — the least-privileged staff account. Admin and
+ * Default: an active support agent — the least-privileged staff account. Admin and
  * super-admin accounts are built by overriding `roles`, matching how the API seeds them.
  */
 export function staffUser(ctx: FactoryContext, overrides: Partial<StaffUser> = {}): StaffUser {
@@ -16,7 +16,6 @@ export function staffUser(ctx: FactoryContext, overrides: Partial<StaffUser> = {
     lastName: ctx.faker.person.lastName(),
     roles: ['support'],
     active: true,
-    mfaEnabled: true,
     lastLoginAt: null,
     createdAt: ctx.clock.iso(),
   };

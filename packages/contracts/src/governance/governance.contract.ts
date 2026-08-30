@@ -13,7 +13,6 @@ export const staffUserSchema = z.object({
   lastName: z.string(),
   roles: z.array(staffRoleSchema),
   active: z.boolean(),
-  mfaEnabled: z.boolean(),
   lastLoginAt: isoDateTimeSchema.nullable(),
   createdAt: isoDateTimeSchema,
 });

@@ -28,7 +28,7 @@ export const governanceOperations = defineOperations([
     path: '/admin/staff/{staffId}',
     tag: TAG.governance,
     operationId: 'getStaffUser',
-    summary: 'One staff user with roles and MFA state (admin)',
+    summary: 'One staff user with roles (admin)',
     pathParams: { staffId: idSchema },
     response: success(STATUS.ok, 'The staff user.', staffUserSchema),
     errors: [{ status: STATUS.notFound }],

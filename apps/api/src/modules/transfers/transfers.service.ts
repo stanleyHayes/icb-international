@@ -16,7 +16,6 @@ import { ClockService } from '../../simulation/clock/clock.service.js';
 import { AccountsService } from '../accounts/accounts.service.js';
 import { TransferNotCancellableError } from './domain/transfer-errors.js';
 import { CANCELLABLE_STATUSES } from './domain/transfers.constants.js';
-import type { StepUpProof } from './application/transfer-step-up.service.js';
 import { timelineEntry } from './infrastructure/transfer.factory.js';
 import {
   toTransferDetail,
@@ -47,9 +46,8 @@ export class TransfersService {
   async create(
     customerId: string,
     request: CreateTransferRequest,
-    proof?: StepUpProof,
   ): Promise<TransferDetail> {
-    const doc = await this.orchestrator.initiate(customerId, request, proof);
+    const doc = await this.orchestrator.initiate(customerId, request);
     return this.get(customerId, doc._id);
   }
 

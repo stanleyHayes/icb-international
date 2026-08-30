@@ -14,8 +14,7 @@ violations (agent_plan.md §10).
 - `support/resolve.ts` — resolves `{token}`s: client routes need entities owned by the
   demo customer (bootstrap creates one fixture per empty collection, additively and only
   when empty); admin routes take any document from Mongo.
-- `global-setup.ts` — probes API/Mongo/apps, resolves ids, enrols TOTP for
-  `ops@icb.example` (staff policy gates the console on MFA). Missing infra is recorded in
+- `global-setup.ts` — probes API/Mongo/apps and resolves ids. Missing infra is recorded in
   `.auth/availability.json` and matching tests **skip with a message** — never false-fail.
 - `support/axe.ts` — WCAG 2.2 A/AA scan; all violations are collected and merged by the
   global teardown into `results/violations.json` (triaged into `docs/a11y-findings.md`).
@@ -45,8 +44,7 @@ pnpm test:a11y -- --grep "transfer"     # route filter
 ```
 
 Demo credentials come from the seed (`demo@icb.example`, staff `ops@icb.example` /
-`lend@icb.example`). `lend@` is deliberately left without TOTP so the mandatory
-`/mfa-enrol` gate page stays scannable.
+`lend@icb.example`).
 
 ## Skips you may see (coverage gaps, not failures)
 
@@ -57,7 +55,7 @@ entity through the product UI or API once and the scan picks it up on the next r
 ## Note: login throttling
 
 `/auth/login` is throttled to 5 attempts/minute/IP (`throttle.constants.ts`). A full run
-uses exactly that budget (demo fixture login + customer UI login + staff UI login + MFA
-verify + unenrolled staff login). Back-to-back full runs within one minute will see the
+uses most of that budget (demo fixture login + customer UI login + staff UI login).
+Back-to-back full runs within one minute will see the
 setup tests skip with "login throttled by the API (429)" — wait out the window and rerun.
 

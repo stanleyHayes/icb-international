@@ -30,8 +30,6 @@ export interface SessionData {
     lastName: string;
     /** Staff roles drive the console's RBAC nav; empty for a customer account. */
     roles: string[];
-    /** Staff must enrol a second factor before the console unlocks (mfa gate). */
-    mfaEnabled: boolean;
   };
 }
 
@@ -87,20 +85,4 @@ export async function writeSession(data: SessionData): Promise<void> {
 export async function clearSession(): Promise<void> {
   const store = await cookies();
   store.delete(COOKIE_NAME);
-}
-
-/**
- * Patch the user half of the session in place.
- *
- * Used when the server learns something new about the signed-in operator after login —
- * completing MFA enrolment flips `mfaEnabled` without a fresh token round-trip.
- */
-export async function updateSessionUser(
-  patch: Partial<SessionData['user']>,
-): Promise<void> {
-  const session = await readSession();
-  if (!session) {
-    return;
-  }
-  await writeSession({ ...session, user: { ...session.user, ...patch } });
 }

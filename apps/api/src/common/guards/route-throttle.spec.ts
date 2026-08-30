@@ -41,7 +41,7 @@ describe('per-route throttles', () => {
     expect(THROTTLE_WINDOW_MS).toBe(60_000);
   });
 
-  it.each(['register', 'login', 'verifyMfa', 'refresh'] as const)(
+  it.each(['register', 'login', 'refresh'] as const)(
     'caps auth %s at 5 per minute',
     (method) => {
       expect(throttleOf(handlerOf(AuthController, method))).toEqual({

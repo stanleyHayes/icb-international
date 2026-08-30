@@ -10,8 +10,8 @@ import type { AuthFormState } from './password-actions';
  * Open the account.
  *
  * Registration creates the customer and sends the verification email; it deliberately does not
- * sign the customer in — the first session comes from an explicit login, where MFA policy first
- * applies. The form therefore ends on "check your inbox", not on a dashboard.
+ * sign the customer in — the first session comes from an explicit login. The form therefore ends
+ * on "check your inbox", not on a dashboard.
  */
 export async function signupAction(
   _previous: AuthFormState,
