@@ -7,3 +7,76 @@
   --icb-font-display: var(--font-outfit), -apple-system, BlinkMacSystemFont, sans-serif;
   --icb-font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+/* Console-wide visual language. Kept under .console-page so public/auth surfaces stay untouched. */
+#console-main {
+  background:
+    radial-gradient(
+      circle at 82% -12%,
+      color-mix(in srgb, var(--icb-primary) 7%, transparent),
+      transparent 32rem
+    ),
+    linear-gradient(180deg, color-mix(in srgb, var(--icb-bg-subtle) 72%, white), var(--icb-bg));
+}
+
+.console-page > header {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.console-page > header::before {
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.15rem;
+  left: 0;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--icb-primary),
+    color-mix(in srgb, var(--icb-primary) 28%, white)
+  );
+  content: '';
+}
+
+.console-page > header h1 {
+  letter-spacing: -0.035em;
+}
+
+.console-page [data-slot='card'] {
+  border-color: color-mix(in srgb, var(--icb-border) 84%, var(--icb-primary));
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 3%),
+    0 10px 30px rgb(15 23 42 / 3%);
+}
+
+.console-page [data-slot='card-header'] h3 {
+  letter-spacing: -0.015em;
+}
+
+.console-page table thead {
+  background: color-mix(in srgb, var(--icb-bg-subtle) 88%, var(--icb-primary));
+}
+
+.console-page table tbody tr {
+  transition: background-color 140ms ease;
+}
+
+.console-page table tbody tr:hover {
+  background: color-mix(in srgb, var(--icb-primary) 3.5%, var(--icb-surface));
+}
+
+.console-page input::placeholder,
+.console-page textarea::placeholder {
+  color: color-mix(in srgb, var(--icb-text-subtle) 76%, transparent);
+}
+
+.console-page :is(input, select, textarea):focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--icb-primary) 12%, transparent);
+}
+
+@media (max-width: 640px) {
+  .console-page > header {
+    padding-left: 0.75rem;
+  }
+}

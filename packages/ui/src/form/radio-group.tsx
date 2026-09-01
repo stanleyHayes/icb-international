@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { cn } from '../lib/cn';
 import { useFieldA11y, useFieldState } from './use-field';
 
@@ -13,6 +15,7 @@ export interface RadioOption {
 export interface RadioGroupProps {
   readonly options: readonly RadioOption[];
   readonly value?: string | null;
+  readonly defaultValue?: string;
   readonly onChange?: (value: string) => void;
   readonly onBlur?: () => void;
   readonly name?: string;
@@ -41,6 +44,7 @@ const RADIO_DOT_CLASSES =
 export function RadioGroup({
   options,
   value,
+  defaultValue,
   onChange,
   onBlur,
   name,
@@ -49,8 +53,10 @@ export function RadioGroup({
   id,
   className,
 }: Readonly<RadioGroupProps>) {
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue ?? '');
   const a11y = useFieldA11y({ id, disabled });
   const field = useFieldState();
+  const selectedValue = value ?? uncontrolledValue;
   return (
     <div
       role="radiogroup"
@@ -69,9 +75,12 @@ export function RadioGroup({
           key={option.value}
           option={option}
           name={name ?? a11y.id}
-          checked={value === option.value}
+          checked={selectedValue === option.value}
           groupDisabled={a11y.disabled}
-          onSelect={() => onChange?.(option.value)}
+          onSelect={() => {
+            setUncontrolledValue(option.value);
+            onChange?.(option.value);
+          }}
           onBlur={onBlur}
         />
       ))}

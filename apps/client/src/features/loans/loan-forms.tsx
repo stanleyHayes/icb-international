@@ -1,7 +1,7 @@
 'use client';
 
 import type { AccountSummary, LoanDetail } from '@icb/contracts';
-import { Button, maskIdentifier, minorUnitsToDraft } from '@icb/ui';
+import { Button, RadioGroup, maskIdentifier, minorUnitsToDraft } from '@icb/ui';
 import { CheckCircle2 } from 'lucide-react';
 import { useActionState, useState } from 'react';
 
@@ -16,6 +16,8 @@ const REPAY_KINDS = [
   { value: 'payoff', label: 'Settle the loan in full' },
 ] as const;
 
+type RepaymentKind = (typeof REPAY_KINDS)[number]['value'];
+
 /**
  * A repayment against an active loan. Extra payments reduce principal, which is where the
  * interest saving lives — the kind is chosen explicitly rather than inferred from the amount.
@@ -25,7 +27,7 @@ export function RepayForm({
   accounts,
 }: Readonly<{ loan: LoanDetail; accounts: AccountSummary[] }>) {
   const [state, action, pending] = useActionState(makeRepaymentAction, IDLE);
-  const [kind, setKind] = useState<'scheduled' | 'extra' | 'payoff'>('scheduled');
+  const [kind, setKind] = useState<RepaymentKind>('scheduled');
   const currency = loan.totalOutstanding.currency;
 
   const defaultAmount = defaultAmountFor(kind, loan);
@@ -48,24 +50,13 @@ export function RepayForm({
 
       <fieldset>
         <legend className="text-sm font-medium">What kind of payment</legend>
-        <div className="mt-2 space-y-2">
-          {REPAY_KINDS.map((option) => (
-            <label
-              key={option.value}
-              className="flex cursor-pointer items-center gap-2 rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] px-3 py-2.5 text-sm has-checked:border-[var(--icb-primary)] has-checked:bg-[var(--icb-navy-50)]"
-            >
-              <input
-                type="radio"
-                name="kind"
-                value={option.value}
-                checked={kind === option.value}
-                onChange={() => setKind(option.value)}
-                className="accent-[var(--icb-primary)]"
-              />
-              {option.label}
-            </label>
-          ))}
-        </div>
+        <RadioGroup
+          name="kind"
+          value={kind}
+          onChange={(value) => setKind(value as RepaymentKind)}
+          options={REPAY_KINDS}
+          className="mt-2"
+        />
       </fieldset>
 
       <MoneyField
@@ -85,7 +76,10 @@ export function RepayForm({
           Make payment
         </Button>
         {state.saved && !pending ? (
-          <p className="flex items-center gap-1.5 text-xs text-[var(--icb-success-fg)]" role="status">
+          <p
+            className="flex items-center gap-1.5 text-xs text-[var(--icb-success-fg)]"
+            role="status"
+          >
             <CheckCircle2 size={14} />
             Payment made
           </p>
@@ -112,10 +106,7 @@ export function AcceptOfferButton({ applicationId }: Readonly<{ applicationId: s
 
   if (state.saved) {
     return (
-      <p
-        role="status"
-        className="flex items-center gap-1.5 text-sm text-[var(--icb-success-fg)]"
-      >
+      <p role="status" className="flex items-center gap-1.5 text-sm text-[var(--icb-success-fg)]">
         <CheckCircle2 size={16} />
         Offer accepted — the loan is being set up and the money is on its way.
       </p>

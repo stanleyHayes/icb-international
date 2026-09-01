@@ -48,7 +48,9 @@ export function MoneyInput({
   id,
   className,
 }: Readonly<MoneyInputProps>) {
-  const [draft, setDraft] = useState(() => (value == null ? '' : minorUnitsToDraft(value, currency)));
+  const [draft, setDraft] = useState(() =>
+    value == null ? '' : minorUnitsToDraft(value, currency),
+  );
   const a11y = useFieldA11y({ id, invalid, disabled, required });
   const focused = useRef(false);
 
@@ -91,7 +93,7 @@ export function MoneyInput({
         id={a11y.id}
         name={name}
         value={draft}
-        placeholder={placeholder}
+        placeholder={placeholder ?? '0.00'}
         disabled={a11y.disabled}
         required={a11y.required}
         aria-invalid={a11y.invalid}

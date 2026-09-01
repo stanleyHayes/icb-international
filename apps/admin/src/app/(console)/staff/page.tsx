@@ -1,6 +1,6 @@
 import type { StaffUser } from '@icb/contracts';
-import { Card, EmptyState, formatDate, StatusBadge } from '@icb/ui';
-import { KeyRound, Plus } from 'lucide-react';
+import { Button, Card, EmptyState, formatDate, Input, Select, StatusBadge } from '@icb/ui';
+import { KeyRound, Plus, Search } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -10,13 +10,18 @@ import { isForbidden } from '@/lib/guards';
 
 export const metadata: Metadata = { title: 'Staff' };
 
+type SearchParams = Promise<{ q?: string; status?: string; role?: string }>;
+
 /**
  * The staff directory.
  *
  * Who can operate the console and with what roles — the facts an administrator scans for.
  * Provisioning and per-person changes happen on the detail and new pages.
  */
-export default async function StaffPage() {
+export default async function StaffPage({
+  searchParams,
+}: Readonly<{ searchParams: SearchParams }>) {
+  const params = await searchParams;
   let staff: StaffUser[];
   try {
     staff = await api<StaffUser[]>('/admin/staff');
@@ -26,6 +31,20 @@ export default async function StaffPage() {
     }
     throw error;
   }
+  const roles = [...new Set(staff.flatMap((member) => member.roles))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const query = params.q?.trim().toLocaleLowerCase() ?? '';
+  const visible = staff.filter((member) => {
+    const matchesQuery =
+      !query ||
+      `${member.firstName} ${member.lastName} ${member.email}`.toLocaleLowerCase().includes(query);
+    const matchesStatus =
+      !params.status || (params.status === 'active' ? member.active : !member.active);
+    const matchesRole =
+      !params.role || member.roles.includes(params.role as StaffUser['roles'][number]);
+    return matchesQuery && matchesStatus && matchesRole;
+  });
 
   return (
     <>
@@ -48,21 +67,31 @@ export default async function StaffPage() {
         </Link>
       </header>
 
-      <Card className="mt-6 overflow-hidden">
-        {staff.length > 0 ? (
+      <StaffFilters params={params} roles={roles} />
+
+      <Card className="mt-4 overflow-hidden">
+        {visible.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] text-sm">
               <caption className="sr-only">Staff directory</caption>
               <thead>
                 <tr className="border-b border-[var(--icb-border)] bg-[var(--icb-bg-subtle)] text-left text-[0.7rem] tracking-[0.08em] text-[var(--icb-text-subtle)] uppercase">
-                  <th scope="col" className="px-5 py-2.5 font-medium">Operator</th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">Roles</th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">Status</th>
-                  <th scope="col" className="px-5 py-2.5 text-right font-medium">Last sign-in</th>
+                  <th scope="col" className="px-5 py-2.5 font-medium">
+                    Operator
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 font-medium">
+                    Roles
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 font-medium">
+                    Status
+                  </th>
+                  <th scope="col" className="px-5 py-2.5 text-right font-medium">
+                    Last sign-in
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--icb-border)]">
-                {staff.map((member) => (
+                {visible.map((member) => (
                   <tr key={member.id} className="hover:bg-[var(--icb-bg-subtle)]">
                     <td className="px-5 py-3">
                       <Link href={`/staff/${member.id}`} className="font-medium hover:underline">
@@ -89,11 +118,56 @@ export default async function StaffPage() {
         ) : (
           <EmptyState
             icon={<KeyRound size={20} />}
-            title="No staff yet"
-            description="Provision the first operator to open the console."
+            title="No staff match"
+            description="Try a different name, status, or role."
           />
         )}
       </Card>
     </>
+  );
+}
+
+function StaffFilters({
+  params,
+  roles,
+}: Readonly<{ params: Awaited<SearchParams>; roles: readonly string[] }>) {
+  return (
+    <Card className="mt-6 p-4">
+      <form method="get" action="/staff" className="flex flex-wrap items-end gap-3">
+        <label className="min-w-[240px] flex-1 text-xs font-medium text-[var(--icb-text-muted)]">
+          Search staff
+          <Input
+            name="q"
+            type="search"
+            defaultValue={params.q ?? ''}
+            placeholder="Name or email address"
+            startIcon={<Search size={16} />}
+            className="mt-1"
+          />
+        </label>
+        <label className="text-xs font-medium text-[var(--icb-text-muted)]">
+          Status
+          <Select name="status" defaultValue={params.status ?? ''} className="mt-1 min-w-36">
+            <option value="">Any status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </Select>
+        </label>
+        <label className="text-xs font-medium text-[var(--icb-text-muted)]">
+          Role
+          <Select name="role" defaultValue={params.role ?? ''} className="mt-1 min-w-44">
+            <option value="">Any role</option>
+            {roles.map((role) => (
+              <option key={role} value={role}>
+                {role.replaceAll('_', ' ')}
+              </option>
+            ))}
+          </Select>
+        </label>
+        <Button type="submit" leadingIcon={<Search size={16} />}>
+          Filter
+        </Button>
+      </form>
+    </Card>
   );
 }

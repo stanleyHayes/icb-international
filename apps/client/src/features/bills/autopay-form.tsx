@@ -2,7 +2,7 @@
 
 import type { AccountSummary, LinkedBill } from '@icb/contracts';
 import type { CurrencyCode } from '@icb/money';
-import { Button, maskIdentifier, minorUnitsToDraft } from '@icb/ui';
+import { Button, RadioGroup, Select, maskIdentifier, minorUnitsToDraft } from '@icb/ui';
 import { CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useId, useState } from 'react';
@@ -42,7 +42,12 @@ export function AutopayForm({
       />
 
       {enabled ? (
-        <AutopayDetails bill={bill} accounts={accounts} currency={currency} errors={state.fieldErrors} />
+        <AutopayDetails
+          bill={bill}
+          accounts={accounts}
+          currency={currency}
+          errors={state.fieldErrors}
+        />
       ) : null}
 
       <SaveFooter saved={state.status === 'success' && !pending} pending={pending} />
@@ -100,7 +105,12 @@ function AutopayDetails({
 
       <StrategyField strategy={strategy} onChange={setStrategy} />
 
-      <AmountOptions autopay={bill.autopay} currency={currency} errors={errors} strategy={strategy} />
+      <AmountOptions
+        autopay={bill.autopay}
+        currency={currency}
+        errors={errors}
+        strategy={strategy}
+      />
     </>
   );
 }
@@ -146,34 +156,24 @@ function AmountOptions({
 function StrategyField({
   strategy,
   onChange,
-}: Readonly<{ strategy: 'full_balance' | 'fixed_amount'; onChange: (value: 'full_balance' | 'fixed_amount') => void }>) {
+}: Readonly<{
+  strategy: 'full_balance' | 'fixed_amount';
+  onChange: (value: 'full_balance' | 'fixed_amount') => void;
+}>) {
   return (
     <fieldset>
       <legend className="text-sm font-medium">How much</legend>
-      <div className="mt-2 flex gap-4 text-sm">
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="radio"
-            name="strategy"
-            value="full_balance"
-            checked={strategy === 'full_balance'}
-            onChange={() => onChange('full_balance')}
-            className="accent-[var(--icb-primary)]"
-          />
-          Full balance
-        </label>
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="radio"
-            name="strategy"
-            value="fixed_amount"
-            checked={strategy === 'fixed_amount'}
-            onChange={() => onChange('fixed_amount')}
-            className="accent-[var(--icb-primary)]"
-          />
-          Fixed amount
-        </label>
-      </div>
+      <RadioGroup
+        name="strategy"
+        orientation="horizontal"
+        value={strategy}
+        onChange={(value) => onChange(value as 'full_balance' | 'fixed_amount')}
+        className="mt-2"
+        options={[
+          { value: 'full_balance', label: 'Full balance' },
+          { value: 'fixed_amount', label: 'Fixed amount' },
+        ]}
+      />
     </fieldset>
   );
 }
@@ -185,18 +185,13 @@ function DaysBeforeDueField({ defaultValue }: Readonly<{ defaultValue: number }>
       <label htmlFor={id} className="block text-sm font-medium">
         Pay this many days before due
       </label>
-      <select
-        id={id}
-        name="daysBeforeDue"
-        defaultValue={defaultValue}
-        className="mt-1.5 h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-sm outline-none focus:border-[var(--icb-primary)]"
-      >
+      <Select id={id} name="daysBeforeDue" defaultValue={defaultValue} className="mt-1.5 h-11">
         {DAY_OPTIONS.map((days) => (
           <option key={days} value={days}>
             {daysLabel(days)}
           </option>
         ))}
-      </select>
+      </Select>
     </div>
   );
 }
@@ -230,6 +225,9 @@ export function UnlinkBillButton({ billId }: Readonly<{ billId: string }>) {
   );
 }
 
-function draftOrEmpty(minorUnits: number | null | undefined, currency: CurrencyCode): string | undefined {
+function draftOrEmpty(
+  minorUnits: number | null | undefined,
+  currency: CurrencyCode,
+): string | undefined {
   return minorUnits == null ? undefined : minorUnitsToDraft(minorUnits, currency);
 }

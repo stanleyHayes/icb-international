@@ -1,16 +1,13 @@
 'use client';
 
 import type { RiskRule } from '@icb/contracts';
-import { Button } from '@icb/ui';
+import { Button, Checkbox, Input, Select, Textarea } from '@icb/ui';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useActionState, useId } from 'react';
 
 import { updateRuleAction, type FraudActionState } from './actions';
 
 const INITIAL: FraudActionState = { status: 'idle', message: null, fieldErrors: {} };
-
-const inputClass =
-  'h-9 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3 text-sm outline-none focus:border-[var(--icb-primary)]';
 
 /**
  * One rule, editable in place.
@@ -45,20 +42,12 @@ export function RuleEditor({ rule }: Readonly<{ rule: RiskRule }>) {
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
-        <label className="flex items-center gap-2.5 text-sm font-medium">
-          <input
-            type="checkbox"
-            name="enabled"
-            defaultChecked={rule.enabled}
-            className="h-4 w-4 accent-[var(--icb-primary)]"
-          />
-          Rule enabled
-        </label>
+        <Checkbox name="enabled" defaultChecked={rule.enabled} label="Rule enabled" />
         <div>
           <label htmlFor={`${baseId}-weight`} className="block text-sm font-medium">
             Weight
           </label>
-          <input
+          <Input
             id={`${baseId}-weight`}
             name="weight"
             type="number"
@@ -66,7 +55,7 @@ export function RuleEditor({ rule }: Readonly<{ rule: RiskRule }>) {
             max={100}
             step={1}
             defaultValue={rule.weight}
-            className={`mt-1 tabular ${inputClass}`}
+            className="mt-1 h-9 tabular"
           />
         </div>
       </div>
@@ -77,26 +66,29 @@ export function RuleEditor({ rule }: Readonly<{ rule: RiskRule }>) {
           <div className="mt-2 grid gap-3 sm:grid-cols-2">
             {parameters.map(([key, value]) => (
               <div key={key}>
-                <label htmlFor={`${baseId}-${key}`} className="block text-xs text-[var(--icb-text-subtle)]">
+                <label
+                  htmlFor={`${baseId}-${key}`}
+                  className="block text-xs text-[var(--icb-text-subtle)]"
+                >
                   {key.replaceAll('_', ' ')}
                 </label>
                 {typeof value === 'boolean' ? (
-                  <select
+                  <Select
                     id={`${baseId}-${key}`}
                     name={`param.${key}`}
                     defaultValue={String(value)}
-                    className={`mt-1 ${inputClass}`}
+                    className="mt-1 h-9"
                   >
                     <option value="true">true</option>
                     <option value="false">false</option>
-                  </select>
+                  </Select>
                 ) : (
-                  <input
+                  <Input
                     id={`${baseId}-${key}`}
                     name={`param.${key}`}
                     type={typeof value === 'number' ? 'number' : 'text'}
                     defaultValue={String(value)}
-                    className={`mt-1 ${typeof value === 'number' ? 'tabular' : ''} ${inputClass}`}
+                    className={`mt-1 h-9 ${typeof value === 'number' ? 'tabular' : ''}`}
                   />
                 )}
               </div>
@@ -109,7 +101,7 @@ export function RuleEditor({ rule }: Readonly<{ rule: RiskRule }>) {
         <label htmlFor={`${baseId}-reason`} className="block text-sm font-medium">
           Reason for change
         </label>
-        <textarea
+        <Textarea
           id={`${baseId}-reason`}
           name="reason"
           rows={2}
@@ -117,7 +109,7 @@ export function RuleEditor({ rule }: Readonly<{ rule: RiskRule }>) {
           minLength={4}
           placeholder="Why is this rule changing?"
           aria-invalid={state.fieldErrors['reason'] ? true : undefined}
-          className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--icb-primary)]"
+          className="mt-1.5"
         />
         {state.fieldErrors['reason'] ? (
           <p className="mt-1 text-xs text-[var(--icb-danger-fg)]">{state.fieldErrors['reason']}</p>

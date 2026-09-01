@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@icb/ui';
+import { Button, RadioGroup } from '@icb/ui';
 import { CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useActionState } from 'react';
@@ -56,23 +56,13 @@ export function ReportCardForm({ cardId }: Readonly<{ cardId: string }>) {
 
       <fieldset>
         <legend className="text-sm font-medium">What happened?</legend>
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {REASONS.map((reason, index) => (
-            <label
-              key={reason.value}
-              className="flex cursor-pointer items-center gap-2 rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] px-3 py-2.5 text-sm has-checked:border-[var(--icb-primary)] has-checked:bg-[var(--icb-navy-50)]"
-            >
-              <input
-                type="radio"
-                name="reason"
-                value={reason.value}
-                defaultChecked={index === 0}
-                className="accent-[var(--icb-primary)]"
-              />
-              {reason.label}
-            </label>
-          ))}
-        </div>
+        <RadioGroup
+          name="reason"
+          defaultValue={REASONS[0].value}
+          orientation="horizontal"
+          options={REASONS}
+          className="mt-2"
+        />
       </fieldset>
 
       <TextField
@@ -85,22 +75,16 @@ export function ReportCardForm({ cardId }: Readonly<{ cardId: string }>) {
 
       <fieldset>
         <legend className="text-sm font-medium">Send a replacement?</legend>
-        <div className="mt-2 flex gap-4 text-sm">
-          <label className="flex cursor-pointer items-center gap-2">
-            <input
-              type="radio"
-              name="reissue"
-              value="yes"
-              defaultChecked
-              className="accent-[var(--icb-primary)]"
-            />
-            Yes, reissue
-          </label>
-          <label className="flex cursor-pointer items-center gap-2">
-            <input type="radio" name="reissue" value="no" className="accent-[var(--icb-primary)]" />
-            No, just block it
-          </label>
-        </div>
+        <RadioGroup
+          name="reissue"
+          defaultValue="yes"
+          orientation="horizontal"
+          className="mt-2"
+          options={[
+            { value: 'yes', label: 'Yes, reissue' },
+            { value: 'no', label: 'No, just block it' },
+          ]}
+        />
       </fieldset>
 
       <Button type="submit" variant="danger" loading={pending}>

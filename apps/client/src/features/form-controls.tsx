@@ -1,11 +1,8 @@
 'use client';
 
-import { cn } from '@icb/ui';
+import { Input, Select, cn } from '@icb/ui';
 import { AlertCircle } from 'lucide-react';
 import { useId, type ChangeEvent, type ReactNode } from 'react';
-
-const CONTROL_CLASS =
-  'mt-1.5 h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-sm outline-none focus:border-[var(--icb-primary)]';
 
 /** Form-level failure, e.g. a domain error returned by the API. Announced, never silent. */
 export function FormError({ message }: Readonly<{ message: string | null }>) {
@@ -23,7 +20,10 @@ export function FormError({ message }: Readonly<{ message: string | null }>) {
   );
 }
 
-export function FieldError({ id, message }: Readonly<{ id: string; message?: string | undefined }>) {
+export function FieldError({
+  id,
+  message,
+}: Readonly<{ id: string; message?: string | undefined }>) {
   if (!message) {
     return null;
   }
@@ -67,11 +67,9 @@ export function TextField({
     <div>
       <label htmlFor={id} className="block text-sm font-medium">
         {label}
-        {hint ? (
-          <span className="font-normal text-[var(--icb-text-subtle)]"> {hint}</span>
-        ) : null}
+        {hint ? <span className="font-normal text-[var(--icb-text-subtle)]"> {hint}</span> : null}
       </label>
-      <input
+      <Input
         id={id}
         name={name}
         type={type}
@@ -83,7 +81,7 @@ export function TextField({
         autoComplete={autoComplete}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={CONTROL_CLASS}
+        className="mt-1.5 h-11"
       />
       <FieldError id={`${id}-error`} message={error} />
     </div>
@@ -123,18 +121,19 @@ export function SelectField({
     <div>
       <label htmlFor={id} className="block text-sm font-medium">
         {label}
-        {hint ? (
-          <span className="font-normal text-[var(--icb-text-subtle)]"> {hint}</span>
-        ) : null}
+        {hint ? <span className="font-normal text-[var(--icb-text-subtle)]"> {hint}</span> : null}
       </label>
-      <select
+      <Select
         id={id}
         name={name}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={CONTROL_CLASS}
+        className="mt-1.5 h-11"
         {...(controlled
-          ? { value, onChange: (event: ChangeEvent<HTMLSelectElement>) => onChange?.(event.target.value) }
+          ? {
+              value,
+              onChange: (event: ChangeEvent<HTMLSelectElement>) => onChange?.(event.target.value),
+            }
           : { defaultValue: defaultValue ?? options[0]?.value })}
       >
         {options.map((option) => (
@@ -142,7 +141,7 @@ export function SelectField({
             {option.label}
           </option>
         ))}
-      </select>
+      </Select>
       <FieldError id={`${id}-error`} message={error} />
     </div>
   );
@@ -167,9 +166,7 @@ export function MoneyField({ label, name, currency, hint, error, defaultValue }:
     <div>
       <label htmlFor={id} className="block text-sm font-medium">
         {label}
-        {hint ? (
-          <span className="font-normal text-[var(--icb-text-subtle)]"> {hint}</span>
-        ) : null}
+        {hint ? <span className="font-normal text-[var(--icb-text-subtle)]"> {hint}</span> : null}
       </label>
       <div className="relative mt-1.5">
         <span className="absolute top-1/2 left-3.5 -translate-y-1/2 text-sm font-medium text-[var(--icb-text-subtle)]">

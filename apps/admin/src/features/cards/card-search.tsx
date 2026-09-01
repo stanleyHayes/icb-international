@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@icb/ui';
+import { Button, Input, Select } from '@icb/ui';
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
@@ -46,17 +46,30 @@ export function CardSearch({ defaultAccountId, defaultStatus, defaultKind }: Car
         >
           Account ID
         </label>
-        <input
+        <Input
           id={accountIdId}
           value={accountId}
           onChange={(event) => setAccountId(event.target.value)}
           placeholder="List cards for an account"
-          className="mt-1 h-10 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 font-mono text-sm outline-none focus:border-[var(--icb-primary)]"
+          startIcon={<Search size={16} />}
+          className="mt-1 h-10 font-mono"
         />
       </div>
 
-      <FilterSelect id={statusId} label="Status" value={status} onChange={setStatus} options={CARD_STATUS_OPTIONS} />
-      <FilterSelect id={kindId} label="Kind" value={kind} onChange={setKind} options={CARD_KIND_OPTIONS} />
+      <FilterSelect
+        id={statusId}
+        label="Status"
+        value={status}
+        onChange={setStatus}
+        options={CARD_STATUS_OPTIONS}
+      />
+      <FilterSelect
+        id={kindId}
+        label="Kind"
+        value={kind}
+        onChange={setKind}
+        options={CARD_KIND_OPTIONS}
+      />
 
       <Button type="submit" leadingIcon={<Search size={16} />}>
         Search
@@ -83,18 +96,18 @@ function FilterSelect({
       <label htmlFor={id} className="block text-xs font-medium text-[var(--icb-text-muted)]">
         {label}
       </label>
-      <select
+      <Select
         id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 h-10 rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3 text-sm outline-none focus:border-[var(--icb-primary)]"
+        className="mt-1 h-10"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
-      </select>
+      </Select>
     </div>
   );
 }

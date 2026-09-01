@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Dialog } from '@icb/ui';
+import { Button, Dialog, Input, Select } from '@icb/ui';
 import { Plus } from 'lucide-react';
 import { useActionState, useId, useState } from 'react';
 
@@ -53,44 +53,44 @@ export function IssueCardDialog({ defaultAccountId }: Readonly<{ defaultAccountI
             <FormError message={state.message} />
 
             <Field label="Account ID" htmlFor={accountIdId} error={state.fieldErrors['accountId']}>
-              <input
+              <Input
                 id={accountIdId}
                 name="accountId"
                 required
                 defaultValue={defaultAccountId ?? ''}
                 aria-invalid={state.fieldErrors['accountId'] ? true : undefined}
-                className={INPUT_CLASS}
+                className="mt-1.5"
               />
             </Field>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Kind" htmlFor={kindId}>
-                <select id={kindId} name="kind" className={INPUT_CLASS}>
+                <Select id={kindId} name="kind" className="mt-1.5">
                   {KIND_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
               <Field label="Network" htmlFor={networkId}>
-                <select id={networkId} name="network" className={INPUT_CLASS}>
+                <Select id={networkId} name="network" className="mt-1.5">
                   {NETWORK_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
             </div>
 
             <Field label="Nickname" htmlFor={nicknameId} error={state.fieldErrors['nickname']}>
-              <input
+              <Input
                 id={nicknameId}
                 name="nickname"
                 maxLength={60}
                 placeholder="Optional"
-                className={INPUT_CLASS}
+                className="mt-1.5"
               />
             </Field>
 
@@ -104,15 +104,17 @@ export function IssueCardDialog({ defaultAccountId }: Readonly<{ defaultAccountI
   );
 }
 
-const INPUT_CLASS =
-  'mt-1.5 h-10 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3 text-sm outline-none focus:border-[var(--icb-primary)]';
-
 function Field({
   label,
   htmlFor,
   error,
   children,
-}: Readonly<{ label: string; htmlFor: string; error?: string | undefined; children: React.ReactNode }>) {
+}: Readonly<{
+  label: string;
+  htmlFor: string;
+  error?: string | undefined;
+  children: React.ReactNode;
+}>) {
   return (
     <div>
       <label htmlFor={htmlFor} className="block text-sm font-medium">

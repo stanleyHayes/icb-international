@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Field, Input } from '@icb/ui';
+import { Hash } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -25,6 +26,7 @@ export function AccountLookup() {
           value={accountId}
           onChange={(event) => setAccountId(event.target.value)}
           placeholder="acc_…"
+          startIcon={<Hash size={16} />}
           spellCheck={false}
         />
       </Field>

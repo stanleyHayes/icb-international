@@ -1,6 +1,6 @@
 import type { Product } from '@icb/contracts';
-import { Amount, Card, EmptyState, StatusBadge } from '@icb/ui';
-import { Package, Plus } from 'lucide-react';
+import { Amount, Button, Card, EmptyState, Input, Select, StatusBadge } from '@icb/ui';
+import { Package, Plus, Search } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -8,13 +8,32 @@ import { api } from '@/lib/api';
 
 export const metadata: Metadata = { title: 'Products' };
 
+type SearchParams = Promise<{ q?: string; status?: string; kind?: string }>;
+
 /**
  * The product catalogue, including retired products — staff see everything, ordered as the
  * public site orders them.
  */
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: Readonly<{ searchParams: SearchParams }>) {
+  const params = await searchParams;
   const products = await api<Product[]>('/admin/products');
-  const sorted = [...products].sort((a, b) => a.displayOrder - b.displayOrder);
+  const kinds = [...new Set(products.map((product) => product.kind))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const query = params.q?.trim().toLocaleLowerCase() ?? '';
+  const sorted = products
+    .filter((product) => {
+      const matchesQuery =
+        !query ||
+        `${product.name} ${product.code} ${product.tagline}`.toLocaleLowerCase().includes(query);
+      const matchesStatus =
+        !params.status || (params.status === 'active' ? product.active : !product.active);
+      const matchesKind = !params.kind || product.kind === params.kind;
+      return matchesQuery && matchesStatus && matchesKind;
+    })
+    .sort((a, b) => a.displayOrder - b.displayOrder);
 
   return (
     <>
@@ -35,7 +54,9 @@ export default async function ProductsPage() {
         </Link>
       </header>
 
-      <Card className="mt-6 overflow-hidden">
+      <ProductFilters params={params} kinds={kinds} />
+
+      <Card className="mt-4 overflow-hidden">
         {sorted.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] text-sm">
@@ -103,11 +124,56 @@ export default async function ProductsPage() {
         ) : (
           <EmptyState
             icon={<Package size={20} />}
-            title="No products"
-            description="The catalogue is empty."
+            title="No products match"
+            description="Try a different name, status, or product kind."
           />
         )}
       </Card>
     </>
+  );
+}
+
+function ProductFilters({
+  params,
+  kinds,
+}: Readonly<{ params: Awaited<SearchParams>; kinds: readonly string[] }>) {
+  return (
+    <Card className="mt-6 p-4">
+      <form method="get" action="/products" className="flex flex-wrap items-end gap-3">
+        <label className="min-w-[240px] flex-1 text-xs font-medium text-[var(--icb-text-muted)]">
+          Search catalogue
+          <Input
+            name="q"
+            type="search"
+            defaultValue={params.q ?? ''}
+            placeholder="Product name, code, or tagline"
+            startIcon={<Search size={16} />}
+            className="mt-1"
+          />
+        </label>
+        <label className="text-xs font-medium text-[var(--icb-text-muted)]">
+          Status
+          <Select name="status" defaultValue={params.status ?? ''} className="mt-1 min-w-36">
+            <option value="">Any status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </Select>
+        </label>
+        <label className="text-xs font-medium text-[var(--icb-text-muted)]">
+          Kind
+          <Select name="kind" defaultValue={params.kind ?? ''} className="mt-1 min-w-44">
+            <option value="">Any kind</option>
+            {kinds.map((kind) => (
+              <option key={kind} value={kind}>
+                {kind.replaceAll('_', ' ')}
+              </option>
+            ))}
+          </Select>
+        </label>
+        <Button type="submit" leadingIcon={<Search size={16} />}>
+          Filter
+        </Button>
+      </form>
+    </Card>
   );
 }

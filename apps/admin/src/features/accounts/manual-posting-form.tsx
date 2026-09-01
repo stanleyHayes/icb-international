@@ -2,6 +2,7 @@
 
 import type { CurrencyCode } from '@icb/money';
 import { Button, Field, Input, MoneyInput, RadioGroup, Textarea } from '@icb/ui';
+import { BookOpen, FileText } from 'lucide-react';
 import { useState } from 'react';
 
 import { submitManualPosting } from '@/features/accounts/actions';
@@ -59,7 +60,13 @@ export function ManualPostingForm({
         />
       </Field>
       <Field label="Amount" required error={form.fieldErrors.amount}>
-        <MoneyInput name="amount" currency={currency} value={amount} onChange={setAmount} required />
+        <MoneyInput
+          name="amount"
+          currency={currency}
+          value={amount}
+          onChange={setAmount}
+          required
+        />
       </Field>
       <Field
         label="Contra account code"
@@ -73,6 +80,8 @@ export function ManualPostingForm({
           pattern="\d{4}"
           maxLength={4}
           value={contra}
+          placeholder="e.g. 1001"
+          startIcon={<BookOpen size={16} />}
           onChange={(event) => setContra(event.target.value)}
           required
         />
@@ -81,6 +90,8 @@ export function ManualPostingForm({
         <Input
           name="description"
           value={description}
+          placeholder="e.g. Branch cash deposit"
+          startIcon={<FileText size={16} />}
           onChange={(event) => setDescription(event.target.value)}
           required
         />

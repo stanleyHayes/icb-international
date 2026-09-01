@@ -1,5 +1,5 @@
 import type { Beneficiary, CursorPage } from '@icb/contracts';
-import { Button, Card, EmptyState, formatDate, formatTime } from '@icb/ui';
+import { Button, Card, Checkbox, EmptyState, Input, formatDate, formatTime } from '@icb/ui';
 import { ArrowLeftRight, BadgeCheck, Clock3, UserPlus, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import type { Route } from 'next';
@@ -62,24 +62,20 @@ export default async function BeneficiariesPage({
         <label htmlFor="payee-search" className="sr-only">
           Search payees
         </label>
-        <input
+        <Input
           id="payee-search"
           type="search"
           name="q"
           defaultValue={params.q ?? ''}
           placeholder="Search by name or account"
-          className="h-10 min-w-64 flex-1 rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-sm outline-none focus:border-[var(--icb-primary)]"
+          className="h-10 min-w-64 flex-1"
         />
-        <label className="flex items-center gap-2 text-sm text-[var(--icb-text-muted)]">
-          <input
-            type="checkbox"
-            name="favourites"
-            value="true"
-            defaultChecked={params.favourites === 'true'}
-            className="h-4 w-4 accent-[var(--icb-primary)]"
-          />
-          Favourites only
-        </label>
+        <Checkbox
+          name="favourites"
+          value="true"
+          defaultChecked={params.favourites === 'true'}
+          label="Favourites only"
+        />
         <Button type="submit" variant="secondary">
           Search
         </Button>

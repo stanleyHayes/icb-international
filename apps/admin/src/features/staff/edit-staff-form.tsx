@@ -110,7 +110,7 @@ function AccessOption({
         defaultChecked={defaultChecked}
         disabled={disabled}
         aria-labelledby={`${groupId}-${value}`}
-        className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--icb-primary)]"
+        className="mt-0.5 h-4 w-4 shrink-0 appearance-none rounded-full border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] checked:border-[5px] checked:border-[var(--icb-primary)] focus-visible:ring-2 focus-visible:ring-[var(--icb-primary)]"
       />
       <span className="min-w-0">
         <span id={`${groupId}-${value}`} className="block text-sm font-medium">

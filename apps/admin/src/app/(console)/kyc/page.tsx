@@ -4,6 +4,7 @@ import { AlertTriangle, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { ListPagination } from '@/components/list-pagination';
 import { api } from '@/lib/api';
 
 export const metadata: Metadata = { title: 'KYC queue' };
@@ -131,11 +132,12 @@ export default async function KycQueuePage({
         )}
       </Card>
 
-      {page.totalPages > 1 ? (
-        <p className="mt-4 text-sm text-[var(--icb-text-subtle)]">
-          Page {page.page} of {page.totalPages}
-        </p>
-      ) : null}
+      <ListPagination
+        page={page.page}
+        totalPages={page.totalPages}
+        total={page.total}
+        itemLabel={page.total === 1 ? 'case' : 'cases'}
+      />
     </>
   );
 }

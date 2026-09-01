@@ -957,6 +957,21 @@ Legend: ⬜ not started · 🟡 partial · ✅ done · ⛔ blocked
 **State as of 30 Aug 2026.** Counted from the tree and run, not estimated. Where a gate is red it
 says so.
 
+**1 Sep 2026 shell update.** The operations console now follows the RelianceVault workspace
+pattern: independently scrolling light sidebar, collapsible groups, compact desktop rail, route
+context and role-filtered command search in the top bar, plus a mobile drawer. Admin typecheck and
+lint pass; browser checks covered desktop collapse/group/search and a 390px drawer with zero
+horizontal overflow. The dashboard card pass replaces disconnected KPI tiles with one ruled
+ledger strip and gives ledger-integrity evidence a dedicated navy proof panel; the transaction
+monitor remains the primary work surface. The same focused checks and 390px overflow check pass.
+
+**1 Sep 2026 console-wide design and list update.** All 41 authenticated admin routes now inherit
+one refined page canvas, accented page heading, elevated card treatment, table hover language,
+and consistent input focus/placeholder styling. Customers, KYC, AML, Fraud, and Audit use a shared
+URL-aware numbered pager that preserves active filters. Staff and Products now add searchable,
+status-aware filter panels (plus role and product-kind filters), while AML/Fraud filter groups use
+the new compact segmented treatment. Admin and UI typechecks pass; targeted lint is clean.
+
 | Gate | Result |
 | --- | --- |
 | `pnpm -r typecheck` | ✅ clean, all ten workspaces |
@@ -1032,6 +1047,24 @@ into the open, which is why they are recorded rather than quietly closed:
 | **MFA and step-up retired by product decision.** TOTP, recovery codes, trusted devices and second-factor challenges previously spanned API schemas/services/controllers, contracts, SDK endpoints, both authenticated apps and end-to-end harnesses. | Leaving any one layer behind would publish dead routes or strand users in an obsolete challenge flow. | Removed the feature end to end, regenerated OpenAPI/SDK artifacts, removed OTP-only dependencies, documented accepted risk G8, and added the idempotent `db:drop-mfa` cleanup for persisted legacy fields and collections. |
 | **The SDK mock fabricated data its own contract rejects.** Zod 4 records integer-ness two ways — `z.int()` sets `format: 'safeint'`, `z.number().int()` files a `number_format` check — and the fabricator read only the format, so the second spelling produced a float. | The mock smoke test caught it, but only once the suite was run; a consumer would have built against invalid data. | Fabricator honours both spellings. |
 | **A date-fragile test** asserting `toEpochDay('2026-08-04') === 20_638` — the value for 2026-07-04. | The date string was updated to "today"; the literal beside it was not. | Pinned to a fixed leap day, which also covers leap-year handling. |
+
+### 1 September 2026 — branded controls, contextual help, and banking-flow verification
+
+- ✅ Added a reusable beginner `PageHelp` drawer to both authenticated shells. Every client and admin route now exposes a help icon beside its page context with plain-language, numbered instructions; Accounts, Transfers, Cards, Customers, Approvals, and Operations receive tailored guidance.
+- ✅ Replaced remaining raw selects, checkboxes, and radio groups across customer and operations forms with the ICB design-system controls. Date, date-time, and time inputs now use branded calendar/clock affordances while preserving the browser's accessible picker interaction.
+- ✅ Rechecked the admin console live: the RelianceVault-inspired grouped sidebar, responsive top bar, command search, account identity, KPI strip, and contextual help are present. The apparent older shell was not reproduced after authenticated loading.
+- ✅ Verified customer transfer quoting without posting money: own-account and same-bank transfers quote at $0 fee with immediate arrival; external ACH quotes at $0 fee with next-business-day arrival. MFA/OTP remains intentionally retired under accepted risk G8, so transfers use authenticated confirmation rather than email OTP.
+- ✅ Client production build completed with 43 static pages. Desktop browser sweep covered Accounts, Transactions, Transfers, Beneficiaries, Cards, Bills, Loans, Savings, Documents, Insights, Support, Settings, and Security without runtime load errors.
+- ✅ Corrected the stale signup assumptions in journey 1 and reran the complete signup → KYC → account → transfer → statement flow: 1/1 passed. The wider desktop run also passed the card-dispute and loan-lifecycle journeys; the optional fourth scenario remained skipped because its fixture prerequisite was unavailable.
+- ✅ Verification: `@icb/ui`, `@icb/admin`, and `@icb/client` lint + typecheck pass; UI tests pass 428/428; `git diff --check` passes.
+
+### 1 September 2026 — client shell parity and authenticated-page redesign
+
+- ✅ Rebuilt the customer shell in the admin console's visual language: four collapsible navigation groups, active-route branches, desktop sidebar collapse, mobile drawer, route breadcrumb, account identity, page help, and command search with `⌘/Ctrl+K`.
+- ✅ Preserved customer-specific information architecture across Home, Accounts, Transactions, Insights, Transfers, Payees, Bills, Cards, Loans, Savings, Documents, Support, Security, and Settings.
+- ✅ Added a scoped authenticated-page design layer for the client: ambient canvas, branded page-title rail, refined card borders and shadows, clearer card headers, interactive tables, and consistent focus treatment. Public, login, and onboarding surfaces remain unchanged.
+- ✅ Live browser verification passed on the Overview and Cards pages. Sidebar collapse/expand, grouped navigation, active-route state, contextual help placement, and command search all worked as expected.
+- ✅ Verification: client lint, strict TypeScript, production build (43 generated pages), and `git diff --check` pass.
 
 **Still open.** Nothing is blocked. Ordered by what a next session should pick up first:
 

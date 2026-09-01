@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@icb/ui';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 import { useActionState, useId, useState } from 'react';
 
 import { loginAction, type LoginState } from './actions';
@@ -28,20 +28,27 @@ export function LoginForm() {
         <label htmlFor={emailId} className="block text-sm font-medium">
           Email
         </label>
-        <input
-          id={emailId}
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="name@example.com"
-          required
-          // React resets uncontrolled fields when the action resolves; re-seeding from state
-          // keeps the email after a failed sign-in (the password is deliberately cleared).
-          defaultValue={state.email}
-          aria-invalid={Boolean(state.fieldErrors['email']) || undefined}
-          aria-describedby={state.fieldErrors['email'] ? `${emailId}-error` : undefined}
-          className="mt-1.5 h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-sm outline-none focus:border-[var(--icb-primary)]"
-        />
+        <div className="relative mt-1.5">
+          <Mail
+            aria-hidden="true"
+            size={16}
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[var(--icb-text-subtle)]"
+          />
+          <input
+            id={emailId}
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="name@example.com"
+            required
+            // React resets uncontrolled fields when the action resolves; re-seeding from state
+            // keeps the email after a failed sign-in (the password is deliberately cleared).
+            defaultValue={state.email}
+            aria-invalid={Boolean(state.fieldErrors['email']) || undefined}
+            aria-describedby={state.fieldErrors['email'] ? `${emailId}-error` : undefined}
+            className="h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] pr-3.5 pl-10 text-sm outline-none focus:border-[var(--icb-primary)]"
+          />
+        </div>
         <FieldError id={`${emailId}-error`} message={state.fieldErrors['email']} />
       </div>
 
@@ -55,6 +62,11 @@ export function LoginForm() {
           </a>
         </div>
         <div className="relative mt-1.5">
+          <LockKeyhole
+            aria-hidden="true"
+            size={16}
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[var(--icb-text-subtle)]"
+          />
           <input
             id={passwordId}
             name="password"
@@ -63,7 +75,7 @@ export function LoginForm() {
             placeholder="Your password"
             required
             aria-invalid={Boolean(state.fieldErrors['password']) || undefined}
-            className="h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 pr-11 text-sm outline-none focus:border-[var(--icb-primary)]"
+            className="h-11 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] pr-11 pl-10 text-sm outline-none focus:border-[var(--icb-primary)]"
           />
           <button
             type="button"

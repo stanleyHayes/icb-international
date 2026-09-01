@@ -37,11 +37,21 @@ function CustomerHits({ customers }: Readonly<{ customers: CustomerAdminView[] }
         <caption className="sr-only">Customers matching the search</caption>
         <thead>
           <tr className="border-b border-[var(--icb-border)] bg-[var(--icb-bg-subtle)] text-left text-[0.7rem] tracking-[0.08em] text-[var(--icb-text-subtle)] uppercase">
-            <th scope="col" className="px-5 py-2.5 font-medium">Customer</th>
-            <th scope="col" className="px-3 py-2.5 font-medium">Email</th>
-            <th scope="col" className="px-3 py-2.5 font-medium">Status</th>
-            <th scope="col" className="px-3 py-2.5 font-medium">Tier</th>
-            <th scope="col" className="px-5 py-2.5 text-right font-medium">Accounts</th>
+            <th scope="col" className="px-5 py-2.5 font-medium">
+              Customer
+            </th>
+            <th scope="col" className="px-3 py-2.5 font-medium">
+              Email
+            </th>
+            <th scope="col" className="px-3 py-2.5 font-medium">
+              Status
+            </th>
+            <th scope="col" className="px-3 py-2.5 font-medium">
+              Tier
+            </th>
+            <th scope="col" className="px-5 py-2.5 text-right font-medium">
+              Accounts
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[var(--icb-border)]">
@@ -109,6 +119,7 @@ export default async function AccountsPage({
                   defaultValue={query}
                   minLength={2}
                   placeholder="e.g. last digits of the account number"
+                  startIcon={<Search size={16} />}
                 />
               </label>
               <Button type="submit">Search</Button>

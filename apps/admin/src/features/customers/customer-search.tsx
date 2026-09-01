@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@icb/ui';
+import { Button, Input, Select as IcbSelect } from '@icb/ui';
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
@@ -56,22 +56,17 @@ export function CustomerSearch({
         <label htmlFor={queryId} className="block text-xs font-medium text-[var(--icb-text-muted)]">
           Search
         </label>
-        <input
+        <Input
           id={queryId}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Name, email, phone or account number"
-          className="mt-1 h-10 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 text-sm outline-none focus:border-[var(--icb-primary)]"
+          startIcon={<Search size={16} />}
+          className="mt-1 h-10"
         />
       </div>
 
-      <Select
-        id={statusId}
-        label="Status"
-        value={status}
-        onChange={setStatus}
-        options={STATUSES}
-      />
+      <Select id={statusId} label="Status" value={status} onChange={setStatus} options={STATUSES} />
       <Select id={riskId} label="Risk" value={risk} onChange={setRisk} options={RISK_RATINGS} />
 
       <Button type="submit" leadingIcon={<Search size={16} />}>
@@ -99,18 +94,18 @@ function Select({
       <label htmlFor={id} className="block text-xs font-medium text-[var(--icb-text-muted)]">
         {label}
       </label>
-      <select
+      <IcbSelect
         id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 h-10 rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3 text-sm outline-none focus:border-[var(--icb-primary)]"
+        className="mt-1 h-10"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
-      </select>
+      </IcbSelect>
     </div>
   );
 }

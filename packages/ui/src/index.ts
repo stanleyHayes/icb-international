@@ -114,8 +114,17 @@ export { Balance, type BalanceProps } from './data/balance';
 export { csvFilename, toCsv, toCsvCell, toCsvRow } from './data/csv';
 export { DataTable, type ColumnDef, type DataTableProps } from './data/data-table';
 export { tableToCsv } from './data/data-table-csv';
-export { DefinitionList, type DefinitionItem, type DefinitionListProps } from './data/definition-list';
-export { FilterBar, type FilterBarProps, type FilterDescriptor, type FilterOption } from './data/filter-bar';
+export {
+  DefinitionList,
+  type DefinitionItem,
+  type DefinitionListProps,
+} from './data/definition-list';
+export {
+  FilterBar,
+  type FilterBarProps,
+  type FilterDescriptor,
+  type FilterOption,
+} from './data/filter-bar';
 export { Pagination, pageWindow, type PageItem, type PaginationProps } from './data/pagination';
 export { SkeletonTable, SkeletonText, SkeletonTransactionList } from './data/skeletons';
 export { StatusBadge, type StatusBadgeProps } from './data/status-badge';
@@ -212,16 +221,38 @@ export { useFieldA11y, useFieldState, type FieldA11y, type FieldState } from './
 
 export { AppShell, type AppShellProps } from './layout/app-shell';
 export { Breadcrumbs, type BreadcrumbItem } from './layout/breadcrumbs';
-export { filterCommands, groupCommands, type CommandGroup, type FilterableCommand } from './layout/command-filter';
-export { CommandPalette, type CommandItem, type CommandPaletteProps } from './layout/command-palette';
+export {
+  filterCommands,
+  groupCommands,
+  type CommandGroup,
+  type FilterableCommand,
+} from './layout/command-filter';
+export {
+  CommandPalette,
+  type CommandItem,
+  type CommandPaletteProps,
+} from './layout/command-palette';
 export { Container } from './layout/container';
 export { Dialog, type DialogProps } from './layout/dialog';
 export { Drawer, type DrawerProps } from './layout/drawer';
-export { DropdownMenu, type DropdownMenuItem, type DropdownMenuProps } from './layout/dropdown-menu';
+export {
+  DropdownMenu,
+  type DropdownMenuItem,
+  type DropdownMenuProps,
+} from './layout/dropdown-menu';
 export { Grid, type GridCols, type GridProps } from './layout/grid';
-export { KEYS, firstEnabledIndex, keyToRovingIntent, resolveRovingIndex, type RovingAxis, type RovingIntent, type RovingOptions } from './layout/keyboard';
+export {
+  KEYS,
+  firstEnabledIndex,
+  keyToRovingIntent,
+  resolveRovingIndex,
+  type RovingAxis,
+  type RovingIntent,
+  type RovingOptions,
+} from './layout/keyboard';
 export { FOCUSABLE_SELECTOR, Z_INDEX } from './layout/layout.constants';
 export { OverlayFrame, type OverlayFrameProps } from './layout/overlay-frame';
+export { PageHelp, type PageHelpProps } from './layout/page-help';
 export { PageHeader, type PageHeaderProps } from './layout/page-header';
 export { Popover, type PopoverProps } from './layout/popover';
 export { Reveal } from './layout/reveal';
@@ -232,4 +263,9 @@ export { Stack, type StackGap, type StackProps } from './layout/stack';
 export { Tabs, type TabItem, type TabsProps } from './layout/tabs';
 export { Tooltip, type TooltipProps } from './layout/tooltip';
 export { Topbar, type TopbarProps } from './layout/topbar';
-export { useEscapeClose, useFocusTrap, useOutsidePointerDown, useScrollLock } from './layout/use-overlay';
+export {
+  useEscapeClose,
+  useFocusTrap,
+  useOutsidePointerDown,
+  useScrollLock,
+} from './layout/use-overlay';

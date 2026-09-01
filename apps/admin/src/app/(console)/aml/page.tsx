@@ -2,9 +2,9 @@ import { AML_ALERT_KINDS, type AmlAlert, type OffsetPage } from '@icb/contracts'
 import { Card, EmptyState } from '@icb/ui';
 import { ShieldCheck } from 'lucide-react';
 import type { Metadata, Route } from 'next';
-import Link from 'next/link';
 
 import { AlertTable } from '@/features/aml/alert-table';
+import { ListPagination } from '@/components/list-pagination';
 import { FilterPills, type FilterPill } from '@/features/fraud/filter-pills';
 import { api } from '@/lib/api';
 
@@ -15,7 +15,11 @@ type SearchParams = Promise<{ kind?: string; severity?: string; status?: string;
 const STATUSES = ['open', 'investigating', 'escalated'] as const;
 const SEVERITIES = ['critical', 'high', 'medium', 'low'] as const;
 
-type Filters = { kind?: string | undefined; severity?: string | undefined; status?: string | undefined };
+type Filters = {
+  kind?: string | undefined;
+  severity?: string | undefined;
+  status?: string | undefined;
+};
 
 function hrefFor(filters: Filters, page?: number): Route {
   const params = new URLSearchParams();
@@ -50,11 +54,7 @@ function toggle(current: string | undefined, value: string): string | undefined 
   return current === value ? undefined : value;
 }
 
-function pillsFor(
-  values: readonly string[],
-  filters: Filters,
-  key: keyof Filters,
-): FilterPill[] {
+function pillsFor(values: readonly string[], filters: Filters, key: keyof Filters): FilterPill[] {
   return values.map((value) => ({
     key: value,
     label: value.replaceAll('_', ' '),
@@ -65,7 +65,12 @@ function pillsFor(
 
 function kindPillsFor(filters: Filters): FilterPill[] {
   return [
-    { key: 'all', label: 'All', href: hrefFor({ ...filters, kind: undefined }), active: !filters.kind },
+    {
+      key: 'all',
+      label: 'All',
+      href: hrefFor({ ...filters, kind: undefined }),
+      active: !filters.kind,
+    },
     ...pillsFor(AML_ALERT_KINDS, filters, 'kind'),
   ];
 }
@@ -94,13 +99,13 @@ export default async function AmlQueuePage({
         </p>
       </header>
 
-      <div className="mt-5 space-y-2">
+      <Card className="mt-5 space-y-3 p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
         <FilterPills label="Kind" pills={kindPillsFor(filters)} />
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <FilterPills label="Severity" pills={pillsFor(SEVERITIES, filters, 'severity')} />
           <FilterPills label="Status" pills={pillsFor(STATUSES, filters, 'status')} />
         </div>
-      </div>
+      </Card>
 
       <div className="mt-6">
         {page.items.length > 0 ? (
@@ -116,22 +121,12 @@ export default async function AmlQueuePage({
         )}
       </div>
 
-      {page.totalPages > 1 ? (
-        <p className="mt-4 text-sm text-[var(--icb-text-subtle)]">
-          Page {page.page} of {page.totalPages}
-          {page.page < page.totalPages ? (
-            <>
-              {' · '}
-              <Link
-                href={hrefFor(filters, page.page + 1)}
-                className="font-medium text-[var(--icb-primary)] hover:underline"
-              >
-                Next page
-              </Link>
-            </>
-          ) : null}
-        </p>
-      ) : null}
+      <ListPagination
+        page={page.page}
+        totalPages={page.totalPages}
+        total={page.total}
+        itemLabel={page.total === 1 ? 'alert' : 'alerts'}
+      />
     </>
   );
 }

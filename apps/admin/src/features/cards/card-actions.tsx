@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Dialog } from '@icb/ui';
+import { Button, Dialog, Select } from '@icb/ui';
 import { Ban, KeyRound, RefreshCw } from 'lucide-react';
 import { useActionState, useId, useState } from 'react';
 
@@ -55,7 +55,13 @@ function BlockButton({ cardId }: Readonly<{ cardId: string }>) {
 
   return (
     <>
-      <Button type="button" variant="danger" size="sm" leadingIcon={<Ban size={15} />} onClick={dialog.show}>
+      <Button
+        type="button"
+        variant="danger"
+        size="sm"
+        leadingIcon={<Ban size={15} />}
+        onClick={dialog.show}
+      >
         Block card
       </Button>
       <Dialog
@@ -94,7 +100,13 @@ function ReissueButton({ cardId }: Readonly<{ cardId: string }>) {
 
   return (
     <>
-      <Button type="button" variant="secondary" size="sm" leadingIcon={<RefreshCw size={15} />} onClick={dialog.show}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        leadingIcon={<RefreshCw size={15} />}
+        onClick={dialog.show}
+      >
         Reissue
       </Button>
       <Dialog
@@ -113,13 +125,13 @@ function ReissueButton({ cardId }: Readonly<{ cardId: string }>) {
               <label htmlFor={reasonId} className="block text-sm font-medium">
                 Reason
               </label>
-              <select id={reasonId} name="reason" className={TEXTAREA_CLASS}>
+              <Select id={reasonId} name="reason" className="mt-1.5">
                 {REISSUE_REASONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <ReasonField
               id={detailId}
@@ -144,7 +156,13 @@ function PinResetButton({ cardId }: Readonly<{ cardId: string }>) {
 
   return (
     <>
-      <Button type="button" variant="secondary" size="sm" leadingIcon={<KeyRound size={15} />} onClick={dialog.show}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        leadingIcon={<KeyRound size={15} />}
+        onClick={dialog.show}
+      >
         Reset PIN
       </Button>
       <Dialog
@@ -175,7 +193,13 @@ function ReasonField({
   label = 'Reason',
   error,
   placeholder,
-}: Readonly<{ id: string; name: string; label?: string; error?: string | undefined; placeholder: string }>) {
+}: Readonly<{
+  id: string;
+  name: string;
+  label?: string;
+  error?: string | undefined;
+  placeholder: string;
+}>) {
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium">

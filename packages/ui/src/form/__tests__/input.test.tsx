@@ -50,6 +50,23 @@ describe('Input', () => {
     expect(screen.getByLabelText('Name').className).toContain('h-12');
   });
 
+  it('reserves space for decorative start and end icons', () => {
+    const { container } = render(
+      <Input
+        aria-label="Search"
+        startIcon={<span data-testid="start-icon">S</span>}
+        endIcon={<span data-testid="end-icon">E</span>}
+      />,
+    );
+
+    const input = screen.getByLabelText('Search');
+    expect(input.className).toContain('pl-10');
+    expect(input.className).toContain('pr-10');
+    expect(screen.getByTestId('start-icon').parentElement).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByTestId('end-icon').parentElement).toHaveAttribute('aria-hidden', 'true');
+    expect(container.firstElementChild).toHaveClass('relative');
+  });
+
   it('inherits disabled state from an enclosing Field', () => {
     render(
       <Field label="Name" disabled>

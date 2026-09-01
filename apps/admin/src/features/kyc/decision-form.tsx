@@ -1,7 +1,7 @@
 'use client';
 
 import type { KycLevel } from '@icb/contracts';
-import { Button } from '@icb/ui';
+import { Button, Select } from '@icb/ui';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useActionState, useId, useState } from 'react';
 
@@ -82,11 +82,11 @@ export function DecisionForm({
           <label htmlFor={levelId} className="block text-sm font-medium">
             Tier to grant
           </label>
-          <select
+          <Select
             id={levelId}
             name="grantedLevel"
             defaultValue={requestedLevel}
-            className="mt-1.5 h-10 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3 text-sm outline-none focus:border-[var(--icb-primary)]"
+            className="mt-1.5 capitalize"
           >
             {LEVELS.map((level) => (
               <option key={level} value={level}>
@@ -94,7 +94,7 @@ export function DecisionForm({
                 {level === requestedLevel ? ' (requested)' : ''}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       ) : null}
 
@@ -112,7 +112,9 @@ export function DecisionForm({
           className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--icb-primary)]"
         />
         {state.fieldErrors['reason'] ? (
-          <p className="mt-1.5 text-xs text-[var(--icb-danger-fg)]">{state.fieldErrors['reason']}</p>
+          <p className="mt-1.5 text-xs text-[var(--icb-danger-fg)]">
+            {state.fieldErrors['reason']}
+          </p>
         ) : (
           <p className="mt-1.5 text-xs text-[var(--icb-text-subtle)]">
             Written to the audit trail against your account.

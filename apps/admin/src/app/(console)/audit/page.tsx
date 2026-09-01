@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import type { z } from 'zod';
 
 import { AccessDenied } from '@/components/access-denied';
+import { ListPagination } from '@/components/list-pagination';
 import { AuditEventTable } from '@/features/audit/audit-event-table';
 import { AuditFilters } from '@/features/audit/audit-filters';
 import { api } from '@/lib/api';
@@ -80,10 +81,7 @@ export default async function AuditPage({
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <Card>
-          <CardHeader
-            title="Filter"
-            description="By actor, action, subject or date range."
-          />
+          <CardHeader title="Filter" description="By actor, action, subject or date range." />
           <CardBody>
             <AuditFilters values={params} />
           </CardBody>
@@ -95,7 +93,12 @@ export default async function AuditPage({
         <AuditEventTable events={page.items} />
       </div>
 
-      {page.totalPages > 1 ? <Pager page={page.page} totalPages={page.totalPages} params={query} /> : null}
+      <ListPagination
+        page={page.page}
+        totalPages={page.totalPages}
+        total={page.total}
+        itemLabel={page.total === 1 ? 'event' : 'events'}
+      />
     </>
   );
 }
@@ -130,35 +133,5 @@ function IntegrityWidget({ report }: Readonly<{ report: AuditIntegrityReport }>)
         </p>
       </CardBody>
     </Card>
-  );
-}
-
-function Pager({
-  page,
-  totalPages,
-  params,
-}: Readonly<{ page: number; totalPages: number; params: URLSearchParams }>) {
-  const link = (target: number) => {
-    const next = new URLSearchParams(params);
-    next.set('page', String(target));
-    return `/audit?${next.toString()}`;
-  };
-
-  return (
-    <nav aria-label="Audit pages" className="mt-4 flex items-center gap-3 text-sm">
-      {page > 1 ? (
-        <a href={link(page - 1)} className="font-medium text-[var(--icb-primary)] hover:underline">
-          Previous
-        </a>
-      ) : null}
-      <span className="text-[var(--icb-text-subtle)]">
-        Page {page} of {totalPages}
-      </span>
-      {page < totalPages ? (
-        <a href={link(page + 1)} className="font-medium text-[var(--icb-primary)] hover:underline">
-          Next
-        </a>
-      ) : null}
-    </nav>
   );
 }

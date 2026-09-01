@@ -9,3 +9,6 @@ resolved statuses always carry their resolution date
 ---
 
 <!-- 2026-08-30 deliverable flush: no observations. -->
+<!-- 2026-09-01 deliverable flush: no observations. -->
+<!-- 2026-09-01 card-polish deliverable flush: no observations. -->
+<!-- 2026-09-01 client-shell redesign deliverable flush: no observations. -->

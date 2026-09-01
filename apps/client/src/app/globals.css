@@ -7,3 +7,88 @@
   --icb-font-display: var(--font-outfit), -apple-system, BlinkMacSystemFont, sans-serif;
   --icb-font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+/* Authenticated client surfaces mirror the operations console with a calmer retail tone. */
+#client-main {
+  background:
+    radial-gradient(
+      circle at 82% -12%,
+      color-mix(in srgb, var(--icb-primary) 8%, transparent),
+      transparent 34rem
+    ),
+    linear-gradient(180deg, color-mix(in srgb, var(--icb-bg-subtle) 70%, white), var(--icb-bg));
+}
+
+.client-page > header {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.client-page > header::before {
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.15rem;
+  left: 0;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--icb-primary),
+    color-mix(in srgb, var(--icb-primary) 28%, white)
+  );
+  content: '';
+}
+
+.client-page > header h1 {
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.client-page [data-slot='card'] {
+  border-color: color-mix(in srgb, var(--icb-border) 82%, var(--icb-primary));
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 3%),
+    0 12px 34px rgb(15 23 42 / 4%);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.client-page [data-slot='card']:hover {
+  border-color: color-mix(in srgb, var(--icb-border) 64%, var(--icb-primary));
+  box-shadow:
+    0 2px 4px rgb(15 23 42 / 3%),
+    0 16px 40px rgb(15 23 42 / 5%);
+}
+
+.client-page [data-slot='card-header'] {
+  border-bottom: 1px solid color-mix(in srgb, var(--icb-border) 72%, transparent);
+  padding-bottom: 1rem;
+}
+
+.client-page [data-slot='card-header'] h3 {
+  letter-spacing: -0.018em;
+}
+
+.client-page table thead {
+  background: color-mix(in srgb, var(--icb-bg-subtle) 88%, var(--icb-primary));
+}
+
+.client-page table tbody tr {
+  transition: background-color 140ms ease;
+}
+
+.client-page table tbody tr:hover {
+  background: color-mix(in srgb, var(--icb-primary) 3.5%, var(--icb-surface));
+}
+
+.client-page :is(input, select, textarea):focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--icb-primary) 12%, transparent);
+}
+
+@media (max-width: 640px) {
+  .client-page > header {
+    padding-left: 0.75rem;
+  }
+}

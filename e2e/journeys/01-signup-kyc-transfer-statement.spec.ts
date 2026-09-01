@@ -67,10 +67,12 @@ test.describe('journey 1: signup → KYC → account → transfer → statement'
     await page.goto('/signup');
     await page.getByLabel('First name').fill('Efe');
     await page.getByLabel('Last name').fill('E2ETest');
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await page.getByLabel(/email address/i).fill(email);
     // PhoneInput composes E.164 from its dial-code dropdown + national digits; typing the
     // '+' ourselves double-prefixes. Plain national digits always produce a valid number.
     await page.getByLabel(/mobile number/i).fill('7700900123');
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await page.getByLabel(/^Password/).fill(PASSWORD);
     await page.getByLabel(/confirm password/i).fill(PASSWORD);
     // Custom Checkbox: a styled SVG sits over the native input, so click the label text.
@@ -84,7 +86,9 @@ test.describe('journey 1: signup → KYC → account → transfer → statement'
     // ── Login + KYC wizard (UI) ──────────────────────────────────────────────
     await loginViaUi(page, email, PASSWORD);
     await completeOnboarding(page);
-    await expect(page.getByRole('heading', { name: /you’re all set|you're all set/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /you’re all set|you're all set/i }),
+    ).toBeVisible();
 
     // ── KYC approval (operations staff, API) ─────────────────────────────────
     const customer = await ApiClient.login(email, PASSWORD);
@@ -104,9 +108,7 @@ test.describe('journey 1: signup → KYC → account → transfer → statement'
     const source = accounts.items[0];
     expect(source, 'onboarding should have opened one account').toBeTruthy();
     const products = await customer.get<{ code: string; active: boolean }[]>('/products');
-    const other = products.find(
-      (product) => product.active && product.code !== source.productCode,
-    );
+    const other = products.find((product) => product.active && product.code !== source.productCode);
     expect(other, 'seed should offer at least two active products').toBeTruthy();
     await customer.post<{ id: string }>('/accounts', {
       productCode: other!.code,
@@ -149,12 +151,10 @@ test.describe('journey 1: signup → KYC → account → transfer → statement'
     await page.getByLabel(/reference/i).fill('E2E journey 1');
     await page.getByRole('button', { name: 'Review quote' }).click();
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
-    await page
-      .getByRole('button', { name: /confirm transfer|verify and confirm/i })
-      .click();
-    await expect(
-      page.getByText(/transfer (sent|scheduled|pending approval)/i).first(),
-    ).toBeVisible({ timeout: 30_000 });
+    await page.getByRole('button', { name: /confirm transfer|verify and confirm/i }).click();
+    await expect(page.getByText(/transfer (sent|scheduled|pending approval)/i).first()).toBeVisible(
+      { timeout: 30_000 },
+    );
 
     // ── Statement (API generate, UI verify) ──────────────────────────────────
     // The window is computed from the bank's simulated business date — never a hard-coded

@@ -1,7 +1,7 @@
 'use client';
 
 import type { FeatureFlag } from '@icb/contracts';
-import { Button, formatDate, formatTime } from '@icb/ui';
+import { Button, Input, Select, formatDate, formatTime } from '@icb/ui';
 import { AlertCircle } from 'lucide-react';
 import { useActionState, useId, useState } from 'react';
 
@@ -50,19 +50,27 @@ export function FlagRow({ flag }: Readonly<{ flag: FeatureFlag }>) {
         <form action={flip} className="shrink-0">
           <input type="hidden" name="key" value={flag.key} />
           <input type="hidden" name="enabled" value={String(!enabled)} />
-          <Button type="submit" variant={enabled ? 'secondary' : 'primary'} size="sm" loading={pending}>
+          <Button
+            type="submit"
+            variant={enabled ? 'secondary' : 'primary'}
+            size="sm"
+            loading={pending}
+          >
             {enabled ? 'Disable' : 'Enable'}
           </Button>
         </form>
       </div>
 
-      <form action={action} className="mt-4 flex flex-wrap items-end gap-4 border-t border-[var(--icb-border)] pt-4">
+      <form
+        action={action}
+        className="mt-4 flex flex-wrap items-end gap-4 border-t border-[var(--icb-border)] pt-4"
+      >
         <input type="hidden" name="key" value={flag.key} />
         <div>
           <label htmlFor={rolloutId} className="block text-xs font-medium">
             Rollout %
           </label>
-          <input
+          <Input
             id={rolloutId}
             name="rolloutPercentage"
             type="number"
@@ -70,25 +78,20 @@ export function FlagRow({ flag }: Readonly<{ flag: FeatureFlag }>) {
             max={100}
             step={1}
             defaultValue={flag.rolloutPercentage}
-            className="tabular mt-1 h-9 w-24 rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3 text-sm outline-none focus:border-[var(--icb-primary)]"
+            className="tabular mt-1 h-9 w-24"
           />
         </div>
         <div>
           <label htmlFor={audienceId} className="block text-xs font-medium">
             Audience
           </label>
-          <select
-            id={audienceId}
-            name="audience"
-            defaultValue={flag.audience}
-            className="mt-1 h-9 rounded-[var(--radius-md)] border border-[var(--icb-border-strong)] bg-[var(--icb-surface)] px-3 text-sm outline-none focus:border-[var(--icb-primary)]"
-          >
+          <Select id={audienceId} name="audience" defaultValue={flag.audience} className="mt-1 h-9">
             {AUDIENCES.map((audience) => (
               <option key={audience.value} value={audience.value}>
                 {audience.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <Button type="submit" variant="secondary" size="sm" loading={pending}>
           Save rollout

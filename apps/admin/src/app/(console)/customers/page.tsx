@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { CustomerSearch } from '@/features/customers/customer-search';
+import { ListPagination } from '@/components/list-pagination';
 import { api } from '@/lib/api';
 
 export const metadata: Metadata = { title: 'Customers' };
@@ -37,13 +38,13 @@ export default async function CustomersPage({
         </p>
       </header>
 
-      <div className="mt-6">
+      <Card className="mt-6 p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
         <CustomerSearch
           defaultQuery={params.q ?? ''}
           defaultStatus={params.status ?? ''}
           defaultRisk={params.riskRating ?? ''}
         />
-      </div>
+      </Card>
 
       <Card className="mt-6 overflow-hidden">
         {page.items.length > 0 ? (
@@ -115,11 +116,12 @@ export default async function CustomersPage({
         )}
       </Card>
 
-      {page.totalPages > 1 ? (
-        <p className="mt-4 text-sm text-[var(--icb-text-subtle)]">
-          Page {page.page} of {page.totalPages} · {page.total} customers
-        </p>
-      ) : null}
+      <ListPagination
+        page={page.page}
+        totalPages={page.totalPages}
+        total={page.total}
+        itemLabel={page.total === 1 ? 'customer' : 'customers'}
+      />
     </>
   );
 }

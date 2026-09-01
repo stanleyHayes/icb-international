@@ -5,6 +5,7 @@ import type { Metadata, Route } from 'next';
 import Link from 'next/link';
 
 import { CaseTable } from '@/features/fraud/case-table';
+import { ListPagination } from '@/components/list-pagination';
 import { FilterPills, type FilterPill } from '@/features/fraud/filter-pills';
 import { api } from '@/lib/api';
 
@@ -74,23 +75,28 @@ export default async function FraudQueuePage({
           <h1 className="font-display text-3xl font-bold tracking-[-0.02em]">Fraud alerts</h1>
           <p className="mt-1.5 text-sm text-[var(--icb-text-muted)]">
             {page.total} case{page.total === 1 ? '' : 's'} on the queue ·{' '}
-            <Link href="/fraud/rules" className="font-medium text-[var(--icb-primary)] hover:underline">
+            <Link
+              href="/fraud/rules"
+              className="font-medium text-[var(--icb-primary)] hover:underline"
+            >
               Detection rules
             </Link>
           </p>
         </div>
       </header>
 
-      <div className="mt-5 space-y-2">
+      <Card className="mt-5 space-y-3 p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
         <FilterPills
           label="Status"
           pills={pillsFor(STATUSES, params.status, (status) => hrefFor(params.severity, status))}
         />
         <FilterPills
           label="Severity"
-          pills={pillsFor(SEVERITIES, params.severity, (severity) => hrefFor(severity, params.status))}
+          pills={pillsFor(SEVERITIES, params.severity, (severity) =>
+            hrefFor(severity, params.status),
+          )}
         />
-      </div>
+      </Card>
 
       <div className="mt-6">
         {page.items.length > 0 ? (
@@ -106,22 +112,12 @@ export default async function FraudQueuePage({
         )}
       </div>
 
-      {page.totalPages > 1 ? (
-        <p className="mt-4 text-sm text-[var(--icb-text-subtle)]">
-          Page {page.page} of {page.totalPages}
-          {page.page < page.totalPages ? (
-            <>
-              {' · '}
-              <Link
-                href={hrefFor(params.severity, params.status, page.page + 1)}
-                className="font-medium text-[var(--icb-primary)] hover:underline"
-              >
-                Next page
-              </Link>
-            </>
-          ) : null}
-        </p>
-      ) : null}
+      <ListPagination
+        page={page.page}
+        totalPages={page.totalPages}
+        total={page.total}
+        itemLabel={page.total === 1 ? 'case' : 'cases'}
+      />
     </>
   );
 }

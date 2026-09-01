@@ -1,7 +1,7 @@
 'use client';
 
 import type { StaffRole } from '@icb/contracts';
-import { cn } from '@icb/ui';
+import { Checkbox, cn } from '@icb/ui';
 
 import { ALL_STAFF_ROLES, ROLE_PERMISSIONS } from './permissions.constants';
 
@@ -42,13 +42,7 @@ function RoleOption({
         'transition-colors has-checked:border-[var(--icb-primary)] has-checked:bg-[var(--icb-navy-50)]',
       )}
     >
-      <input
-        type="checkbox"
-        name={name}
-        value={role}
-        defaultChecked={defaultChecked}
-        className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--icb-primary)]"
-      />
+      <Checkbox name={name} value={role} defaultChecked={defaultChecked} className="mt-0.5" />
       <span className="min-w-0">
         <span className="block text-sm font-medium capitalize">{role.replaceAll('_', ' ')}</span>
         <span className="mt-0.5 block text-xs text-[var(--icb-text-subtle)]">
