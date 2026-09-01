@@ -3,6 +3,7 @@ import { format, fromMinorUnits } from '@icb/money';
 
 const API_URL = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:4100/v1');
 export const RATES_REVALIDATE_SECONDS = 3600;
+const RATES_REQUEST_TIMEOUT_MS = 5_000;
 
 /**
  * A display-ready rates page. Rows are pre-rendered strings so the page component never
@@ -62,6 +63,7 @@ async function fetchRateTable(): Promise<RateTable | null> {
   try {
     const response = await fetch(`${API_URL}/products/rates`, {
       next: { revalidate: RATES_REVALIDATE_SECONDS, tags: ['rates'] },
+      signal: AbortSignal.timeout(RATES_REQUEST_TIMEOUT_MS),
     });
     if (!response.ok) {
       return null;

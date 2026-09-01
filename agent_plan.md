@@ -1066,6 +1066,12 @@ into the open, which is why they are recorded rather than quietly closed:
 - ✅ Live browser verification passed on the Overview and Cards pages. Sidebar collapse/expand, grouped navigation, active-route state, contextual help placement, and command search all worked as expected.
 - ✅ Verification: client lint, strict TypeScript, production build (43 generated pages), and `git diff --check` pass.
 
+### 1 September 2026 — hydration-overlay and build-timeout repair
+
+- ✅ Added root-level hydration-warning suppression to the marketing, client, and admin layouts. Browser extensions that inject attributes such as `data-scribe-recorder-ready` onto `<html>` no longer trigger Next.js's development error overlay.
+- ✅ Bounded the marketing rates API request to five seconds. Offline builds now use the documented fallback table promptly instead of exhausting two 60-second static-generation retries.
+- ✅ Verification: full monorepo build passed; client, admin, and marketing lint/typecheck passed; focused marketing production build generated all 47 pages cleanly in 29 seconds.
+
 **Still open.** Nothing is blocked. Ordered by what a next session should pick up first:
 
 | Area | State |

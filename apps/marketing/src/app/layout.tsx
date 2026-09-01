@@ -61,7 +61,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${plexMono.variable}`}>
+    <html
+      lang="en"
+      className={`${outfit.variable} ${plexMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-dvh bg-[var(--icb-bg)] antialiased">
         <a
           href="#main"
