@@ -29,6 +29,17 @@ export interface TransactionDayGroup {
 }
 
 /** Group a date-ordered statement into labelled days. Pure, so the grouping is unit-testable. */
+/**
+ * The identity of one row.
+ *
+ * A summary is one *leg* of a transaction, so the id alone is not unique: a transfer between two
+ * of the customer's own accounts puts both legs in this list under the same id. The account is
+ * what separates them.
+ */
+export function transactionRowKey(transaction: TransactionSummary): string {
+  return `${transaction.id}:${transaction.accountId}`;
+}
+
 export function groupTransactionsByDay(transactions: TransactionSummary[]): TransactionDayGroup[] {
   const groups = new Map<string, TransactionSummary[]>();
   for (const transaction of transactions) {
@@ -105,7 +116,7 @@ export function TransactionList({
           <div className="divide-y divide-[var(--icb-border)]">
             {group.items.map((transaction) => (
               <TransactionRow
-                key={transaction.id}
+                key={transactionRowKey(transaction)}
                 transaction={transaction}
                 showRunningBalance={showRunningBalance}
                 {...(onSelect ? { onSelect } : {})}

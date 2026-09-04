@@ -51,7 +51,7 @@ export default async function NewDepositPage() {
             </thead>
             <tbody className="divide-y divide-[var(--icb-border)]">
               {bands.map((band) => (
-                <tr key={band.termMonths}>
+                <tr key={`${band.termMonths}:${band.minimumAmount.minorUnits}`}>
                   <td className="px-5 py-3">
                     {band.termMonths} month{band.termMonths === 1 ? '' : 's'}
                   </td>

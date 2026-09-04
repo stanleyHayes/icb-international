@@ -49,7 +49,7 @@ export function DepositForm({
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {bands.map((item) => (
             <button
-              key={item.termMonths}
+              key={`${item.termMonths}:${item.minimumAmount.minorUnits}`}
               type="button"
               aria-pressed={term === item.termMonths}
               onClick={() => setTerm(item.termMonths)}
