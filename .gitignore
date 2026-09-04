@@ -33,3 +33,6 @@ e2e/.artifacts/
 
 # Local dev credentials (seeded logins)
 credentials.txt
+
+# Rendered usage guides — regenerated from the app, not source of truth.
+docs/guides/
