@@ -1,6 +1,7 @@
 import type { LedgerIntegrityReport } from '@icb/contracts';
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
+import type { FastifyReply } from 'fastify';
 import type { Connection } from 'mongoose';
 
 import { Public } from '../../common/decorators/public.decorator.js';
@@ -39,7 +40,7 @@ export class HealthController {
   }
 
   @Get('ready')
-  ready(): {
+  ready(@Res({ passthrough: true }) reply: FastifyReply): {
     status: 'ready' | 'not_ready';
     database: string;
     serverTime: string;
@@ -47,10 +48,15 @@ export class HealthController {
   } {
     // Mongoose exposes readyState as a numeric enum; 1 is "connected".
     const connected = Number(this.connection.readyState) === 1;
-    const database = connected ? 'connected' : 'disconnected';
+
+    // The status code is the answer, not the body: Render's `healthCheckPath` and the compose
+    // health check both gate on it, and a 200 here keeps traffic on an instance whose every
+    // request will 500. 503 is what the route contract has always declared for this case.
+    reply.status(connected ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE);
+
     return {
       status: connected ? 'ready' : 'not_ready',
-      database,
+      database: connected ? 'connected' : 'disconnected',
       serverTime: this.clock.now().toISOString(),
       businessDate: this.clock.today(),
     };
