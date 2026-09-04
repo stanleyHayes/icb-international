@@ -16,12 +16,12 @@ export const metadata: Metadata = { title: 'Bill' };
 /** One bill: what is owed, paying it, and the autopay that makes sure it never goes late. */
 export default async function BillDetailPage({ params }: Readonly<{ params: Params }>) {
   const { billId } = await params;
-  const [bill, accounts, payments] = await Promise.all([
+  const [bill, accountsPage, payments] = await Promise.all([
     api<LinkedBill>(`/bills/${billId}`, { tags: ['bills'] }),
-    api<AccountSummary[]>('/accounts', { tags: ['accounts'] }),
+    api<CursorPage<AccountSummary>>('/accounts?limit=50', { tags: ['accounts'] }),
     api<CursorPage<BillPayment>>(`/bill-payments?billId=${billId}&limit=15`, { tags: ['bills'] }),
   ]);
-  const active = accounts.filter((account) => account.status === 'active');
+  const active = accountsPage.items.filter((account) => account.status === 'active');
 
   return (
     <>

@@ -1,4 +1,4 @@
-import type { AccountSummary, LoanProduct } from '@icb/contracts';
+import type { AccountSummary, CursorPage, LoanProduct } from '@icb/contracts';
 import { Card, CardBody, CardHeader } from '@icb/ui';
 import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -16,11 +16,11 @@ export default async function ApplyPage({
   searchParams,
 }: Readonly<{ searchParams: Search }>) {
   const { product } = await searchParams;
-  const [products, accounts] = await Promise.all([
+  const [products, accountsPage] = await Promise.all([
     api<{ items: LoanProduct[] }>('/loans/products', { tags: ['loans'], revalidate: 300 }),
-    api<AccountSummary[]>('/accounts', { tags: ['accounts'] }),
+    api<CursorPage<AccountSummary>>('/accounts?limit=50', { tags: ['accounts'] }),
   ]);
-  const active = accounts.filter((account) => account.status === 'active');
+  const active = accountsPage.items.filter((account) => account.status === 'active');
 
   return (
     <>

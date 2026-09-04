@@ -1,4 +1,4 @@
-import type { AccountSummary, DepositRateBand } from '@icb/contracts';
+import type { AccountSummary, CursorPage, DepositRateBand } from '@icb/contracts';
 import { Amount, Card, CardBody, CardHeader } from '@icb/ui';
 import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -11,11 +11,11 @@ export const metadata: Metadata = { title: 'Open a fixed deposit' };
 
 /** The published term/rate matrix, then the form that locks a rate in. */
 export default async function NewDepositPage() {
-  const [rates, accounts] = await Promise.all([
+  const [rates, accountsPage] = await Promise.all([
     api<{ items: DepositRateBand[] }>('/savings/rates', { tags: ['savings'], revalidate: 300 }),
-    api<AccountSummary[]>('/accounts', { tags: ['accounts'] }),
+    api<CursorPage<AccountSummary>>('/accounts?limit=50', { tags: ['accounts'] }),
   ]);
-  const active = accounts.filter((account) => account.status === 'active');
+  const active = accountsPage.items.filter((account) => account.status === 'active');
   const bands = [...rates.items].sort((a, b) => a.termMonths - b.termMonths);
 
   return (

@@ -1,4 +1,4 @@
-import type { AccountSummary } from '@icb/contracts';
+import type { AccountSummary, CursorPage } from '@icb/contracts';
 import { Card, CardBody, CardHeader } from '@icb/ui';
 import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -11,8 +11,10 @@ export const metadata: Metadata = { title: 'New savings goal' };
 
 /** Open a savings goal against an account. */
 export default async function NewGoalPage() {
-  const accounts = await api<AccountSummary[]>('/accounts', { tags: ['accounts'] });
-  const active = accounts.filter((account) => account.status === 'active');
+  const accountsPage = await api<CursorPage<AccountSummary>>('/accounts?limit=50', {
+    tags: ['accounts'],
+  });
+  const active = accountsPage.items.filter((account) => account.status === 'active');
 
   return (
     <>

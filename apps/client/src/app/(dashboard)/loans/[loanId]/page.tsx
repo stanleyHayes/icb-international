@@ -1,4 +1,4 @@
-import type { AccountSummary, LoanDetail, PayoffQuote } from '@icb/contracts';
+import type { AccountSummary, CursorPage, LoanDetail, PayoffQuote } from '@icb/contracts';
 import { Amount, Card, CardBody, CardHeader, StatusBadge, formatDate } from '@icb/ui';
 import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -17,12 +17,12 @@ export const metadata: Metadata = { title: 'Loan' };
  */
 export default async function LoanDetailPage({ params }: Readonly<{ params: Params }>) {
   const { loanId } = await params;
-  const [loan, payoff, accounts] = await Promise.all([
+  const [loan, payoff, accountsPage] = await Promise.all([
     api<LoanDetail>(`/loans/${loanId}`, { tags: ['loans'] }),
     api<PayoffQuote>(`/loans/${loanId}/payoff-quote`, { tags: ['loans'] }).catch(() => null),
-    api<AccountSummary[]>('/accounts', { tags: ['accounts'] }),
+    api<CursorPage<AccountSummary>>('/accounts?limit=50', { tags: ['accounts'] }),
   ]);
-  const active = accounts.filter((account) => account.status === 'active');
+  const active = accountsPage.items.filter((account) => account.status === 'active');
   const open = loan.status === 'active' || loan.status === 'in_arrears';
 
   return (
