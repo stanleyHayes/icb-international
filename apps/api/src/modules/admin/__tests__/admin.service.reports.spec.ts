@@ -5,12 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import type { AccountDoc } from '../../accounts/infrastructure/account.schemas.js';
 import type { CustomerDoc } from '../../customers/infrastructure/customer.schemas.js';
-import { listGlAccounts } from '../../ledger/domain/chart-of-accounts.js';
 import type {
   AccountBalanceDoc,
   LedgerEntryDoc,
   LedgerTransactionDoc,
 } from '../../ledger/infrastructure/ledger.schemas.js';
+import { TrialBalanceService } from '../../ledger/trial-balance.service.js';
 import { AdminService } from '../admin.service.js';
 
 const NOW = new Date('2026-08-04T10:00:00.000Z');
@@ -24,15 +24,26 @@ function makeHarness() {
   const balances = { find: vi.fn() };
   const clock = new ClockService();
   clock.freeze(NOW);
+  const trialBalanceService = {
+    generate: vi.fn().mockResolvedValue({
+      asOf: NOW.toISOString(),
+      currency: 'USD',
+      lines: [],
+      totalDebits: { minorUnits: 0, currency: 'USD', scale: 2 },
+      totalCredits: { minorUnits: 0, currency: 'USD', scale: 2 },
+      balanced: true,
+    }),
+  };
   const service = new AdminService(
     customers as unknown as Model<CustomerDoc>,
     accounts as unknown as Model<AccountDoc>,
     transactions as unknown as Model<LedgerTransactionDoc>,
     entries as unknown as Model<LedgerEntryDoc>,
     balances as unknown as Model<AccountBalanceDoc>,
+    trialBalanceService as unknown as TrialBalanceService,
     clock,
   );
-  return { service, transactions, entries };
+  return { service, transactions, entries, trialBalanceService };
 }
 
 function transactionRow(overrides: Record<string, unknown> = {}) {
@@ -60,58 +71,14 @@ describe('AdminService.trialBalance', () => {
     vi.clearAllMocks();
   });
 
-  it('maps every GL account, taking each balance in its natural direction', async () => {
-    const { service, entries } = makeHarness();
-    entries.aggregate.mockResolvedValue([
-      { _id: 'gl:1000', debit: 500, credit: 200 },
-      { _id: 'gl:4000', debit: 200, credit: 500 },
-    ]);
+  it('delegates to the ledger module, so staff see the one definition of balanced', async () => {
+    // The report itself is covered in ledger/__tests__/trial-balance.service.spec.ts.
+    const { service, trialBalanceService } = makeHarness();
 
     const report = await service.trialBalance();
 
-    expect(report.asOf).toBe(NOW.toISOString());
+    expect(trialBalanceService.generate).toHaveBeenCalledWith('USD');
     expect(report.currency).toBe('USD');
-    expect(report.lines).toHaveLength(listGlAccounts().length);
-    const byCode = new Map(report.lines.map((line) => [line.accountCode, line]));
-    // Cash is debit-normal: 500 - 200.
-    expect(byCode.get('1000')).toMatchObject({
-      accountName: 'Cash and central bank',
-      type: 'asset',
-      debit: { minorUnits: 500 },
-      credit: { minorUnits: 200 },
-      balance: { minorUnits: 300 },
-    });
-    // Fee income is credit-normal: 500 - 200.
-    expect(byCode.get('4000')?.balance).toEqual({ minorUnits: 300, currency: 'USD', scale: 2 });
-    // An account with no entries shows zeroes rather than disappearing.
-    expect(byCode.get('9900')).toMatchObject({
-      debit: { minorUnits: 0 },
-      credit: { minorUnits: 0 },
-      balance: { minorUnits: 0 },
-    });
-    expect(report.totalDebits).toEqual({ minorUnits: 700, currency: 'USD', scale: 2 });
-    expect(report.totalCredits).toEqual({ minorUnits: 700, currency: 'USD', scale: 2 });
-    expect(report.balanced).toBe(true);
-  });
-
-  it('flags the books as unbalanced when debits and credits disagree', async () => {
-    const { service, entries } = makeHarness();
-    entries.aggregate.mockResolvedValue([{ _id: 'gl:1000', debit: 100, credit: 0 }]);
-
-    const report = await service.trialBalance();
-
-    expect(report.balanced).toBe(false);
-    expect(report.totalDebits).toEqual({ minorUnits: 100, currency: 'USD', scale: 2 });
-    expect(report.totalCredits).toEqual({ minorUnits: 0, currency: 'USD', scale: 2 });
-  });
-
-  it('aggregates only base-currency GL entries', async () => {
-    const { service, entries } = makeHarness();
-
-    await service.trialBalance();
-
-    const pipeline = entries.aggregate.mock.calls[0]?.[0] as unknown[];
-    expect(pipeline[0]).toEqual({ $match: { accountRef: { $regex: '^gl:' }, currency: 'USD' } });
   });
 });
 

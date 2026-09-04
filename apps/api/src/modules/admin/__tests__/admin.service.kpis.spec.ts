@@ -9,6 +9,7 @@ import type {
   LedgerEntryDoc,
   LedgerTransactionDoc,
 } from '../../ledger/infrastructure/ledger.schemas.js';
+import { TrialBalanceService } from '../../ledger/trial-balance.service.js';
 import { AdminService } from '../admin.service.js';
 
 const NOW = new Date('2026-08-04T10:00:00.000Z');
@@ -22,12 +23,14 @@ function makeHarness() {
   const balances = { find: vi.fn() };
   const clock = new ClockService();
   clock.freeze(NOW);
+  const trialBalanceService = { generate: vi.fn() };
   const service = new AdminService(
     customers as unknown as Model<CustomerDoc>,
     accounts as unknown as Model<AccountDoc>,
     transactions as unknown as Model<LedgerTransactionDoc>,
     entries as unknown as Model<LedgerEntryDoc>,
     balances as unknown as Model<AccountBalanceDoc>,
+    trialBalanceService as unknown as TrialBalanceService,
     clock,
   );
   return { service, customers, accounts, transactions, entries, balances };

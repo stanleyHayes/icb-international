@@ -7,12 +7,13 @@ import { ClockService } from '../../simulation/clock/clock.service.js';
 import { toMoneyDto } from '../accounts/infrastructure/account.mapper.js';
 import { AccountDoc } from '../accounts/infrastructure/account.schemas.js';
 import { CustomerDoc } from '../customers/infrastructure/customer.schemas.js';
-import { getGlAccount, listGlAccounts } from '../ledger/domain/chart-of-accounts.js';
+import { getGlAccount } from '../ledger/domain/chart-of-accounts.js';
 import {
   AccountBalanceDoc,
   LedgerEntryDoc,
   LedgerTransactionDoc,
 } from '../ledger/infrastructure/ledger.schemas.js';
+import { TrialBalanceService } from '../ledger/trial-balance.service.js';
 
 const BASE_CURRENCY = 'USD';
 const CUSTOMER_REF_PREFIX = '^acct:';
@@ -57,6 +58,7 @@ export class AdminService {
     private readonly transactions: Model<LedgerTransactionDoc>,
     @InjectModel(LedgerEntryDoc.name) private readonly entries: Model<LedgerEntryDoc>,
     @InjectModel(AccountBalanceDoc.name) private readonly balances: Model<AccountBalanceDoc>,
+    private readonly trialBalanceService: TrialBalanceService,
     private readonly clock: ClockService,
   ) {}
 
@@ -80,46 +82,13 @@ export class AdminService {
   }
 
   /**
-   * Trial balance — the report that proves the bank's books add up.
+   * Trial balance.
    *
-   * Built from `ledger_entries` rather than the cached balances on purpose: if the two ever
-   * disagree, this report shows the truth and LedgerIntegrityService flags the drift.
+   * The report is the ledger module's, not the back office's: staff and any other reader must
+   * see the same numbers, and there is exactly one definition of what balances.
    */
   async trialBalance(): Promise<TrialBalance> {
-    const rows = await this.entries.aggregate<{
-      _id: string;
-      debit: number;
-      credit: number;
-    }>([
-      { $match: { accountRef: { $regex: '^gl:' }, currency: BASE_CURRENCY } },
-      {
-        $group: {
-          _id: '$accountRef',
-          debit: { $sum: { $cond: [{ $eq: ['$direction', 'debit'] }, '$minorUnits', 0] } },
-          credit: { $sum: { $cond: [{ $eq: ['$direction', 'credit'] }, '$minorUnits', 0] } },
-        },
-      },
-    ]);
-
-    const byRef = new Map(rows.map((row) => [row._id, row]));
-    let totalDebits = 0;
-    let totalCredits = 0;
-
-    const lines = listGlAccounts().map((account) => {
-      const row = byRef.get(`gl:${account.code}`) ?? { debit: 0, credit: 0 };
-      totalDebits += row.debit;
-      totalCredits += row.credit;
-      return toTrialBalanceLine(account, row);
-    });
-
-    return {
-      asOf: this.clock.now().toISOString(),
-      currency: BASE_CURRENCY,
-      lines,
-      totalDebits: toMoneyDto(totalDebits, BASE_CURRENCY),
-      totalCredits: toMoneyDto(totalCredits, BASE_CURRENCY),
-      balanced: totalDebits === totalCredits,
-    };
+    return this.trialBalanceService.generate(BASE_CURRENCY);
   }
 
   /** The global transaction monitor — every posting in the bank, newest first. */
@@ -175,20 +144,4 @@ export class AdminService {
   describeGlAccount(code: string): string {
     return getGlAccount(code).name;
   }
-}
-
-/** One trial-balance row, with the balance taken in the account's natural direction. */
-function toTrialBalanceLine(
-  account: ReturnType<typeof listGlAccounts>[number],
-  row: { debit: number; credit: number },
-): TrialBalance['lines'][number] {
-  const balance = account.normalSide === 'debit' ? row.debit - row.credit : row.credit - row.debit;
-  return {
-    accountCode: account.code,
-    accountName: account.name,
-    type: account.type,
-    debit: toMoneyDto(row.debit, BASE_CURRENCY),
-    credit: toMoneyDto(row.credit, BASE_CURRENCY),
-    balance: toMoneyDto(balance, BASE_CURRENCY),
-  };
 }
