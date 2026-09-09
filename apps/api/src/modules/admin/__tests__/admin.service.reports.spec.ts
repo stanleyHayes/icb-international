@@ -10,7 +10,7 @@ import type {
   LedgerEntryDoc,
   LedgerTransactionDoc,
 } from '../../ledger/infrastructure/ledger.schemas.js';
-import { TrialBalanceService } from '../../ledger/trial-balance.service.js';
+import type { TrialBalanceService } from '../../ledger/trial-balance.service.js';
 import { AdminService } from '../admin.service.js';
 
 const NOW = new Date('2026-08-04T10:00:00.000Z');

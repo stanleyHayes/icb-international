@@ -27,6 +27,14 @@ interface Totals {
   readonly credit: number;
 }
 
+/**
+ * A sub-ledger row before its account kind is resolved to a GL code. The key is null when the
+ * `$lookup` found no account — an orphaned entry, which is a real state, not an impossible one.
+ */
+interface SubLedgerTotals extends Omit<Totals, '_id'> {
+  readonly _id: string | null;
+}
+
 const EMPTY_TOTALS = { debit: 0, credit: 0 };
 
 const DEBIT_CREDIT_SUMS = {
@@ -104,7 +112,7 @@ export class TrialBalanceService {
    * integrity check requires to be zero, so an orphan is impossible to miss.
    */
   private async subLedgerTotals(currency: CurrencyCode): Promise<Totals[]> {
-    const rows = await this.entries.aggregate<Totals>([
+    const rows = await this.entries.aggregate<SubLedgerTotals>([
       { $match: { accountRef: { $regex: CUSTOMER_REF_PATTERN }, currency } },
       {
         $addFields: {
@@ -127,7 +135,7 @@ export class TrialBalanceService {
 
     return rows.map((row) => ({
       ...row,
-      _id: row._id === null || row._id === undefined ? GL_SUSPENSE : depositGlCodeFor(row._id),
+      _id: row._id == null ? GL_SUSPENSE : depositGlCodeFor(row._id),
     }));
   }
 }

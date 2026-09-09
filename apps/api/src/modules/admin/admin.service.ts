@@ -51,6 +51,7 @@ function count(key: string, label: string, value: number, positive: Kpi['positiv
  */
 @Injectable()
 export class AdminService {
+  // eslint-disable-next-line max-params -- each collaborator backs a different report, and folding them into a bag would satisfy the count while hiding what this service reads.
   constructor(
     @InjectModel(CustomerDoc.name) private readonly customers: Model<CustomerDoc>,
     @InjectModel(AccountDoc.name) private readonly accounts: Model<AccountDoc>,
