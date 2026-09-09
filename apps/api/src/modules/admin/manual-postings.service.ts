@@ -4,17 +4,19 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 
-import { NotFoundError } from '../../common/errors/index.js';
+import { NotFoundError, ValidationError } from '../../common/errors/index.js';
 import { newId } from '../../infrastructure/database/identifier.js';
 import { ClockService } from '../../simulation/clock/clock.service.js';
 import { AccountDoc } from '../accounts/infrastructure/account.schemas.js';
 import { ApprovalsService } from '../iam/approvals.service.js';
 import { customerRef, glRef } from '../ledger/domain/account-ref.js';
+import { isGlCode } from '../ledger/domain/chart-of-accounts.js';
 import type { PostingCommand, PostingLine } from '../ledger/domain/posting.types.js';
 import { LedgerService } from '../ledger/ledger.service.js';
 import { ManualPostingDoc } from './infrastructure/manual-posting.schemas.js';
 import {
   MANUAL_POSTING_ACTOR_LABEL,
+  MANUAL_POSTING_MAX_ATTEMPTS,
   MANUAL_POSTING_SOURCE_TYPE,
 } from './manual-postings.constants.js';
 
@@ -51,10 +53,7 @@ export class ManualPostingsService {
     request: ManualPostingRequest,
     requestedBy: string,
   ): Promise<ApprovalRequest> {
-    const account = await this.accounts.findOne({ _id: request.accountId }).lean();
-    if (!account) {
-      throw new NotFoundError('Account', request.accountId);
-    }
+    await this.assertPostable(request);
 
     const trackingId = newId();
     const approval = await this.approvals.requestApproval({
@@ -86,11 +85,38 @@ export class ManualPostingsService {
   }
 
   /**
+   * Everything that must be true before an approval is worth a checker's time.
+   *
+   * The contract only checks the contra code's shape (four digits). A code that is well-formed
+   * but absent from the chart of accounts used to clear approval and then fail in the sweep
+   * forever, so the maker learns here — while the form is still open — rather than never.
+   */
+  private async assertPostable(request: ManualPostingRequest): Promise<void> {
+    const account = await this.accounts.findOne({ _id: request.accountId }).lean();
+    if (!account) {
+      throw new NotFoundError('Account', request.accountId);
+    }
+    if (!isGlCode(request.contraAccountCode)) {
+      throw new ValidationError('That contra account is not in the chart of accounts', [
+        {
+          path: 'contraAccountCode',
+          message: `Unknown general-ledger code ${request.contraAccountCode}`,
+        },
+      ]);
+    }
+  }
+
+  /**
    * Post every approved manual posting not yet claimed. Returns the number posted.
    *
    * Each row is claimed atomically before the ledger write: the claim — not the ledger
    * result — is what a concurrent or retried sweep contends on, so one approval can never
    * become two transactions.
+   *
+   * Each row also fails alone. The pass used to let a throw escape, and because approved rows
+   * are swept newest-first, a single unpostable entry stopped every older one behind it — a
+   * legitimate refund could sit unposted indefinitely because someone had mistyped a contra
+   * code afterwards. One row's failure is now its own.
    */
   async executeApproved(): Promise<number> {
     const approved = await this.approvals.listInbox({
@@ -100,14 +126,27 @@ export class ManualPostingsService {
 
     let posted = 0;
     for (const approval of approved) {
-      if (await this.executeOne(approval)) {
-        posted += 1;
+      try {
+        if (await this.executeOne(approval)) {
+          posted += 1;
+        }
+      } catch (error) {
+        this.logger.error(
+          { err: error, approvalId: approval.id },
+          'Manual posting failed; the rest of the pass continues',
+        );
       }
     }
     return posted;
   }
 
-  /** Claim, post, mark — or release the claim and let the sweep retry on ledger failure. */
+  /**
+   * Claim, post, mark — or record the failure and release the claim so the next sweep retries.
+   *
+   * A row that has burned its attempts is marked `failed` instead, carrying the reason: the
+   * claim query only matches `awaiting_approval`, so a failed row is never picked up again and
+   * an operator has something to read other than an API log.
+   */
   private async executeOne(approval: ApprovalRequest): Promise<boolean> {
     const claimed = await this.postings.findOneAndUpdate(
       { approvalId: approval.id, status: 'awaiting_approval' },
@@ -130,11 +169,42 @@ export class ManualPostingsService {
       );
       return true;
     } catch (error) {
-      await this.postings.updateOne(
-        { _id: claimed._id },
-        { $set: { status: 'awaiting_approval', updatedAt: this.clock.now() } },
-      );
+      await this.recordFailure(claimed, approval, error);
       throw error;
+    }
+  }
+
+  /**
+   * Note a failed attempt, and give up once the row has burned its budget.
+   *
+   * Below the limit the row returns to `awaiting_approval` and the next sweep retries it, which
+   * is what a transient database failure deserves. At the limit it becomes `failed`: the claim
+   * query only matches `awaiting_approval`, so the row is never picked up again and the reason
+   * it died is on the document rather than only in a log.
+   */
+  private async recordFailure(
+    claimed: ManualPostingDoc,
+    approval: ApprovalRequest,
+    error: unknown,
+  ): Promise<void> {
+    const attempts = claimed.attempts + 1;
+    const exhausted = attempts >= MANUAL_POSTING_MAX_ATTEMPTS;
+    await this.postings.updateOne(
+      { _id: claimed._id },
+      {
+        $set: {
+          status: exhausted ? 'failed' : 'awaiting_approval',
+          attempts,
+          failureReason: error instanceof Error ? error.message : String(error),
+          updatedAt: this.clock.now(),
+        },
+      },
+    );
+    if (exhausted) {
+      this.logger.error(
+        { approvalId: approval.id, postingId: claimed._id, attempts },
+        'Manual posting abandoned after repeated failures',
+      );
     }
   }
 

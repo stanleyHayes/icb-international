@@ -4,8 +4,17 @@ import type { HydratedDocument } from 'mongoose';
 
 import { newId } from '../../../infrastructure/database/identifier.js';
 
-/** Lifecycle: parked awaiting a second operator, claimed by the sweep, then posted. */
-export const MANUAL_POSTING_STATUSES = ['awaiting_approval', 'posting', 'posted'] as const;
+/**
+ * Lifecycle: parked awaiting a second operator, claimed by the sweep, then posted — or
+ * `failed`, once the sweep has tried and lost enough times to call it dead. A failed row is
+ * never reclaimed, which is what stops one unpostable entry retrying until the end of time.
+ */
+export const MANUAL_POSTING_STATUSES = [
+  'awaiting_approval',
+  'posting',
+  'posted',
+  'failed',
+] as const;
 export type ManualPostingStatus = (typeof MANUAL_POSTING_STATUSES)[number];
 
 /**
@@ -57,6 +66,14 @@ export class ManualPostingDoc {
 
   @Prop({ type: String, default: null })
   transactionId!: string | null;
+
+  /** Sweep attempts so far. A transient failure retries; a persistent one gives up. */
+  @Prop({ type: Number, required: true, default: 0 })
+  attempts!: number;
+
+  /** Why the last attempt failed, kept so a stuck posting explains itself to an operator. */
+  @Prop({ type: String, default: null })
+  failureReason!: string | null;
 
   /** Staff id of the maker — taken from the token, never from request input. */
   @Prop({ type: String, required: true })

@@ -2,7 +2,7 @@ import type { ApprovalRequest, ManualPostingRequest } from '@icb/contracts';
 import type { Model } from 'mongoose';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { NotFoundError } from '../../../common/errors/index.js';
+import { NotFoundError, ValidationError } from '../../../common/errors/index.js';
 import { ClockService } from '../../../simulation/clock/clock.service.js';
 import type { AccountDoc } from '../../accounts/infrastructure/account.schemas.js';
 import type { ApprovalsService } from '../../iam/approvals.service.js';
@@ -31,9 +31,12 @@ function makeRequest(overrides: Partial<ManualPostingRequest> = {}): ManualPosti
   };
 }
 
-function makeApproval(status: ApprovalRequest['status']): ApprovalRequest {
+function makeApproval(
+  status: ApprovalRequest['status'],
+  id: string = APPROVAL_ID,
+): ApprovalRequest {
   return {
-    id: APPROVAL_ID,
+    id,
     kind: 'manual_posting',
     summary: 'Manual credit of USD 1,234.56',
     payload: {},
@@ -62,6 +65,8 @@ function makeTracking(overrides: Partial<ManualPostingDoc> = {}): ManualPostingD
     valueDate: null,
     status: 'posting',
     transactionId: null,
+    attempts: 0,
+    failureReason: null,
     requestedBy: MAKER,
     createdAt: START,
     updatedAt: START,
@@ -136,6 +141,19 @@ describe('ManualPostingsService', () => {
       expect(result.id).toBe(APPROVAL_ID);
     });
 
+    it('refuses a contra code the chart of accounts does not hold', async () => {
+      // Four digits satisfies the contract, so `1001` used to pass here, clear approval, and
+      // only fail in the sweep — where nobody was watching.
+      const { service, postings, accounts, approvals } = makeHarness();
+      accountFound(accounts);
+
+      await expect(
+        service.requestManualPosting(makeRequest({ contraAccountCode: '1001' }), MAKER),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(approvals.requestApproval).not.toHaveBeenCalled();
+      expect(postings.create).not.toHaveBeenCalled();
+    });
+
     it('throws NOT_FOUND for an unknown account and raises nothing', async () => {
       const { service, postings, accounts, approvals } = makeHarness();
       accounts.findOne.mockReturnValue({ lean: () => Promise.resolve(null) });
@@ -204,19 +222,73 @@ describe('ManualPostingsService', () => {
       expect(postings.updateOne).not.toHaveBeenCalled();
     });
 
-    it('releases the claim and rethrows when the ledger rejects', async () => {
+    it('releases the claim and records the failure when the ledger rejects', async () => {
       const { service, postings, approvals, ledger } = makeHarness();
       approvals.listInbox.mockResolvedValue([makeApproval('approved')]);
       postings.findOneAndUpdate.mockResolvedValue(makeTracking());
       ledger.post.mockRejectedValue(new Error('balance contention'));
 
-      await expect(service.executeApproved()).rejects.toThrow('balance contention');
+      // The pass absorbs it: a transient failure is this row's problem, not the batch's.
+      await expect(service.executeApproved()).resolves.toBe(0);
 
       expect(postings.updateOne).toHaveBeenCalledWith(
         { _id: TRACKING_ID },
-        { $set: { status: 'awaiting_approval', updatedAt: START } },
+        {
+          $set: {
+            status: 'awaiting_approval',
+            attempts: 1,
+            failureReason: 'balance contention',
+            updatedAt: START,
+          },
+        },
       );
-      expect(postings.updateOne).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps going when one row fails, so it cannot block the rest of the queue', async () => {
+      // Approved rows are swept newest-first, so an escaping throw stopped every older row
+      // behind it — a valid refund could sit unposted because someone mistyped a contra code
+      // after it was raised.
+      const { service, postings, approvals, ledger } = makeHarness();
+      approvals.listInbox.mockResolvedValue([
+        makeApproval('approved', 'appr-poison'),
+        makeApproval('approved', 'appr-refund'),
+      ]);
+      postings.findOneAndUpdate
+        .mockResolvedValueOnce(makeTracking({ _id: 'mp-poison', approvalId: 'appr-poison' }))
+        .mockResolvedValueOnce(makeTracking({ _id: 'mp-refund', approvalId: 'appr-refund' }));
+      ledger.post
+        .mockRejectedValueOnce(new Error('Unknown general-ledger account code: 1001'))
+        .mockResolvedValueOnce({ id: TRANSACTION_ID });
+
+      const posted = await service.executeApproved();
+
+      expect(posted).toBe(1);
+      expect(postings.updateOne).toHaveBeenCalledWith(
+        { _id: 'mp-refund' },
+        { $set: { status: 'posted', transactionId: TRANSACTION_ID, updatedAt: START } },
+      );
+    });
+
+    it('gives up on a row that has burned its attempts, with the reason attached', async () => {
+      const { service, postings, approvals, ledger } = makeHarness();
+      approvals.listInbox.mockResolvedValue([makeApproval('approved')]);
+      postings.findOneAndUpdate.mockResolvedValue(makeTracking({ attempts: 2 }));
+      ledger.post.mockRejectedValue(new Error('Unknown general-ledger account code: 1001'));
+
+      await service.executeApproved();
+
+      // `failed` is outside the claim query, so the sweep never picks it up again.
+      expect(postings.updateOne).toHaveBeenCalledWith(
+        { _id: TRACKING_ID },
+        {
+          $set: {
+            status: 'failed',
+            attempts: 3,
+            failureReason: 'Unknown general-ledger account code: 1001',
+            updatedAt: START,
+          },
+        },
+      );
     });
   });
 });

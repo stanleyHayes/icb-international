@@ -72,7 +72,7 @@ export function ManualPostingForm({
         label="Contra account code"
         required
         error={form.fieldErrors.contraAccountCode}
-        description="The internal four-digit ledger code forming the other leg."
+        description="The internal ledger code forming the other leg — 1000 for cash at the counter."
       >
         <Input
           name="contraAccountCode"
@@ -80,7 +80,7 @@ export function ManualPostingForm({
           pattern="\d{4}"
           maxLength={4}
           value={contra}
-          placeholder="e.g. 1001"
+          placeholder="e.g. 1000"
           startIcon={<BookOpen size={16} />}
           onChange={(event) => setContra(event.target.value)}
           required
