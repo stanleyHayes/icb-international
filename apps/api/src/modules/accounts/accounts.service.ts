@@ -83,6 +83,22 @@ export class AccountsService {
   }
 
   /**
+   * Read any account, without scoping to an owner.
+   *
+   * Staff operate on accounts they do not own, so ownership cannot be part of the lookup the
+   * way it is in `getForCustomer`. Authorisation is the controller's job here — the role guard
+   * on the staff routes — rather than the query's.
+   */
+  async getForStaff(accountId: string): Promise<AccountDetail> {
+    const account = await this.accounts.findOne({ _id: accountId }).lean();
+    if (!account) {
+      throw new NotFoundError('Account', accountId);
+    }
+    const balances = await this.loadBalances([accountId]);
+    return toAccountDetail(account, this.rowFor(account, balances));
+  }
+
+  /**
    * Load an account for a money-moving operation, asserting it can actually be used.
    *
    * Every debit path calls this rather than a bare `findById`, so "is this account frozen?" is
