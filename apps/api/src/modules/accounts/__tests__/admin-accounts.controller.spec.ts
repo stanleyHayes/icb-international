@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AccountsService } from '../accounts.service.js';
 import { AdminAccountsController } from '../admin-accounts.controller.js';
 import type { AccountHoldsService } from '../application/account-holds.service.js';
+import type { AccountTermsService } from '../application/account-terms.service.js';
 import type { AccountStatusService } from '../application/account-status.service.js';
 import type { BalanceHistoryService } from '../application/balance-history.service.js';
 
@@ -17,6 +18,11 @@ describe('AdminAccountsController', () => {
   let accounts: { getForStaff: ReturnType<typeof vi.fn> };
   let history: { historyFor: ReturnType<typeof vi.fn> };
   let holds: { holdsFor: ReturnType<typeof vi.fn> };
+  let terms: {
+    changeProduct: ReturnType<typeof vi.fn>;
+    setInterestOverride: ReturnType<typeof vi.fn>;
+    releaseHold: ReturnType<typeof vi.fn>;
+  };
   let controller: AdminAccountsController;
 
   beforeEach(() => {
@@ -27,9 +33,15 @@ describe('AdminAccountsController', () => {
     accounts = { getForStaff: vi.fn().mockResolvedValue(DETAIL) };
     history = { historyFor: vi.fn().mockResolvedValue(HISTORY) };
     holds = { holdsFor: vi.fn().mockResolvedValue(HOLDS) };
+    terms = {
+      changeProduct: vi.fn().mockResolvedValue(DETAIL),
+      setInterestOverride: vi.fn().mockResolvedValue(DETAIL),
+      releaseHold: vi.fn().mockResolvedValue(undefined),
+    };
     controller = new AdminAccountsController(
       accounts as unknown as AccountsService,
       status as unknown as AccountStatusService,
+      terms as unknown as AccountTermsService,
       history as unknown as BalanceHistoryService,
       holds as unknown as AccountHoldsService,
     );
@@ -61,6 +73,33 @@ describe('AdminAccountsController', () => {
     expect(accounts.getForStaff).toHaveBeenCalledWith(ACCOUNT_ID);
     expect(holds.holdsFor).toHaveBeenCalledWith(ACCOUNT_ID);
     expect(result).toBe(HOLDS);
+  });
+
+  it('moves the account to another product', async () => {
+    // The console has always had this button; until now it posted to a route that did not exist.
+    const body = { productCode: 'ICB-SAVINGS', reason: 'Customer requested the savings tier' };
+
+    const result = await controller.changeProduct(ACCOUNT_ID, body);
+
+    expect(terms.changeProduct).toHaveBeenCalledWith(ACCOUNT_ID, 'ICB-SAVINGS');
+    expect(result).toBe(DETAIL);
+  });
+
+  it('sets an interest rate, and passes null through as "restore the product rate"', async () => {
+    await controller.setInterestOverride(ACCOUNT_ID, { rate: 3.5, reason: 'Retention offer' });
+    expect(terms.setInterestOverride).toHaveBeenCalledWith(ACCOUNT_ID, 3.5);
+
+    await controller.setInterestOverride(ACCOUNT_ID, { rate: null, reason: 'Offer ended' });
+    expect(terms.setInterestOverride).toHaveBeenLastCalledWith(ACCOUNT_ID, null);
+  });
+
+  it('releases a hold against the account in the path', async () => {
+    const body = { reason: 'Merchant abandoned the sale' };
+
+    await controller.releaseHold(ACCOUNT_ID, 'hold-1', body);
+
+    // Both ids travel together so the service can refuse a hold on someone else's account.
+    expect(terms.releaseHold).toHaveBeenCalledWith(ACCOUNT_ID, 'hold-1', 'Merchant abandoned the sale');
   });
 
   it('transitions the account status with the staff-supplied reason', async () => {

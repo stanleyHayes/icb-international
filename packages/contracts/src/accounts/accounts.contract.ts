@@ -91,6 +91,27 @@ export const setOverdraftRequestSchema = z.object({
   reason: z.string().min(4).max(500),
 });
 
+export const changeAccountProductRequestSchema = z.object({
+  productCode: z.string().min(1),
+  reason: z.string().min(4).max(500),
+});
+
+/**
+ * An interest rate set by an operator, as an annual nominal percentage.
+ *
+ * `null` means "no special rate" and restores the account to its product's own rate — it does
+ * not blank the account's rate, because interest accrual reads the account's figure directly.
+ */
+export const setInterestOverrideRequestSchema = z.object({
+  rate: z.number().min(0).max(100).nullable(),
+  reason: z.string().min(4).max(500),
+});
+
+/** Release an authorisation hold before it expires on its own. */
+export const releaseHoldRequestSchema = z.object({
+  reason: z.string().min(4).max(500),
+});
+
 /** One point on the balance-history chart. */
 export const balancePointSchema = z.object({
   date: z.iso.date(),
@@ -128,6 +149,9 @@ export type AccountSummary = z.infer<typeof accountSummarySchema>;
 export type AccountDetail = z.infer<typeof accountDetailSchema>;
 export type OpenAccountRequest = z.infer<typeof openAccountRequestSchema>;
 export type UpdateAccountRequest = z.infer<typeof updateAccountRequestSchema>;
+export type ChangeAccountProductRequest = z.infer<typeof changeAccountProductRequestSchema>;
+export type SetInterestOverrideRequest = z.infer<typeof setInterestOverrideRequestSchema>;
+export type ReleaseHoldRequest = z.infer<typeof releaseHoldRequestSchema>;
 export type BalanceHistory = z.infer<typeof balanceHistorySchema>;
 export type BalancePoint = z.infer<typeof balancePointSchema>;
 export type Hold = z.infer<typeof holdSchema>;

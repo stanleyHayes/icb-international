@@ -1,12 +1,25 @@
 import {
   balanceHistoryQuerySchema,
+  changeAccountProductRequestSchema,
+  releaseHoldRequestSchema,
   setAccountStatusRequestSchema,
+  setInterestOverrideRequestSchema,
   setOverdraftRequestSchema,
   type AccountDetail,
   type BalanceHistory,
   type Hold,
 } from '@icb/contracts';
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import type { z } from 'zod';
 
 import { AuditAction } from '../../common/decorators/audit-action.decorator.js';
@@ -16,10 +29,14 @@ import { zodBody } from '../../common/pipes/zod-validation.pipe.js';
 import { AccountsService } from './accounts.service.js';
 import { AccountHoldsService } from './application/account-holds.service.js';
 import { AccountStatusService } from './application/account-status.service.js';
+import { AccountTermsService } from './application/account-terms.service.js';
 import { BalanceHistoryService } from './application/balance-history.service.js';
 
 type SetAccountStatusRequest = z.infer<typeof setAccountStatusRequestSchema>;
 type SetOverdraftRequest = z.infer<typeof setOverdraftRequestSchema>;
+type ChangeProductRequest = z.infer<typeof changeAccountProductRequestSchema>;
+type SetInterestOverrideRequest = z.infer<typeof setInterestOverrideRequestSchema>;
+type ReleaseHoldRequest = z.infer<typeof releaseHoldRequestSchema>;
 
 /**
  * The staff view of one account, and the lifecycle actions against it.
@@ -39,6 +56,7 @@ export class AdminAccountsController {
   constructor(
     private readonly accounts: AccountsService,
     private readonly status: AccountStatusService,
+    private readonly terms: AccountTermsService,
     private readonly history: BalanceHistoryService,
     private readonly holds: AccountHoldsService,
   ) {}
@@ -81,5 +99,34 @@ export class AdminAccountsController {
     @Body(zodBody(setOverdraftRequestSchema)) body: SetOverdraftRequest,
   ): Promise<AccountDetail> {
     return this.status.setOverdraft(accountId, body.limit.minorUnits);
+  }
+
+  @Post(':accountId/product')
+  @AuditAction('account.change-product')
+  async changeProduct(
+    @Param('accountId') accountId: string,
+    @Body(zodBody(changeAccountProductRequestSchema)) body: ChangeProductRequest,
+  ): Promise<AccountDetail> {
+    return this.terms.changeProduct(accountId, body.productCode);
+  }
+
+  @Post(':accountId/interest-override')
+  @AuditAction('account.set-interest-override')
+  async setInterestOverride(
+    @Param('accountId') accountId: string,
+    @Body(zodBody(setInterestOverrideRequestSchema)) body: SetInterestOverrideRequest,
+  ): Promise<AccountDetail> {
+    return this.terms.setInterestOverride(accountId, body.rate);
+  }
+
+  @Post(':accountId/holds/:holdId/force-expire')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @AuditAction('account.release-hold')
+  async releaseHold(
+    @Param('accountId') accountId: string,
+    @Param('holdId') holdId: string,
+    @Body(zodBody(releaseHoldRequestSchema)) body: ReleaseHoldRequest,
+  ): Promise<void> {
+    await this.terms.releaseHold(accountId, holdId, body.reason);
   }
 }
