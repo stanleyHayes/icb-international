@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 import { cn } from '../lib/cn';
 import { IconClose } from '../primitives/icons';
@@ -11,6 +12,15 @@ import { useEscapeClose, useFocusTrap, useScrollLock } from './use-overlay';
  * The shared modal frame behind Dialog, Sheet, Drawer, and CommandPalette: dimmed backdrop,
  * `role="dialog"` + `aria-modal`, Escape to close, focus trap, and a body scroll lock.
  * Not exported from the package barrel — consumers use the named overlays.
+ *
+ * Rendered through a portal on `document.body`, which is what makes `fixed inset-0` mean the
+ * viewport. Left in place, an overlay is laid out against its nearest *containing block*, and
+ * any ancestor carrying `transform`, `filter`, `backdrop-filter`, `perspective`, `contain` or
+ * `will-change` becomes one. Both app headers use `backdrop-blur`, so the page-help drawer
+ * opened from the top bar was being sized to the 64px header and painted inside it. A `z-index`
+ * cannot rescue that: `position: relative` on the same header opens a stacking context the
+ * overlay's own z-index is then scoped to. The portal sidesteps both, for every overlay and
+ * every mount point, rather than leaving the next `transform` to reintroduce it.
  */
 export interface OverlayFrameProps {
   onClose: () => void;
@@ -42,10 +52,23 @@ export function OverlayFrame({
   children,
 }: Readonly<OverlayFrameProps>) {
   const panelRef = useRef<HTMLDivElement>(null);
+  // `createPortal` needs a live document, so the server pass renders nothing and the overlay
+  // attaches once mounted. Nothing is lost: an overlay only ever opens from an interaction, so
+  // it is closed during server rendering anyway.
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  useEffect(() => setContainer(document.body), []);
+
   useEscapeClose(true, onClose);
   useScrollLock(true);
-  useFocusTrap(panelRef, true);
-  return (
+  // Gated on the portal, not on `true`: the panel node does not exist until the portal mounts,
+  // and a trap that runs against a null ref never re-runs to find one.
+  useFocusTrap(panelRef, container !== null);
+
+  if (!container) {
+    return null;
+  }
+
+  return createPortal(
     <div className={cn('fixed inset-0', wrapperClassName)} style={{ zIndex: Z_INDEX.overlay }}>
       {backdrop ? (
         <div
@@ -65,7 +88,8 @@ export function OverlayFrame({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    container,
   );
 }
 

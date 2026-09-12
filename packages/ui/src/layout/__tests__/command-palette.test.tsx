@@ -1,5 +1,7 @@
-import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+// @vitest-environment jsdom
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { CommandPalette, type CommandItem } from '../command-palette';
 
@@ -8,19 +10,17 @@ const commands: CommandItem[] = [
   { id: 'accounts', label: 'View accounts', group: 'Navigate' },
 ];
 
+afterEach(cleanup);
+
 describe('CommandPalette', () => {
   it('renders nothing when closed', () => {
-    expect(
-      renderToStaticMarkup(
-        <CommandPalette open={false} onClose={() => undefined} commands={commands} />,
-      ),
-    ).toBe('');
+    render(<CommandPalette open={false} onClose={() => undefined} commands={commands} />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('renders a combobox driving a grouped listbox when open', () => {
-    const html = renderToStaticMarkup(
-      <CommandPalette open onClose={() => undefined} commands={commands} />,
-    );
+    render(<CommandPalette open onClose={() => undefined} commands={commands} />);
+    const html = document.body.innerHTML;
     expect(html).toContain('role="dialog"');
     expect(html).toContain('role="combobox"');
     expect(html).toContain('aria-expanded="true"');
@@ -33,9 +33,7 @@ describe('CommandPalette', () => {
   });
 
   it('marks the first command active by default', () => {
-    const html = renderToStaticMarkup(
-      <CommandPalette open onClose={() => undefined} commands={commands} />,
-    );
-    expect(html).toContain('aria-selected="true"');
+    render(<CommandPalette open onClose={() => undefined} commands={commands} />);
+    expect(document.body.innerHTML).toContain('aria-selected="true"');
   });
 });

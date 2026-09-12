@@ -1,19 +1,20 @@
-import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+// @vitest-environment jsdom
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { Dialog } from '../dialog';
 
+afterEach(cleanup);
+
 describe('Dialog', () => {
   it('renders nothing when closed', () => {
-    expect(
-      renderToStaticMarkup(
-        <Dialog open={false} onClose={() => undefined} title="Confirm" />,
-      ),
-    ).toBe('');
+    render(<Dialog open={false} onClose={() => undefined} title="Confirm" />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('renders a labelled modal when open', () => {
-    const html = renderToStaticMarkup(
+    render(
       <Dialog
         open
         onClose={() => undefined}
@@ -24,6 +25,7 @@ describe('Dialog', () => {
         <p>body</p>
       </Dialog>,
     );
+    const html = document.body.innerHTML;
     expect(html).toContain('role="dialog"');
     expect(html).toContain('aria-modal="true"');
     expect(html).toContain('aria-labelledby');
@@ -35,16 +37,12 @@ describe('Dialog', () => {
   });
 
   it('omits aria-describedby without a description', () => {
-    const html = renderToStaticMarkup(
-      <Dialog open onClose={() => undefined} title="Plain" />,
-    );
-    expect(html).not.toContain('aria-describedby');
+    render(<Dialog open onClose={() => undefined} title="Plain" />);
+    expect(screen.getByRole('dialog')).not.toHaveAttribute('aria-describedby');
   });
 
   it('applies size variants', () => {
-    const html = renderToStaticMarkup(
-      <Dialog open onClose={() => undefined} title="Wide" size="lg" />,
-    );
-    expect(html).toContain('max-w-2xl');
+    render(<Dialog open onClose={() => undefined} title="Wide" size="lg" />);
+    expect(document.body.innerHTML).toContain('max-w-2xl');
   });
 });
