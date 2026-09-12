@@ -35,6 +35,55 @@ export async function spentOnRailToday(
   return row?.total ?? 0;
 }
 
+/**
+ * The sender's debits across every rail since the start of the current business month.
+ *
+ * The rail-agnostic counterpart of `spentOnRailToday`: a customer's tier ceiling is on what
+ * they move, not on how they moved it, so this deliberately does not filter by rail.
+ *
+ * Minor units are summed as they were booked, without converting between currencies — the same
+ * simplification `spentOnRailToday` already makes. A customer sending in two currencies has
+ * their totals added as plain numbers, which is only exactly right while the ceiling is read
+ * the same way (see `assertCustomerLimits`). Converting would make today's headroom depend on
+ * a rate that moves.
+ */
+export async function spentThisMonth(
+  transfers: Model<TransferDoc>,
+  customerId: string,
+  clock: ClockService,
+): Promise<number> {
+  const [row] = await transfers.aggregate<{ total: number }>([
+    {
+      $match: {
+        customerId,
+        createdAt: { $gte: clock.monthBounds().from },
+        status: { $nin: NON_DEBITING_STATUSES },
+      },
+    },
+    { $group: { _id: null, total: { $sum: '$debitMinorUnits' } } },
+  ]);
+  return row?.total ?? 0;
+}
+
+/** The sender's debits across every rail since the start of the current business day. */
+export async function spentToday(
+  transfers: Model<TransferDoc>,
+  customerId: string,
+  clock: ClockService,
+): Promise<number> {
+  const [row] = await transfers.aggregate<{ total: number }>([
+    {
+      $match: {
+        customerId,
+        createdAt: { $gte: clock.startOfDay() },
+        status: { $nin: NON_DEBITING_STATUSES },
+      },
+    },
+    { $group: { _id: null, total: { $sum: '$debitMinorUnits' } } },
+  ]);
+  return row?.total ?? 0;
+}
+
 /** The Mongo filter for the customer transfer list, cursor included. */
 export function buildTransferFilter(
   customerId: string,

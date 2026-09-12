@@ -11,7 +11,10 @@ import { SimulationModule } from '../simulation/simulation.module.js';
 import { BulkTransfersService } from './application/bulk-transfers.service.js';
 import { DestinationResolver } from './application/destination-resolver.js';
 import { DueTransfersProcessor } from './application/due-transfers.processor.js';
+import { KycModule } from '../kyc/kyc.module.js';
+import { CUSTOMER_LIMITS_PORT } from './application/customer-limits.port.js';
 import { FRAUD_CHECK_PORT } from './application/fraud-check.port.js';
+import { KycCustomerLimitsAdapter } from './application/kyc-customer-limits.adapter.js';
 import { RAIL_DISPATCH_PORT } from './application/rail-dispatch.port.js';
 import { RegistryRailDispatchAdapter } from './application/registry-rail-dispatch.adapter.js';
 import { RiskFraudCheckAdapter } from './application/risk-fraud-check.adapter.js';
@@ -61,6 +64,7 @@ import { TransfersService } from './transfers.service.js';
     AccountsModule,
     BeneficiariesModule,
     FxModule,
+    KycModule,
     RiskModule,
     SimulationModule,
     MongooseModule.forFeature([
@@ -105,7 +109,9 @@ import { TransfersService } from './transfers.service.js';
         SwiftTransferUseCase,
       ],
     },
+    KycCustomerLimitsAdapter,
     { provide: FRAUD_CHECK_PORT, useClass: RiskFraudCheckAdapter },
+    { provide: CUSTOMER_LIMITS_PORT, useClass: KycCustomerLimitsAdapter },
     { provide: RAIL_DISPATCH_PORT, useClass: RegistryRailDispatchAdapter },
     {
       provide: TRANSFER_PRICING,

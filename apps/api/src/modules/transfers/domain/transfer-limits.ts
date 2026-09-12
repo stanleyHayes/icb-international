@@ -2,6 +2,8 @@ import type { TransferRail } from '@icb/contracts';
 import { fromMinorUnits, getMinorUnitFactor, type CurrencyCode, type Money } from '@icb/money';
 
 import { LimitExceededError } from '../../../common/errors/index.js';
+import type { CustomerLimits } from '../application/customer-limits.port.js';
+import { InternationalNotPermittedError } from './transfer-errors.js';
 import {
   DAILY_DEBIT_CAP_MAJOR_UNITS,
   RAIL_PER_TRANSACTION_CAP,
@@ -44,4 +46,65 @@ export function assertDailyLimit(
   if (attempted.minorUnits > cap.minorUnits) {
     throw new LimitExceededError('daily transfer limit', cap, attempted);
   }
+}
+
+/**
+ * The customer's own ceilings, on top of the rail's.
+ *
+ * Rail caps say what the bank will move on a given rail; these say what this customer may move
+ * at all, and the tighter of the two is what bites. A null ceiling means the tier does not cap
+ * that dimension.
+ *
+ * Figures are compared in the debit currency rather than converted, which is the same
+ * convention `capMoney` already applies to the rail caps: the published number is the ceiling
+ * in whatever currency is being sent. Converting instead would make a customer's limit depend
+ * on an FX rate that moves under them.
+ */
+export function assertCustomerLimits(
+  limits: CustomerLimits,
+  amount: Money,
+  spentTodayMinorUnits: number,
+  spentThisMonthMinorUnits: number,
+): void {
+  assertCeiling(
+    limits.singleTransferMinorUnits,
+    amount.minorUnits,
+    amount,
+    `${limits.label} single-transfer limit`,
+  );
+  assertCeiling(
+    limits.dailyTransferMinorUnits,
+    spentTodayMinorUnits + amount.minorUnits,
+    amount,
+    `${limits.label} daily transfer limit`,
+  );
+  assertCeiling(
+    limits.monthlyTransferMinorUnits,
+    spentThisMonthMinorUnits + amount.minorUnits,
+    amount,
+    `${limits.label} monthly transfer limit`,
+  );
+}
+
+/** International rails are a tier privilege, not a rail the whole bank offers everyone. */
+export function assertInternationalAllowed(limits: CustomerLimits, rail: TransferRail): void {
+  if (rail === 'swift' && !limits.internationalAllowed) {
+    throw new InternationalNotPermittedError(limits.label);
+  }
+}
+
+function assertCeiling(
+  capMinorUnits: number | null,
+  attemptedMinorUnits: number,
+  amount: Money,
+  label: string,
+): void {
+  if (capMinorUnits === null || attemptedMinorUnits <= capMinorUnits) {
+    return;
+  }
+  throw new LimitExceededError(
+    label,
+    fromMinorUnits(capMinorUnits, amount.currency),
+    fromMinorUnits(attemptedMinorUnits, amount.currency),
+  );
 }

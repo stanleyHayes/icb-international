@@ -7,6 +7,7 @@ import { ClockService } from '../../../../simulation/clock/clock.service.js';
 import { TransferBlockedError } from '../../domain/transfer-errors.js';
 import { TRANSFER_EVENTS } from '../../domain/transfers.constants.js';
 import { DestinationResolver } from '../destination-resolver.js';
+import { UnlimitedCustomerLimits } from '../customer-limits.port.js';
 import type { FraudCheckPort } from '../fraud-check.port.js';
 import { TransferOrchestrator } from '../transfer-orchestrator.js';
 import { TransferPreparationService } from '../transfer-preparation.service.js';
@@ -43,8 +44,10 @@ function request(overrides: Partial<CreateTransferRequest> = {}): CreateTransfer
 function setup(order: string[]) {
   const source = { _id: 'acct-1', number: '0000000001', currency: 'GBP', nickname: null };
   const model = {
-    aggregate: vi.fn().mockImplementation(() => {
-      order.push('limits.daily');
+    // Spend totals are all aggregates; the rail's is the one filtered by rail, the customer's
+    // tier totals are not. Both belong to the limits stage, and both must precede the rest.
+    aggregate: vi.fn().mockImplementation((pipeline: [{ $match?: { rail?: string } }]) => {
+      order.push(pipeline?.[0]?.$match?.rail ? 'limits.rail-daily' : 'limits.customer');
       return Promise.resolve([{ total: 0 }]);
     }),
     create: vi.fn().mockImplementation((rows: unknown[]) => {
@@ -111,6 +114,9 @@ function setup(order: string[]) {
     destinations,
     { confirm: vi.fn() } as never,
     fraud,
+    // This suite is about orchestration order, not eligibility; the unlimited stub keeps tier
+    // ceilings out of the way, exactly as a deployment without KYC would bind it.
+    new UnlimitedCustomerLimits(),
     clock,
   );
   const orchestrator = new TransferOrchestrator(
@@ -139,7 +145,10 @@ describe('pipeline order', () => {
 
     expect(order).toEqual([
       'validate',
-      'limits.daily',
+      'limits.rail-daily',
+      // Today and this month, read together for the customer's own ceilings.
+      'limits.customer',
+      'limits.customer',
       'beneficiary',
       'fraud',
       'funds',

@@ -10,11 +10,21 @@ import { ClockService } from '../../../simulation/clock/clock.service.js';
 import { AccountsService } from '../../accounts/accounts.service.js';
 import { resolveRail } from '../domain/rail-resolver.js';
 import { feesFor, totalFees } from '../domain/transfer-fees.js';
-import { assertDailyLimit, assertPerTransactionLimit } from '../domain/transfer-limits.js';
+import {
+  assertCustomerLimits,
+  assertDailyLimit,
+  assertInternationalAllowed,
+  assertPerTransactionLimit,
+} from '../domain/transfer-limits.js';
 import { TransferBlockedError } from '../domain/transfer-errors.js';
-import { spentOnRailToday } from '../infrastructure/transfer-query.js';
+import {
+  spentOnRailToday,
+  spentThisMonth,
+  spentToday,
+} from '../infrastructure/transfer-query.js';
 import { TransferDoc } from '../infrastructure/transfer.schemas.js';
 import { DestinationResolver, type ResolvedDestination } from './destination-resolver.js';
+import { CUSTOMER_LIMITS_PORT, type CustomerLimitsPort } from './customer-limits.port.js';
 import { FRAUD_CHECK_PORT, type FraudCheckPort } from './fraud-check.port.js';
 import { TransferQuoteRedemptionService } from './transfer-quote-redemption.service.js';
 import type { RedeemedTransferQuote } from './transfer-quotes.service.js';
@@ -34,12 +44,14 @@ type ResolvedTerms = Omit<RedeemedTransferQuote, 'quoteId'> & {
  */
 @Injectable()
 export class TransferPreparationService {
+  // eslint-disable-next-line max-params -- each collaborator is one step of the documented pipeline; collapsing them into a bag would satisfy the count and hide the order the steps run in.
   constructor(
     @InjectModel(TransferDoc.name) private readonly transfers: Model<TransferDoc>,
     private readonly accounts: AccountsService,
     private readonly destinations: DestinationResolver,
     private readonly redemption: TransferQuoteRedemptionService,
     @Inject(FRAUD_CHECK_PORT) private readonly fraud: FraudCheckPort,
+    @Inject(CUSTOMER_LIMITS_PORT) private readonly customerLimits: CustomerLimitsPort,
     private readonly clock: ClockService,
   ) {}
 
@@ -52,8 +64,9 @@ export class TransferPreparationService {
     const terms = await this.resolveTerms(customerId, request, resolved.destination);
 
     assertPerTransactionLimit(terms.rail, terms.debit);
-    const spent = await spentOnRailToday(this.transfers, customerId, terms.rail, this.clock);
-    assertDailyLimit(terms.rail, terms.debit, spent);
+    const spentOnRail = await spentOnRailToday(this.transfers, customerId, terms.rail, this.clock);
+    assertDailyLimit(terms.rail, terms.debit, spentOnRail);
+    await this.assertWithinCustomerLimits(customerId, terms.rail, terms.debit);
     await this.destinations.assertPayable(resolved, terms.debit, customerId);
 
     const transferId = newId();
@@ -110,6 +123,29 @@ export class TransferPreparationService {
       totalFees: total,
       estimatedArrival: this.clock.now(),
     };
+  }
+
+  /**
+   * The customer's own ceilings, checked alongside the rail's.
+   *
+   * The tier a customer holds is quoted to them on the limits screen and has always claimed to
+   * bound what they can move; until this was wired, only the per-rail caps bit, so a tier-1
+   * customer could send far past the figure they had been shown. Both totals are rail-agnostic
+   * because the ceiling is on what the customer moves, not on how.
+   */
+  private async assertWithinCustomerLimits(
+    customerId: string,
+    rail: PreparedTransfer['rail'],
+    debit: Money,
+  ): Promise<void> {
+    const limits = await this.customerLimits.limitsFor(customerId);
+    assertInternationalAllowed(limits, rail);
+
+    const [today, month] = await Promise.all([
+      spentToday(this.transfers, customerId, this.clock),
+      spentThisMonth(this.transfers, customerId, this.clock),
+    ]);
+    assertCustomerLimits(limits, debit, today, month);
   }
 
   /** Step 4: the fraud score. Only an outright block stops the payment here. */

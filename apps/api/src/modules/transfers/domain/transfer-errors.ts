@@ -62,3 +62,20 @@ export class BulkTransferValidationError extends DomainError {
     });
   }
 }
+
+/**
+ * An international send from a tier that has not unlocked them.
+ *
+ * `FORBIDDEN` rather than `LIMIT_EXCEEDED`: no amount would have been accepted, so telling the
+ * customer they exceeded a ceiling would send them to reduce a number that was never the
+ * problem. What they need is the next verification tier.
+ */
+export class InternationalNotPermittedError extends DomainError {
+  constructor(tierLabel: string) {
+    super(
+      'FORBIDDEN',
+      'International transfers need a higher verification tier on your account',
+      { context: { tier: tierLabel } },
+    );
+  }
+}
